@@ -353,7 +353,7 @@ const detectCategory = (wb: any): SpotCategory => {
 
 // 🆕 COORDINATE CORRECTIONS - Above and Beyond Accuracy!
 // Bekannte Angelteiche mit korrekten Koordinaten
-const KNOWN_SPOT_CORRECTIONS = {
+const KNOWN_SPOT_CORRECTIONS: Record<string, { lat: number; lng: number }> = {
   // Forellenhof Bendestorf - Korrekte Koordinaten
   'Forellenhof Bendestorf': { lat: 53.3355, lng: 9.9732 },
   'Angelteich Jesteburg': { lat: 53.3035, lng: 9.9618 },
@@ -364,7 +364,9 @@ const KNOWN_SPOT_CORRECTIONS = {
   'Forellenteich Hittfeld': { lat: 53.3632, lng: 9.9831 },
 };
 
-// Function to get corrected coordinates
+// Default Location: Bendestorf (21227), Germany (Fallback)
+// Forellenhof Bendestorf ist hier - perfekt zum Testen!
+const BENDESTORF_COORDS: [number, number] = [9.9732, 53.3355]; // [lng, lat]
 function getCorrectedCoordinates(name: string, originalLat: number, originalLng: number, googleLat?: number, googleLng?: number) {
   // 1. Google Places coordinates have highest priority (most accurate)
   if (googleLat && googleLng) {
@@ -508,8 +510,8 @@ export const MapScreen: React.FC = () => {
                       place_rating: googleData.placeRating,
                       place_open_now: googleData.placeOpenNow,
                       // 🆕 Also update coordinates if Google has better ones
-                      latitude: googleData.geometry?.location?.lat || wb.latitude,
-                      longitude: googleData.geometry?.location?.lng || wb.longitude,
+                      latitude: googleData.geometry?.location?.lat || spot.latitude,
+                      longitude: googleData.geometry?.location?.lng || spot.longitude,
                     })
                     .eq('id', spot.id);
                   
