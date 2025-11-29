@@ -725,19 +725,19 @@ export const MapScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* 🆕 Quick Action Menu - 4 Buttons - NOW BIG AND VISIBLE! */}
-      <View style={[styles.quickMenuWrapper, { zIndex: 9999 }]}>
+      {/* 🆕 Quick Action Menu - 4 Buttons */}
+      <View style={styles.quickMenuWrapper}>
         <View style={[styles.quickMenuBar, isDark && styles.quickMenuBarDark]}>
           {/* ⭐ Top 3 */}
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'top3' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('⭐ TOP3 MENU OPENED!');
+              console.log('⭐ Top3 button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'top3' ? null : 'top3');
             }}
           >
-            <Star size={24} color={activeMenu === 'top3' ? '#F59E0B' : isDark ? colors.white : colors.gray900}
+            <Star size={18} color={activeMenu === 'top3' ? '#F59E0B' : isDark ? colors.gray400 : colors.gray600} 
               fill={activeMenu === 'top3' ? '#F59E0B' : 'transparent'} />
           </TouchableOpacity>
 
@@ -745,36 +745,36 @@ export const MapScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'categories' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('🏷️ CATEGORIES MENU OPENED!');
+              console.log('🏷️ Categories button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'categories' ? null : 'categories');
             }}
           >
-            <Navigation size={24} color={activeMenu === 'categories' ? colors.primary : isDark ? colors.white : colors.gray900} />
+            <Navigation size={18} color={activeMenu === 'categories' ? colors.primary : isDark ? colors.gray400 : colors.gray600} />
           </TouchableOpacity>
 
           {/* 🐟 Fish Filter */}
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'fish' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('🐟 FISH MENU OPENED!');
+              console.log('🐟 Fish button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'fish' ? null : 'fish');
             }}
           >
-            <Fish size={24} color={activeMenu === 'fish' ? '#10B981' : isDark ? colors.white : colors.gray900} />
+            <Fish size={18} color={activeMenu === 'fish' ? '#10B981' : isDark ? colors.gray400 : colors.gray600} />
           </TouchableOpacity>
 
           {/* ℹ️ Info */}
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'info' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('ℹ️ INFO MENU OPENED!');
+              console.log('ℹ️ Info button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'info' ? null : 'info');
             }}
           >
-            <Info size={24} color={activeMenu === 'info' ? '#6366F1' : isDark ? colors.white : colors.gray900} />
+            <Info size={18} color={activeMenu === 'info' ? '#6366F1' : isDark ? colors.gray400 : colors.gray600} />
           </TouchableOpacity>
         </View>
 
@@ -955,7 +955,7 @@ export const MapScreen: React.FC = () => {
       {/* Bottom Sheet */}
       <BottomSheet
         ref={bottomSheetRef}
-        index={0}
+        index={selectedSpot ? 1 : 0}
         snapPoints={snapPoints}
         backgroundStyle={[styles.sheetBg, isDark && styles.sheetBgDark]}
         handleIndicatorStyle={[styles.sheetHandle, isDark && styles.sheetHandleDark]}
@@ -1306,9 +1306,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 8,
     alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1320,23 +1320,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(19,35,55,0.95)',
   },
   quickMenuBtn: {
-    width: 60,
-    height: 60,
-    borderRadius: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    backgroundColor: 'transparent',
   },
   quickMenuBtnActive: {
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
+    backgroundColor: 'rgba(0,0,0,0.08)',
   },
   
   // Menu Panels
