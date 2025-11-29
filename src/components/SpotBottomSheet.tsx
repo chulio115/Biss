@@ -51,6 +51,18 @@ export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose 
     if (url) Linking.openURL(url);
   };
 
+  const openGoogleMaps = () => {
+    // If we have a Google Place ID, use it for more accurate link
+    if (spot.google_place_id) {
+      const url = `https://www.google.com/maps/place/?q=place_id:${spot.google_place_id}`;
+      Linking.openURL(url);
+    } else {
+      // Fallback to coordinates search
+      const url = `https://www.google.com/maps/search/?api=1&query=${spot.latitude},${spot.longitude}&query_place_id=${encodeURIComponent(spot.name)}`;
+      Linking.openURL(url);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Handle bar */}
@@ -114,7 +126,10 @@ export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose 
         {/* Action buttons */}
         <View style={styles.actions}>
           <TouchableOpacity style={styles.primaryBtn} onPress={openInMaps}>
-            <Text style={styles.primaryBtnText}>🧭 Route planen</Text>
+            <Text style={styles.primaryBtnText}>🧭 Route</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.googleBtn} onPress={openGoogleMaps}>
+            <Text style={styles.googleBtnText}>G</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryBtn}>
             <Text style={styles.secondaryBtnText}>❤️</Text>
@@ -285,6 +300,19 @@ const styles = StyleSheet.create({
     color: '#0a1628',
     fontSize: 16,
     fontWeight: '600',
+  },
+  googleBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#4285f4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  googleBtnText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   secondaryBtn: {
     width: 56,

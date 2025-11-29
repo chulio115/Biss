@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { supabase } from '../services/supabase';
 import { calculateFangIndex } from '../services/xai';
@@ -27,39 +27,11 @@ export interface MapWaterBody {
   permit_price: number | null;
   is_assumed: boolean;
   fangIndex: number;
+  google_place_id?: string;
 }
 
-type MapMode = 'default' | 'night' | 'water';
-
-// Custom map styles
-const mapStyles = {
-  default: [],
-  night: [
-    { elementType: 'geometry', stylers: [{ color: '#0a1628' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#0a1628' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#64748b' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1e3a5f' }] },
-    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4ade80' }] },
-    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-    { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
-  ],
-  water: [
-    { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#8892b0' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0077b6' }] },
-    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#caf0f8' }] },
-    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2d3748' }] },
-    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3d4f6f' }] },
-    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1d3d2d' }, { visibility: 'on' }] },
-    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#16213e' }] },
-  ],
-};
+// Map types that work on iOS (Apple Maps doesn't support custom styles)
+type MapMode = 'standard' | 'satellite' | 'hybrid';
 
 const getMarkerColor = (score: number): string => {
   if (score >= 70) return '#22c55e';
@@ -74,7 +46,7 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [selectedSpot, setSelectedSpot] = useState<MapWaterBody | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mapMode, setMapMode] = useState<MapMode>('water');
+  const [mapMode, setMapMode] = useState<MapMode>('standard');
   const [selectedFish, setSelectedFish] = useState<string | null>(null);
 
   const initialRegion: Region = {
@@ -166,7 +138,7 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   };
 
   const cycleMapMode = () => {
-    const modes: MapMode[] = ['default', 'water', 'night'];
+    const modes: MapMode[] = ['standard', 'satellite', 'hybrid'];
     const currentIndex = modes.indexOf(mapMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setMapMode(modes[nextIndex]);
@@ -174,16 +146,16 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const getModeIcon = () => {
     switch (mapMode) {
-      case 'night': return '🌙';
-      case 'water': return '💧';
-      default: return '🗺️';
+      case 'satellite': return '🛰️';
+      case 'hybrid': return '🗺️';
+      default: return '📍';
     }
   };
 
   const getModeLabel = () => {
     switch (mapMode) {
-      case 'night': return 'Nacht';
-      case 'water': return 'Gewässer';
+      case 'satellite': return 'Satellit';
+      case 'hybrid': return 'Hybrid';
       default: return 'Standard';
     }
   };
@@ -208,7 +180,7 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         showsUserLocation
         showsMyLocationButton={false}
         showsCompass={false}
-        customMapStyle={mapStyles[mapMode]}
+        mapType={mapMode}
         mapPadding={{ top: 100, right: 0, bottom: 100, left: 0 }}
       >
         {filteredBodies.map((wb) => (
