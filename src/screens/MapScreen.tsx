@@ -6,6 +6,13 @@
  * - Heatmap: #4ADE80 → #FACC15 → #EF4444
  * - Typography: System font, 400/600
  * - 80% Map, max 3-4 touch points
+ * 
+ * Features:
+ * - Native Mapbox Integration
+ * - Geolocation with Lüneburg fallback (53.2509, 10.4141)
+ * - Floating Search Button
+ * - Bottom Sheet with Spot Details
+ * - Top 3 Cards
  */
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
@@ -18,15 +25,18 @@ import {
   ActivityIndicator,
   ScrollView,
   Platform,
+  Modal,
 } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Search, Navigation } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 import { calculateFangIndex } from '../services/xai';
 import { getWeather } from '../services/weather';
+import { SearchScreen } from './SearchScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -93,7 +103,10 @@ const FISH_FILTERS = [
   { id: 'aal', name: 'Aal', confidence: 'low' },
 ];
 
-export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+// Default Location: Lüneburg, Germany (Fallback)
+const LUNEBURG_COORDS: [number, number] = [10.4141, 53.2509]; // [lng, lat]
+
+export const MapScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
@@ -103,11 +116,12 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   
   const [waterBodies, setWaterBodies] = useState<MapWaterBody[]>([]);
   const [selectedSpot, setSelectedSpot] = useState<MapWaterBody | null>(null);
-  const [userLocation, setUserLocation] = useState<[number, number]>([9.9717, 53.3347]);
+  const [userLocation, setUserLocation] = useState<[number, number]>(LUNEBURG_COORDS);
   const [loading, setLoading] = useState(true);
   const [mapMode, setMapMode] = useState<MapMode>('angel');
   const [selectedFish, setSelectedFish] = useState<string[]>([]);
   const [top3, setTop3] = useState<MapWaterBody[]>([]);
+  const [showSearch, setShowSearch] = useState(false);
 
   // Bottom sheet snap points
   const snapPoints = [90, 260, 500];
@@ -120,15 +134,31 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     try {
       setLoading(true);
       
-      // Get location
+      // Get location with high accuracy (BestForNavigation)
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === 'granted') {
         try {
-          const location = await Location.getCurrentPositionAsync({});
-          setUserLocation([location.coords.longitude, location.coords.latitude]);
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.BestForNavigation,
+          });
+          // Only update if we got valid coordinates (not USA default)
+          const { longitude, latitude } = location.coords;
+          if (longitude && latitude && 
+              // Sanity check: Coordinates should be in Germany/Europe range
+              longitude > 5 && longitude < 16 && 
+              latitude > 47 && latitude < 56) {
+            setUserLocation([longitude, latitude]);
+          } else {
+            console.log('Invalid coordinates, using Lüneburg fallback');
+            setUserLocation(LUNEBURG_COORDS);
+          }
         } catch (e) {
-          console.log('Location error, using default');
+          console.log('Location error, using Lüneburg fallback');
+          setUserLocation(LUNEBURG_COORDS);
         }
+      } else {
+        console.log('Location permission denied, using Lüneburg fallback');
+        setUserLocation(LUNEBURG_COORDS);
       }
 
       // Fetch water bodies
@@ -246,8 +276,19 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
       {/* Top Bar */}
       <View style={[styles.topBar, isDark && styles.topBarDark]}>
-        <TouchableOpacity style={[styles.iconBtn, isDark && styles.iconBtnDark]} onPress={onBack}>
-          <Text style={[styles.iconText, isDark && styles.textLight]}>←</Text>
+        {/* My Location Button */}
+        <TouchableOpacity 
+          style={[styles.iconBtn, isDark && styles.iconBtnDark]} 
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            cameraRef.current?.setCamera({
+              centerCoordinate: userLocation,
+              zoomLevel: 13,
+              animationDuration: 800,
+            });
+          }}
+        >
+          <Navigation size={20} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
 
         <View style={styles.modeSwitcher}>
@@ -264,6 +305,35 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           ))}
         </View>
       </View>
+
+      {/* Floating Search Button (oben rechts) */}
+      <TouchableOpacity
+        style={[styles.searchFab, isDark && styles.searchFabDark]}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          setShowSearch(true);
+        }}
+        activeOpacity={0.85}
+      >
+        <Search size={28} color={colors.primary} strokeWidth={1.8} />
+      </TouchableOpacity>
+
+      {/* Search Modal */}
+      <Modal
+        visible={showSearch}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <SearchScreen 
+          onClose={() => setShowSearch(false)}
+          onSelectSpot={(spotId) => {
+            const spot = waterBodies.find(w => w.id === spotId);
+            if (spot) {
+              handleMarkerPress(spot);
+            }
+          }}
+        />
+      </Modal>
 
       {/* Top 3 Floating Cards */}
       <View style={styles.top3Container}>
@@ -442,7 +512,28 @@ const styles = StyleSheet.create({
   topBarDark: { backgroundColor: 'rgba(10,26,47,0.95)' },
   iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.gray100, justifyContent: 'center', alignItems: 'center' },
   iconBtnDark: { backgroundColor: colors.dark.surface },
-  iconText: { fontSize: 20, color: colors.gray600 },
+
+  // Floating Search Button
+  searchFab: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 116 : 96,
+    left: 16,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+    zIndex: 1000,
+  },
+  searchFabDark: {
+    backgroundColor: 'rgba(19, 35, 55, 0.95)',
+  },
 
   // Mode Switcher
   modeSwitcher: { flexDirection: 'row', gap: 8 },
