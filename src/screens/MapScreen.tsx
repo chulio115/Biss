@@ -106,14 +106,176 @@ const colors = {
   },
 };
 
-// Mapbox Style URLs - 3 Premium Styles
+// ═══════════════════════════════════════════════════════════════════════════════
+// CUSTOM MAPBOX STYLES - Replace with your Mapbox Studio URLs!
+// Upload the JSON files from /assets/mapstyles/ to Mapbox Studio
+// ═══════════════════════════════════════════════════════════════════════════════
 const mapStyles: Record<MapStyle, string> = {
-  // Style 1: Standard - Light with desaturated land
-  standard: 'mapbox://styles/mapbox/light-v11',
-  // Style 2: Angel-Fokus - Our USP (water highlighted)
-  angelFokus: 'mapbox://styles/mapbox/outdoors-v12',
-  // Style 3: Angel-Night - Dark with glowing water
-  angelNight: 'mapbox://styles/mapbox/dark-v11',
+  // TODO: Replace these with your uploaded Mapbox Studio URLs:
+  // Format: mapbox://styles/YOUR_USERNAME/STYLE_ID
+  
+  // Style 1: Standard - Full navigation, gentle water
+  standard: process.env.EXPO_PUBLIC_MAPBOX_STYLE_STANDARD || 'mapbox://styles/mapbox/light-v11',
+  
+  // Style 2: Angel-Fokus - Water dominates, land faded (OUR USP!)
+  angelFokus: process.env.EXPO_PUBLIC_MAPBOX_STYLE_FOKUS || 'mapbox://styles/mapbox/outdoors-v12',
+  
+  // Style 3: Angel-Night - Dark with glowing neon water
+  angelNight: process.env.EXPO_PUBLIC_MAPBOX_STYLE_NIGHT || 'mapbox://styles/mapbox/dark-v11',
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BEISSZEIT-RADAR: Sunrise/Sunset + Golden Hour Calculation
+// ═══════════════════════════════════════════════════════════════════════════════
+const calculateSunTimes = (lat: number, lng: number): { sunrise: Date; sunset: Date; goldenHour: { morning: Date; evening: Date } } => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  const dayOfYear = Math.floor(diff / oneDay);
+  
+  // Simplified sunrise/sunset calculation
+  const zenith = 90.833;
+  const D2R = Math.PI / 180;
+  const R2D = 180 / Math.PI;
+  
+  const lngHour = lng / 15;
+  const t_rise = dayOfYear + ((6 - lngHour) / 24);
+  const t_set = dayOfYear + ((18 - lngHour) / 24);
+  
+  const M_rise = (0.9856 * t_rise) - 3.289;
+  const M_set = (0.9856 * t_set) - 3.289;
+  
+  let L_rise = M_rise + (1.916 * Math.sin(M_rise * D2R)) + (0.020 * Math.sin(2 * M_rise * D2R)) + 282.634;
+  let L_set = M_set + (1.916 * Math.sin(M_set * D2R)) + (0.020 * Math.sin(2 * M_set * D2R)) + 282.634;
+  
+  L_rise = L_rise % 360;
+  L_set = L_set % 360;
+  
+  const sinDec_rise = 0.39782 * Math.sin(L_rise * D2R);
+  const sinDec_set = 0.39782 * Math.sin(L_set * D2R);
+  const cosDec_rise = Math.cos(Math.asin(sinDec_rise));
+  const cosDec_set = Math.cos(Math.asin(sinDec_set));
+  
+  const cosH_rise = (Math.cos(zenith * D2R) - (sinDec_rise * Math.sin(lat * D2R))) / (cosDec_rise * Math.cos(lat * D2R));
+  const cosH_set = (Math.cos(zenith * D2R) - (sinDec_set * Math.sin(lat * D2R))) / (cosDec_set * Math.cos(lat * D2R));
+  
+  const H_rise = 360 - (Math.acos(cosH_rise) * R2D);
+  const H_set = Math.acos(cosH_set) * R2D;
+  
+  const T_rise = H_rise / 15 + (0.06571 * t_rise) - 6.622 - lngHour + 1; // +1 for CET
+  const T_set = H_set / 15 + (0.06571 * t_set) - 6.622 - lngHour + 1;
+  
+  const sunrise = new Date(now);
+  sunrise.setHours(Math.floor(T_rise % 24), Math.floor((T_rise % 1) * 60), 0);
+  
+  const sunset = new Date(now);
+  sunset.setHours(Math.floor(T_set % 24), Math.floor((T_set % 1) * 60), 0);
+  
+  // Golden Hour: 1h after sunrise, 1h before sunset
+  const goldenMorning = new Date(sunrise.getTime() + 60 * 60 * 1000);
+  const goldenEvening = new Date(sunset.getTime() - 60 * 60 * 1000);
+  
+  return { sunrise, sunset, goldenHour: { morning: goldenMorning, evening: goldenEvening } };
+};
+
+// Check if we're in Golden Hour
+const isGoldenHour = (lat: number, lng: number): { isGolden: boolean; nextGolden: string } => {
+  const now = new Date();
+  const { sunrise, sunset, goldenHour } = calculateSunTimes(lat, lng);
+  
+  const nearSunrise = Math.abs(now.getTime() - sunrise.getTime()) < 60 * 60 * 1000;
+  const nearSunset = Math.abs(now.getTime() - sunset.getTime()) < 60 * 60 * 1000;
+  
+  if (nearSunrise || nearSunset) {
+    return { isGolden: true, nextGolden: 'JETZT! 🔥' };
+  }
+  
+  // Next golden hour
+  if (now < goldenHour.morning) {
+    return { isGolden: false, nextGolden: `${goldenHour.morning.getHours()}:${String(goldenHour.morning.getMinutes()).padStart(2, '0')}` };
+  } else if (now < goldenHour.evening) {
+    return { isGolden: false, nextGolden: `${goldenHour.evening.getHours()}:${String(goldenHour.evening.getMinutes()).padStart(2, '0')}` };
+  }
+  
+  return { isGolden: false, nextGolden: 'Morgen früh' };
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FISH SEASON DATA - Germany Fishing Seasons
+// ═══════════════════════════════════════════════════════════════════════════════
+interface FishSeason {
+  name: string;
+  icon: string;
+  schonzeit: [number, number][]; // [startMonth, endMonth] pairs (1-indexed)
+  bestMonths: number[];
+}
+
+const FISH_SEASONS: Record<string, FishSeason> = {
+  forelle: { 
+    name: 'Forelle', 
+    icon: '🐟', 
+    schonzeit: [[10, 3]], // Oct-Mar
+    bestMonths: [4, 5, 6, 9] 
+  },
+  karpfen: { 
+    name: 'Karpfen', 
+    icon: '🐡', 
+    schonzeit: [], // No closed season in most areas
+    bestMonths: [5, 6, 7, 8, 9] 
+  },
+  hecht: { 
+    name: 'Hecht', 
+    icon: '🦈', 
+    schonzeit: [[2, 4]], // Feb-Apr (spawning)
+    bestMonths: [5, 6, 10, 11] 
+  },
+  zander: { 
+    name: 'Zander', 
+    icon: '🐠', 
+    schonzeit: [[3, 5]], // Mar-May
+    bestMonths: [6, 7, 8, 9, 10] 
+  },
+  barsch: { 
+    name: 'Barsch', 
+    icon: '🎣', 
+    schonzeit: [], // No closed season
+    bestMonths: [3, 4, 5, 9, 10, 11] 
+  },
+  aal: { 
+    name: 'Aal', 
+    icon: '🐍', 
+    schonzeit: [], // Complex regulations
+    bestMonths: [5, 6, 7, 8, 9] 
+  },
+  wels: {
+    name: 'Wels',
+    icon: '🐋',
+    schonzeit: [[5, 6]], // May-Jun
+    bestMonths: [7, 8, 9]
+  },
+};
+
+const getFishSeasonStatus = (fishName: string): 'open' | 'closed' | 'best' => {
+  const fish = FISH_SEASONS[fishName.toLowerCase()];
+  if (!fish) return 'open';
+  
+  const currentMonth = new Date().getMonth() + 1; // 1-indexed
+  
+  // Check if in Schonzeit
+  for (const [start, end] of fish.schonzeit) {
+    if (start <= end) {
+      if (currentMonth >= start && currentMonth <= end) return 'closed';
+    } else {
+      // Wraps around year (e.g., Oct-Mar = 10-3)
+      if (currentMonth >= start || currentMonth <= end) return 'closed';
+    }
+  }
+  
+  // Check if best month
+  if (fish.bestMonths.includes(currentMonth)) return 'best';
+  
+  return 'open';
 };
 
 // Score color helper
@@ -153,9 +315,13 @@ export const MapScreen: React.FC = () => {
   const [selectedFish, setSelectedFish] = useState<string[]>([]);
   const [top3, setTop3] = useState<MapWaterBody[]>([]);
   const [showSearch, setShowSearch] = useState(false);
+  
+  // Beißzeit-Radar State
+  const [sunTimes, setSunTimes] = useState<{ sunrise: Date; sunset: Date } | null>(null);
+  const [goldenHourInfo, setGoldenHourInfo] = useState<{ isGolden: boolean; nextGolden: string }>({ isGolden: false, nextGolden: '' });
 
   // Bottom sheet snap points
-  const snapPoints = [90, 260, 500];
+  const snapPoints = [90, 320, 550];
 
   useEffect(() => {
     loadData();
@@ -217,6 +383,11 @@ export const MapScreen: React.FC = () => {
       // Calculate top 3
       const sorted = [...scored].sort((a, b) => b.fangIndex - a.fangIndex);
       setTop3(sorted.slice(0, 3));
+      
+      // Calculate Beißzeit-Radar
+      const times = calculateSunTimes(userLocation[1], userLocation[0]);
+      setSunTimes({ sunrise: times.sunrise, sunset: times.sunset });
+      setGoldenHourInfo(isGoldenHour(userLocation[1], userLocation[0]));
       
     } catch (e) {
       console.error('Load error:', e);
@@ -332,6 +503,22 @@ export const MapScreen: React.FC = () => {
         >
           <Navigation size={20} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
+
+        {/* Beißzeit-Radar Badge */}
+        <View style={[
+          styles.goldenHourBadge,
+          goldenHourInfo.isGolden && styles.goldenHourBadgeActive,
+        ]}>
+          <Text style={styles.goldenHourIcon}>🌅</Text>
+          <View>
+            <Text style={[styles.goldenHourLabel, goldenHourInfo.isGolden && styles.goldenHourLabelActive]}>
+              {goldenHourInfo.isGolden ? 'BEISSZEIT!' : 'Nächste Beißzeit'}
+            </Text>
+            <Text style={[styles.goldenHourTime, goldenHourInfo.isGolden && styles.goldenHourTimeActive]}>
+              {goldenHourInfo.nextGolden}
+            </Text>
+          </View>
+        </View>
 
         {/* Style Switcher */}
         <View style={styles.modeSwitcher}>
@@ -450,14 +637,48 @@ export const MapScreen: React.FC = () => {
 
               {selectedSpot.fish_species?.length > 0 && (
                 <View style={styles.fishSection}>
-                  <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Fischarten</Text>
+                  <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Fischarten (Saison-Status)</Text>
                   <View style={styles.fishGrid}>
-                    {selectedSpot.fish_species.map((fish, i) => (
-                      <View key={i} style={[styles.fishTag, isDark && styles.fishTagDark]}>
-                        <Text style={[styles.fishTagText, isDark && styles.textLight]}>{fish}</Text>
-                      </View>
-                    ))}
+                    {selectedSpot.fish_species.map((fish, i) => {
+                      const status = getFishSeasonStatus(fish);
+                      const fishData = FISH_SEASONS[fish.toLowerCase()];
+                      return (
+                        <View 
+                          key={i} 
+                          style={[
+                            styles.fishTagEnhanced, 
+                            isDark && styles.fishTagDark,
+                            status === 'closed' && styles.fishTagClosed,
+                            status === 'best' && styles.fishTagBest,
+                          ]}
+                        >
+                          <Text style={styles.fishIcon}>{fishData?.icon || '🐟'}</Text>
+                          <Text style={[
+                            styles.fishTagText, 
+                            isDark && styles.textLight,
+                            status === 'closed' && styles.fishTagTextClosed,
+                          ]}>
+                            {fish}
+                          </Text>
+                          <View style={[
+                            styles.seasonBadge,
+                            status === 'open' && styles.seasonOpen,
+                            status === 'closed' && styles.seasonClosed,
+                            status === 'best' && styles.seasonBest,
+                          ]}>
+                            <Text style={styles.seasonBadgeText}>
+                              {status === 'closed' ? '🚫' : status === 'best' ? '🔥' : '✓'}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
                   </View>
+                  {selectedSpot.fish_species.some(f => getFishSeasonStatus(f) === 'closed') && (
+                    <Text style={styles.schonzeitWarning}>
+                      ⚠️ Einige Fischarten haben aktuell Schonzeit
+                    </Text>
+                  )}
                 </View>
               )}
 
@@ -598,6 +819,31 @@ const styles = StyleSheet.create({
   modeBtnNight: { backgroundColor: colors.dark.surface },
   modeBtnText: { fontSize: 18 },
 
+  // Golden Hour / Beißzeit Badge
+  goldenHourBadge: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(255,255,255,0.95)', 
+    paddingHorizontal: 12, 
+    paddingVertical: 8, 
+    borderRadius: 20,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  goldenHourBadgeActive: { 
+    backgroundColor: '#FEF3C7', // Warm golden background
+    borderWidth: 2,
+    borderColor: '#F59E0B',
+  },
+  goldenHourIcon: { fontSize: 20 },
+  goldenHourLabel: { fontSize: 10, color: colors.gray400, fontWeight: '500' },
+  goldenHourLabelActive: { color: '#B45309', fontWeight: '700' },
+  goldenHourTime: { fontSize: 14, color: colors.gray900, fontWeight: '600' },
+  goldenHourTimeActive: { color: '#B45309', fontWeight: '800' },
+
   // Top 3 Cards
   top3Container: { position: 'absolute', right: 16, top: Platform.OS === 'ios' ? 116 : 96, gap: 8 },
   top3Card: { 
@@ -645,6 +891,43 @@ const styles = StyleSheet.create({
   fishTag: { backgroundColor: colors.gray100, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
   fishTagDark: { backgroundColor: colors.dark.bg },
   fishTagText: { fontSize: 13, color: colors.gray600 },
+  
+  // Enhanced Fish Tags with Season Status
+  fishTagEnhanced: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: colors.gray100, 
+    paddingHorizontal: 12, 
+    paddingVertical: 10, 
+    borderRadius: 16,
+    gap: 6,
+  },
+  fishTagClosed: { backgroundColor: '#FEE2E2', opacity: 0.7 },
+  fishTagBest: { backgroundColor: '#D1FAE5', borderWidth: 2, borderColor: colors.green },
+  fishTagTextClosed: { textDecorationLine: 'line-through', color: colors.red },
+  fishIcon: { fontSize: 16 },
+  seasonBadge: { 
+    width: 20, 
+    height: 20, 
+    borderRadius: 10, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    backgroundColor: colors.gray200,
+  },
+  seasonOpen: { backgroundColor: '#D1FAE5' },
+  seasonClosed: { backgroundColor: '#FEE2E2' },
+  seasonBest: { backgroundColor: colors.green },
+  seasonBadgeText: { fontSize: 10 },
+  schonzeitWarning: { 
+    fontSize: 12, 
+    color: '#B91C1C', 
+    marginTop: 12, 
+    fontStyle: 'italic',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+  },
 
   // Price Section
   priceSection: { marginBottom: 20 },
