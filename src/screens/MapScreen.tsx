@@ -49,6 +49,7 @@ import {
   Star,
   Waves,
   Camera,
+  Info,
 } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 import { calculateFangIndex } from '../services/xai';
@@ -374,6 +375,10 @@ export const MapScreen: React.FC = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [activeCategories, setActiveCategories] = useState<SpotCategory[]>(['fangindex', 'official']);
   const [showCategoryInfo, setShowCategoryInfo] = useState<SpotCategory | null>(null);
+  
+  // 🆕 Menu System - 4 Buttons: ⭐ Top3, 🏷️ Categories, 🐟 Fish, ℹ️ Info
+  type MenuType = 'top3' | 'categories' | 'fish' | 'info' | null;
+  const [activeMenu, setActiveMenu] = useState<MenuType>(null);
   
   // Beißzeit-Radar State
   const [sunTimes, setSunTimes] = useState<{ sunrise: Date; sunset: Date } | null>(null);
@@ -719,73 +724,172 @@ export const MapScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Category Filter Pills - With Long-Press Info */}
-      <View style={styles.categoryFilterWrapper}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoryFilterContainer}
-          contentContainerStyle={styles.categoryFilterContent}
-        >
-          {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => {
-            const isActive = activeCategories.includes(cat.id as SpotCategory);
-            const count = waterBodies.filter(wb => wb.category === cat.id).length;
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[
-                  styles.categoryPill,
-                  isDark && styles.categoryPillDark,
-                  isActive && { backgroundColor: cat.color },
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setActiveCategories(prev => 
-                    prev.includes(cat.id as SpotCategory)
-                      ? prev.filter(c => c !== cat.id)
-                      : [...prev, cat.id as SpotCategory]
-                  );
-                }}
-                onLongPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  setShowCategoryInfo(cat.id as SpotCategory);
-                }}
-              >
-                <Text style={styles.categoryPillIcon}>{cat.icon}</Text>
-                <Text style={[
-                  styles.categoryPillText,
-                  isActive && styles.categoryPillTextActive,
-                ]}>
-                  {cat.name}
-                </Text>
-                {count > 0 && (
-                  <View style={[styles.categoryPillBadge, !isActive && styles.categoryPillBadgeInactive]}>
-                    <Text style={[styles.categoryPillBadgeText, !isActive && styles.categoryPillBadgeTextInactive]}>
-                      {count}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-        
-        {/* Category Info Tooltip - Shows on long-press */}
-        {showCategoryInfo && (
-          <TouchableOpacity 
-            style={styles.categoryInfoTooltip}
-            activeOpacity={1}
-            onPress={() => setShowCategoryInfo(null)}
+      {/* 🆕 Quick Action Menu - 4 Buttons */}
+      <View style={styles.quickMenuWrapper}>
+        <View style={[styles.quickMenuBar, isDark && styles.quickMenuBarDark]}>
+          {/* ⭐ Top 3 */}
+          <TouchableOpacity
+            style={[styles.quickMenuBtn, activeMenu === 'top3' && styles.quickMenuBtnActive]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              setActiveMenu(activeMenu === 'top3' ? null : 'top3');
+            }}
           >
-            <View style={[styles.categoryInfoCard, { borderLeftColor: SPOT_CATEGORIES[showCategoryInfo].color }]}>
-              <View style={styles.categoryInfoHeader}>
-                <Text style={styles.categoryInfoIcon}>{SPOT_CATEGORIES[showCategoryInfo].icon}</Text>
-                <Text style={styles.categoryInfoTitle}>{SPOT_CATEGORIES[showCategoryInfo].name}</Text>
-              </View>
-              <Text style={styles.categoryInfoDesc}>{SPOT_CATEGORIES[showCategoryInfo].description}</Text>
-              <Text style={styles.categoryInfoHint}>Tippen zum Schließen</Text>
-            </View>
+            <Star size={18} color={activeMenu === 'top3' ? '#F59E0B' : isDark ? colors.gray400 : colors.gray600} 
+              fill={activeMenu === 'top3' ? '#F59E0B' : 'transparent'} />
           </TouchableOpacity>
+          
+          {/* 🏷️ Categories */}
+          <TouchableOpacity
+            style={[styles.quickMenuBtn, activeMenu === 'categories' && styles.quickMenuBtnActive]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              setActiveMenu(activeMenu === 'categories' ? null : 'categories');
+            }}
+          >
+            <Navigation size={18} color={activeMenu === 'categories' ? colors.primary : isDark ? colors.gray400 : colors.gray600} />
+          </TouchableOpacity>
+          
+          {/* 🐟 Fish Filter */}
+          <TouchableOpacity
+            style={[styles.quickMenuBtn, activeMenu === 'fish' && styles.quickMenuBtnActive]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              setActiveMenu(activeMenu === 'fish' ? null : 'fish');
+            }}
+          >
+            <Fish size={18} color={activeMenu === 'fish' ? '#10B981' : isDark ? colors.gray400 : colors.gray600} />
+          </TouchableOpacity>
+          
+          {/* ℹ️ Info */}
+          <TouchableOpacity
+            style={[styles.quickMenuBtn, activeMenu === 'info' && styles.quickMenuBtnActive]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              setActiveMenu(activeMenu === 'info' ? null : 'info');
+            }}
+          >
+            <Info size={18} color={activeMenu === 'info' ? '#6366F1' : isDark ? colors.gray400 : colors.gray600} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Expandable Panels */}
+        {activeMenu && (
+          <View style={[styles.menuPanel, isDark && styles.menuPanelDark]}>
+            
+            {/* ⭐ Top 3 Panel */}
+            {activeMenu === 'top3' && (
+              <View style={styles.panelContent}>
+                <Text style={[styles.panelTitle, isDark && styles.textLight]}>⭐ Top 3 in deiner Nähe</Text>
+                {top3.length > 0 ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.top3Scroll}>
+                    {top3.map((spot, i) => (
+                      <TouchableOpacity
+                        key={spot.id}
+                        style={[styles.top3MiniCard, isDark && styles.top3MiniCardDark]}
+                        onPress={() => {
+                          handleMarkerPress(spot);
+                          setActiveMenu(null);
+                        }}
+                      >
+                        <View style={[styles.top3MiniRank, { backgroundColor: getScoreColor(spot.fangIndex) }]}>
+                          <Text style={styles.top3MiniRankText}>#{i + 1}</Text>
+                        </View>
+                        <Text style={[styles.top3MiniName, isDark && styles.textLight]} numberOfLines={1}>{spot.name}</Text>
+                        <Text style={styles.top3MiniDist}>{getDistance(spot.longitude, spot.latitude)}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                ) : (
+                  <Text style={styles.panelEmpty}>Keine Spots gefunden</Text>
+                )}
+              </View>
+            )}
+
+            {/* 🏷️ Categories Panel */}
+            {activeMenu === 'categories' && (
+              <View style={styles.panelContent}>
+                <Text style={[styles.panelTitle, isDark && styles.textLight]}>🏷️ Kategorien filtern</Text>
+                <View style={styles.categoryGrid}>
+                  {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => {
+                    const isActive = activeCategories.includes(cat.id as SpotCategory);
+                    const count = waterBodies.filter(wb => wb.category === cat.id).length;
+                    return (
+                      <TouchableOpacity
+                        key={cat.id}
+                        style={[
+                          styles.categoryChip,
+                          isActive && { backgroundColor: cat.color, borderColor: cat.color },
+                        ]}
+                        onPress={() => {
+                          Haptics.selectionAsync();
+                          setActiveCategories(prev => 
+                            prev.includes(cat.id as SpotCategory)
+                              ? prev.filter(c => c !== cat.id)
+                              : [...prev, cat.id as SpotCategory]
+                          );
+                        }}
+                      >
+                        <Text style={styles.categoryChipIcon}>{cat.icon}</Text>
+                        <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>{cat.name}</Text>
+                        <Text style={[styles.categoryChipCount, isActive && styles.categoryChipCountActive]}>{count}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* 🐟 Fish Filter Panel */}
+            {activeMenu === 'fish' && (
+              <View style={styles.panelContent}>
+                <Text style={[styles.panelTitle, isDark && styles.textLight]}>🐟 Nach Fischart filtern</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.fishGrid}>
+                    {FISH_FILTERS.map((fish) => {
+                      const isActive = selectedFish.includes(fish.id);
+                      return (
+                        <TouchableOpacity
+                          key={fish.id}
+                          style={[styles.fishChip, isActive && styles.fishChipActive]}
+                          onPress={() => {
+                            Haptics.selectionAsync();
+                            setSelectedFish(prev =>
+                              prev.includes(fish.id)
+                                ? prev.filter(f => f !== fish.id)
+                                : [...prev, fish.id]
+                            );
+                          }}
+                        >
+                          <Text style={[styles.fishChipText, isActive && styles.fishChipTextActive]}>{fish.name}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+              </View>
+            )}
+
+            {/* ℹ️ Info Panel */}
+            {activeMenu === 'info' && (
+              <View style={styles.panelContent}>
+                <Text style={[styles.panelTitle, isDark && styles.textLight]}>ℹ️ Legende & Tipps</Text>
+                <View style={styles.infoGrid}>
+                  {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => (
+                    <View key={cat.id} style={styles.infoRow}>
+                      <View style={[styles.infoIcon, { backgroundColor: cat.color }]}>
+                        <Text style={styles.infoIconText}>{cat.icon}</Text>
+                      </View>
+                      <View style={styles.infoTextBox}>
+                        <Text style={[styles.infoLabel, isDark && styles.textLight]}>{cat.name}</Text>
+                        <Text style={styles.infoDesc}>{cat.description}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
         )}
       </View>
 
@@ -1156,78 +1260,224 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
-  // Category Filter Pills (inside wrapper)
-  categoryFilterContainer: {
-    // No position needed - wrapper handles it
+  // 🆕 Quick Action Menu - 4 Buttons
+  quickMenuWrapper: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 105 : 85,
+    left: 16,
+    right: 16,
+    zIndex: 100,
   },
-  categoryFilterContent: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  categoryPill: {
+  quickMenuBar: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.95)',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 6,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 8,
+    alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  categoryPillDark: {
+  quickMenuBarDark: {
     backgroundColor: 'rgba(19,35,55,0.95)',
   },
-  categoryPillIcon: {
+  quickMenuBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  quickMenuBtnActive: {
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  
+  // Menu Panels
+  menuPanel: {
+    marginTop: 8,
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  menuPanelDark: {
+    backgroundColor: 'rgba(19,35,55,0.98)',
+  },
+  panelContent: {
+    gap: 12,
+  },
+  panelTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.gray900,
+    marginBottom: 4,
+  },
+  panelEmpty: {
+    fontSize: 13,
+    color: colors.gray400,
+    textAlign: 'center',
+    paddingVertical: 12,
+  },
+  
+  // Top 3 Mini Cards
+  top3Scroll: {
+    marginHorizontal: -4,
+  },
+  top3MiniCard: {
+    width: 120,
+    backgroundColor: colors.gray100,
+    borderRadius: 12,
+    padding: 10,
+    marginHorizontal: 4,
+  },
+  top3MiniCardDark: {
+    backgroundColor: colors.dark.surface,
+  },
+  top3MiniRank: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  top3MiniRankText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.white,
+  },
+  top3MiniName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.gray900,
+    marginBottom: 4,
+  },
+  top3MiniDist: {
+    fontSize: 11,
+    color: colors.gray400,
+  },
+  
+  // Category Grid
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: colors.gray200,
+    backgroundColor: colors.white,
+    gap: 6,
+  },
+  categoryChipIcon: {
     fontSize: 14,
   },
-  categoryPillText: {
+  categoryChipText: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.gray600,
   },
-  categoryPillTextActive: {
+  categoryChipTextActive: {
     color: colors.white,
   },
-  categoryPillBadge: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginLeft: 4,
-  },
-  categoryPillBadgeText: {
+  categoryChipCount: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.white,
+    color: colors.gray400,
   },
-  categoryPillBadgeInactive: {
-    backgroundColor: 'rgba(0,0,0,0.1)',
+  categoryChipCountActive: {
+    color: 'rgba(255,255,255,0.8)',
   },
-  categoryPillBadgeTextInactive: {
+  
+  // Fish Grid
+  fishGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  fishChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.gray200,
+    backgroundColor: colors.white,
+  },
+  fishChipActive: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  fishChipText: {
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.gray600,
   },
-  
-  // Category Filter Wrapper (for tooltip positioning)
-  categoryFilterWrapper: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 105 : 85,
-    left: 0,
-    right: 0,
-    zIndex: 100,
+  fishChipTextActive: {
+    color: colors.white,
   },
   
-  // Category Info Tooltip
-  categoryInfoTooltip: {
-    position: 'absolute',
-    top: 50,
-    left: 16,
-    right: 16,
-    zIndex: 200,
+  // Info Grid
+  infoGrid: {
+    gap: 10,
   },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  infoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoIconText: {
+    fontSize: 18,
+  },
+  infoTextBox: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.gray900,
+  },
+  infoDesc: {
+    fontSize: 11,
+    color: colors.gray400,
+    marginTop: 2,
+  },
+
+  // Legacy Category Filter (now in Menu Panel)
+  categoryFilterContainer: {},
+  categoryFilterContent: { paddingHorizontal: 16, gap: 8 },
+  categoryPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, gap: 6 },
+  categoryPillDark: { backgroundColor: 'rgba(19,35,55,0.95)' },
+  categoryPillIcon: { fontSize: 14 },
+  categoryPillText: { fontSize: 13, fontWeight: '600', color: colors.gray600 },
+  categoryPillTextActive: { color: colors.white },
+  categoryPillBadge: { backgroundColor: 'rgba(255,255,255,0.3)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, marginLeft: 4 },
+  categoryPillBadgeText: { fontSize: 11, fontWeight: '700', color: colors.white },
+  categoryPillBadgeInactive: { backgroundColor: 'rgba(0,0,0,0.1)' },
+  categoryPillBadgeTextInactive: { color: colors.gray600 },
+  categoryFilterWrapper: { position: 'absolute', top: Platform.OS === 'ios' ? 105 : 85, left: 0, right: 0, zIndex: 100 },
+  categoryInfoTooltip: { position: 'absolute', top: 50, left: 16, right: 16, zIndex: 200 },
   categoryInfoCard: {
     backgroundColor: colors.white,
     borderRadius: 16,
