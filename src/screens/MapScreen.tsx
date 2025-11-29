@@ -57,8 +57,11 @@ import { CAMERA_CONFIG, getStyleURL, shouldUseNightMode } from '../config/map.co
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Initialize Mapbox
-MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN || '');
+// Initialize Mapbox - Token MUST be in .env (never hardcode!)
+if (!process.env.EXPO_PUBLIC_MAPBOX_TOKEN) {
+  throw new Error('EXPO_PUBLIC_MAPBOX_TOKEN is missing in .env');
+}
+MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN);
 
 // Types
 export interface MapWaterBody {
