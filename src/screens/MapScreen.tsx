@@ -6,6 +6,8 @@
  * Features:
  * - 3 Map Styles: Standard, Angel-Fokus, Angel-Night
  * - Auto Night Mode (18:30)
+ * - 🆕 Smart Fishing Intelligence (Kontextbewusste Empfehlungen)
+ * - 🆕 Predictive Insights (Wetter, Mond, Tageszeit)
  * - Google Places Integration (Photos, Hours, Ratings)
  * - Apple Watch Activity Ring for Fangindex
  * - Pulse Animation for Hot Spots (80+)
@@ -52,8 +54,16 @@ import { calculateFangIndex } from '../services/xai';
 import { getWeather } from '../services/weather';
 import { fetchPlaceDetails } from '../services/googlePlaces';
 import { SearchScreen } from './SearchScreen';
-import { ActivityRing, PulseMarker, FishChip, PulsingBuyButton } from '../components/map';
+import { 
+  ActivityRing, 
+  PulseMarker, 
+  FishChip, 
+  PulsingBuyButton,
+  SmartInsightBanner,
+  SmartRecommendationsList,
+} from '../components/map';
 import { CAMERA_CONFIG, getStyleURL, shouldUseNightMode } from '../config/map.config';
+import { useSmartFishing } from '../hooks/useSmartFishing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -303,6 +313,17 @@ export const MapScreen: React.FC = () => {
   // Beißzeit-Radar State
   const [sunTimes, setSunTimes] = useState<{ sunrise: Date; sunset: Date } | null>(null);
   const [goldenHourInfo, setGoldenHourInfo] = useState<{ isGolden: boolean; nextGolden: string }>({ isGolden: false, nextGolden: '' });
+
+  // 🆕 Smart Fishing Intelligence
+  const {
+    headline: smartHeadline,
+    subheadline: smartSubheadline,
+    insights: smartInsights,
+    recommendations: smartRecommendations,
+    isGoldenHour: smartIsGoldenHour,
+    currentCondition,
+    loading: smartLoading,
+  } = useSmartFishing(waterBodies, userLocation);
 
   // Bottom sheet snap points
   const snapPoints = [90, 320, 550];
@@ -649,8 +670,37 @@ export const MapScreen: React.FC = () => {
         />
       </Modal>
 
-      {/* Top 3 Floating Cards - Only show if not mock data */}
-      {top3.length > 0 && !top3[0]?.id?.startsWith('mock-') && (
+      {/* 🆕 Smart Fishing Intelligence - Contextual Recommendations */}
+      {smartRecommendations.length > 0 && (
+        <View style={styles.smartRecommendationsContainer}>
+          <SmartRecommendationsList
+            recommendations={smartRecommendations}
+            onRecommendationPress={(spotId) => {
+              const spot = waterBodies.find(w => w.id === spotId);
+              if (spot) handleMarkerPress(spot);
+            }}
+            variant="horizontal"
+          />
+        </View>
+      )}
+
+      {/* 🆕 Smart Insight Banner - Shows contextual tips */}
+      {smartInsights.length > 0 && (
+        <View style={styles.smartInsightContainer}>
+          <SmartInsightBanner
+            insights={smartInsights}
+            onInsightPress={(insight) => {
+              // Handle insight actions (filter, navigate, info)
+              if (insight.actionable?.action === 'filter' && insight.actionable.payload?.fish) {
+                setSelectedFish(insight.actionable.payload.fish);
+              }
+            }}
+          />
+        </View>
+      )}
+
+      {/* Legacy Top 3 Floating Cards - Fallback if no Smart data */}
+      {smartRecommendations.length === 0 && top3.length > 0 && !top3[0]?.id?.startsWith('mock-') && (
         <View style={styles.top3Container}>
           {top3.map((spot) => (
             <TouchableOpacity
@@ -986,7 +1036,7 @@ const styles = StyleSheet.create({
   goldenHourTime: { fontSize: 14, color: colors.gray900, fontWeight: '600' },
   goldenHourTimeActive: { color: '#B45309', fontWeight: '800' },
 
-  // Top 3 Cards
+  // Top 3 Cards (Legacy - Fallback)
   top3Container: { position: 'absolute', right: 16, top: Platform.OS === 'ios' ? 116 : 96, gap: 8 },
   top3Card: { 
     width: 150, 
@@ -1007,6 +1057,20 @@ const styles = StyleSheet.create({
   top3Distance: { fontSize: 11, color: colors.gray400, marginTop: 2 },
   scoreCircle: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   scoreText: { color: colors.white, fontSize: 11, fontWeight: '700' },
+
+  // 🆕 Smart Fishing Intelligence Containers
+  smartRecommendationsContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 108 : 88,
+    left: 0,
+    right: 0,
+  },
+  smartInsightContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+  },
 
   // Bottom Sheet
   sheetBg: { backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
