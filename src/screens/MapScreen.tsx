@@ -486,24 +486,49 @@ export const MapScreen: React.FC = () => {
         {/* User Location */}
         <MapboxGL.UserLocation visible animated />
 
-        {/* Water Body Markers */}
-        {waterBodies.map((wb) => (
-          <MapboxGL.MarkerView
-            key={wb.id}
-            coordinate={[wb.longitude, wb.latitude]}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <TouchableOpacity
-              onPress={() => handleMarkerPress(wb)}
-              style={styles.markerContainer}
-              activeOpacity={0.8}
+        {/* Water Body Markers - Size based on score */}
+        {waterBodies.map((wb) => {
+          const markerSize = wb.fangIndex >= 80 ? 48 : wb.fangIndex >= 60 ? 40 : 32;
+          const fontSize = wb.fangIndex >= 80 ? 16 : wb.fangIndex >= 60 ? 14 : 12;
+          const isHotSpot = wb.fangIndex >= 80;
+          const isSelected = selectedSpot?.id === wb.id;
+          
+          return (
+            <MapboxGL.MarkerView
+              key={wb.id}
+              coordinate={[wb.longitude, wb.latitude]}
+              anchor={{ x: 0.5, y: 0.5 }}
             >
-              <View style={[styles.marker, { backgroundColor: getScoreColor(wb.fangIndex) }]}>
-                <Text style={styles.markerText}>{wb.fangIndex}</Text>
-              </View>
-            </TouchableOpacity>
-          </MapboxGL.MarkerView>
-        ))}
+              <TouchableOpacity
+                onPress={() => handleMarkerPress(wb)}
+                style={styles.markerContainer}
+                activeOpacity={0.8}
+              >
+                {/* Pulse ring for hot spots */}
+                {isHotSpot && (
+                  <View style={[styles.pulseRing, { width: markerSize + 20, height: markerSize + 20 }]} />
+                )}
+                {/* Selection ring */}
+                {isSelected && (
+                  <View style={[styles.selectionRing, { width: markerSize + 12, height: markerSize + 12 }]} />
+                )}
+                {/* Main marker */}
+                <View style={[
+                  styles.marker, 
+                  { 
+                    backgroundColor: getScoreColor(wb.fangIndex),
+                    width: markerSize,
+                    height: markerSize,
+                    borderRadius: markerSize / 2,
+                  },
+                  isHotSpot && styles.markerGlow,
+                ]}>
+                  <Text style={[styles.markerText, { fontSize }]}>{wb.fangIndex}</Text>
+                </View>
+              </TouchableOpacity>
+            </MapboxGL.MarkerView>
+          );
+        })}
       </MapboxGL.MapView>
 
       {/* Top Bar */}
@@ -818,6 +843,27 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     marginTop: -1,
+  },
+  pulseRing: {
+    position: 'absolute',
+    borderRadius: 100,
+    backgroundColor: 'rgba(74, 222, 128, 0.3)',
+    borderWidth: 2,
+    borderColor: 'rgba(74, 222, 128, 0.5)',
+  },
+  selectionRing: {
+    position: 'absolute',
+    borderRadius: 100,
+    borderWidth: 3,
+    borderColor: colors.primary,
+    backgroundColor: 'transparent',
+  },
+  markerGlow: {
+    shadowColor: '#4ADE80',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 12,
+    elevation: 10,
   },
 
   // Top Bar
