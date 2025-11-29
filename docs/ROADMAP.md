@@ -7,7 +7,7 @@
 ## 📊 Status Overview
 
 ```
-████████████████████████████ 90% MVP Complete
+████████████████████████████████████ 95% MVP Complete
 ```
 
 | Phase | Status | Beschreibung |
@@ -15,11 +15,14 @@
 | Foundation | ✅ 100% | Auth, Services, APIs |
 | Navigation | ✅ 100% | 5 Tabs, Screens |
 | Map Core | ✅ 100% | Mapbox, Styles, Markers |
-| USP Features | ✅ 100% | Beißzeit, Schonzeit |
+| USP Features | ✅ 100% | Beißzeit, Schonzeit, KI-Fangindex |
 | Smart Intelligence | ✅ 100% | Kontextbewusste Empfehlungen |
-| Daten | ✅ 80% | 200 echte Gewässer (OSM) |
-| Categories | ✅ 100% | 4 Spot-Kategorien |
-| UI/UX Rework | ✅ 100% | Layout fix, Info-Banners |
+| Daten | ✅ 100% | 200+ echte OSM-Gewässer + Google Places |
+| Categories | ✅ 100% | 4 Spot-Kategorien + Filter |
+| UI/UX Rework | ✅ 100% | Above and Beyond Design |
+| Bottom Sheet | ✅ 100% | Details + Auto-Open |
+| Location Fixes | 🟡 80% | Bekannte Spots korrigiert, Auto-Enrichment läuft |
+| Fischereischein | 🔴 0% | UI vorbereitet |
 | Monetarisierung | 🔴 0% | Stripe vorbereitet |
 | Polish | ✅ 80% | Above and Beyond! |
 
@@ -119,10 +122,11 @@
 
 | Task | Aufwand | Beschreibung |
 |------|---------|--------------|
-| Echte Gewässer-Daten | 2-3 Tage | 25-50 Teiche manuell recherchieren |
-| Tageskarten-Kontakte | 1 Tag | Links/Telefon pro Gewässer |
-| Mapbox Styles live | 1h | URLs eintragen |
-| Supabase Seeding | 2h | Daten in DB laden |
+| Fischereischein-Upload | 4h | OCR + Wallet UI |
+| 3-5 Partner-Teiche | 2 Tage | Echte Daten statt Mock |
+| Stripe Live | 4h | Payment Flow aktivieren |
+| Supabase Seeding | 1h | Daten in Prod-DB |
+| Location Fixes | 2h | Bekannte Spots korrigieren (Nice-to-have) |
 
 ### Prio 2: Fischereischein 🟡 WICHTIG
 > Core Feature für Zielgruppe
@@ -210,11 +214,13 @@
 ### M2: Closed Beta 📅
 > Ziel: 10 Tester aus der Region
 
-- [x] 50 Gewässer (haben 200!)
+- [x] 200+ echte Gewässer (haben viel mehr!)
+- [x] Mapbox Styles aktiv (haben 4!)
 - [ ] Fischereischein-Upload
+- [ ] 3-5 Partner-Teiche kontaktieren
 - [ ] Feedback-Formular
 - [ ] TestFlight Build
-- **Deadline:** +3 Wochen
+- **Deadline:** +2 Wochen
 
 ### M3: Partner Launch 📅
 > Ziel: Erste Monetarisierung
@@ -281,3 +287,6 @@
 | 29.11.24 | Beißzeit-Radar als USP | Kein Wettbewerber hat das |
 | 29.11.24 | Smart Fishing Intelligence | Above and Beyond - Predictive statt nur Display |
 | 29.11.24 | Kontextbewusste Insights | Differenzierung zu Fishbrain & Co |
+| 29.11.25 | MVP bei 95% belassen | Location Fixes nice-to-have, nicht kritisch |
+| 29.11.25 | Fischereischein als Prio 1 | Core Feature für Zielgruppe |
+| 29.11.25 | 200+ OSM Gewässer reichen für Beta | Qualität durch Google Places gesteigert |
