@@ -348,8 +348,9 @@ const detectCategory = (wb: any): SpotCategory => {
   return 'fangindex';
 };
 
-// Default Location: Lüneburg, Germany (Fallback)
-const LUNEBURG_COORDS: [number, number] = [10.4141, 53.2509]; // [lng, lat]
+// Default Location: Bendestorf (21227), Germany (Fallback)
+// Forellenhof Bendestorf ist hier - perfekt zum Testen!
+const BENDESTORF_COORDS: [number, number] = [9.9732, 53.3355]; // [lng, lat]
 
 export const MapScreen: React.FC = () => {
   const colorScheme = useColorScheme();
@@ -371,6 +372,7 @@ export const MapScreen: React.FC = () => {
   const [top3, setTop3] = useState<MapWaterBody[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [activeCategories, setActiveCategories] = useState<SpotCategory[]>(['fangindex', 'official']);
+  const [showCategoryInfo, setShowCategoryInfo] = useState<SpotCategory | null>(null);
   
   // Beißzeit-Radar State
   const [sunTimes, setSunTimes] = useState<{ sunrise: Date; sunset: Date } | null>(null);
@@ -414,15 +416,15 @@ export const MapScreen: React.FC = () => {
             setUserLocation([longitude, latitude]);
           } else {
             console.log('Invalid coordinates, using Lüneburg fallback');
-            setUserLocation(LUNEBURG_COORDS);
+            setUserLocation(BENDESTORF_COORDS);
           }
         } catch (e) {
           console.log('Location error, using Lüneburg fallback');
-          setUserLocation(LUNEBURG_COORDS);
+          setUserLocation(BENDESTORF_COORDS);
         }
       } else {
         console.log('Location permission denied, using Lüneburg fallback');
-        setUserLocation(LUNEBURG_COORDS);
+        setUserLocation(BENDESTORF_COORDS);
       }
 
       // Fetch water bodies
@@ -706,50 +708,75 @@ export const MapScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Category Filter Pills */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryFilterContainer}
-        contentContainerStyle={styles.categoryFilterContent}
-      >
-        {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => {
-          const isActive = activeCategories.includes(cat.id as SpotCategory);
-          return (
-            <TouchableOpacity
-              key={cat.id}
-              style={[
-                styles.categoryPill,
-                isDark && styles.categoryPillDark,
-                isActive && { backgroundColor: cat.color },
-              ]}
-              onPress={() => {
-                Haptics.selectionAsync();
-                setActiveCategories(prev => 
-                  prev.includes(cat.id as SpotCategory)
-                    ? prev.filter(c => c !== cat.id)
-                    : [...prev, cat.id as SpotCategory]
-                );
-              }}
-            >
-              <Text style={styles.categoryPillIcon}>{cat.icon}</Text>
-              <Text style={[
-                styles.categoryPillText,
-                isActive && styles.categoryPillTextActive,
-              ]}>
-                {cat.name}
-              </Text>
-              {isActive && (
-                <View style={styles.categoryPillBadge}>
-                  <Text style={styles.categoryPillBadgeText}>
-                    {waterBodies.filter(wb => wb.category === cat.id).length}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      {/* Category Filter Pills - With Long-Press Info */}
+      <View style={styles.categoryFilterWrapper}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryFilterContainer}
+          contentContainerStyle={styles.categoryFilterContent}
+        >
+          {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => {
+            const isActive = activeCategories.includes(cat.id as SpotCategory);
+            const count = waterBodies.filter(wb => wb.category === cat.id).length;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[
+                  styles.categoryPill,
+                  isDark && styles.categoryPillDark,
+                  isActive && { backgroundColor: cat.color },
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setActiveCategories(prev => 
+                    prev.includes(cat.id as SpotCategory)
+                      ? prev.filter(c => c !== cat.id)
+                      : [...prev, cat.id as SpotCategory]
+                  );
+                }}
+                onLongPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setShowCategoryInfo(cat.id as SpotCategory);
+                }}
+              >
+                <Text style={styles.categoryPillIcon}>{cat.icon}</Text>
+                <Text style={[
+                  styles.categoryPillText,
+                  isActive && styles.categoryPillTextActive,
+                ]}>
+                  {cat.name}
+                </Text>
+                {count > 0 && (
+                  <View style={[styles.categoryPillBadge, !isActive && styles.categoryPillBadgeInactive]}>
+                    <Text style={[styles.categoryPillBadgeText, !isActive && styles.categoryPillBadgeTextInactive]}>
+                      {count}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        
+        {/* Category Info Tooltip - Shows on long-press */}
+        {showCategoryInfo && (
+          <TouchableOpacity 
+            style={styles.categoryInfoTooltip}
+            activeOpacity={1}
+            onPress={() => setShowCategoryInfo(null)}
+          >
+            <View style={[styles.categoryInfoCard, { borderLeftColor: SPOT_CATEGORIES[showCategoryInfo].color }]}>
+              <View style={styles.categoryInfoHeader}>
+                <Text style={styles.categoryInfoIcon}>{SPOT_CATEGORIES[showCategoryInfo].icon}</Text>
+                <Text style={styles.categoryInfoTitle}>{SPOT_CATEGORIES[showCategoryInfo].name}</Text>
+              </View>
+              <Text style={styles.categoryInfoDesc}>{SPOT_CATEGORIES[showCategoryInfo].description}</Text>
+              <Text style={styles.categoryInfoHint}>Tippen zum Schließen</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Zoom Controls - Increment/Decrement by 2 */}
       <View style={styles.zoomControls}>
@@ -831,29 +858,7 @@ export const MapScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Legacy Top 3 Floating Cards - Fallback if no Smart data */}
-      {smartRecommendations.length === 0 && top3.length > 0 && !top3[0]?.id?.startsWith('mock-') && (
-        <View style={styles.top3Container}>
-          {top3.map((spot) => (
-            <TouchableOpacity
-              key={spot.id}
-              style={[styles.top3Card, isDark && styles.top3CardDark]}
-              onPress={() => handleMarkerPress(spot)}
-              activeOpacity={0.9}
-            >
-              <View style={styles.top3Content}>
-                <Text style={[styles.top3Name, isDark && styles.textLight]} numberOfLines={1}>
-                  {spot.name}
-                </Text>
-                <Text style={styles.top3Distance}>{getDistance(spot.longitude, spot.latitude)}</Text>
-              </View>
-              <View style={[styles.scoreCircle, { backgroundColor: getScoreColor(spot.fangIndex) }]}>
-                <Text style={styles.scoreText}>{spot.fangIndex}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+      {/* Top 3 Cards moved to Bottom Sheet - no more overlap! */}
 
       {/* Bottom Sheet */}
       <BottomSheet
@@ -912,6 +917,68 @@ export const MapScreen: React.FC = () => {
                   </Text>
                 </View>
               </View>
+
+              {/* 🏢 Official Location Extra Info */}
+              {selectedSpot.category === 'official' && (
+                <View style={styles.officialInfoSection}>
+                  <View style={styles.officialBanner}>
+                    <Text style={styles.officialBannerIcon}>✓</Text>
+                    <View style={styles.officialBannerContent}>
+                      <Text style={styles.officialBannerTitle}>Offizieller Angelteich</Text>
+                      <Text style={styles.officialBannerDesc}>Tageskarten vor Ort erhältlich</Text>
+                    </View>
+                  </View>
+                  
+                  {/* Google Rating Stars */}
+                  {selectedSpot.placeRating && (
+                    <View style={styles.ratingRow}>
+                      <Text style={styles.ratingStars}>
+                        {'⭐'.repeat(Math.round(selectedSpot.placeRating))}
+                      </Text>
+                      <Text style={styles.ratingValue}>{selectedSpot.placeRating.toFixed(1)}</Text>
+                      <Text style={styles.ratingLabel}>Google Bewertung</Text>
+                    </View>
+                  )}
+                  
+                  {/* Opening Status */}
+                  {selectedSpot.placeOpenNow !== undefined && (
+                    <View style={[
+                      styles.openStatus,
+                      selectedSpot.placeOpenNow ? styles.openStatusOpen : styles.openStatusClosed
+                    ]}>
+                      <Text style={styles.openStatusText}>
+                        {selectedSpot.placeOpenNow ? '🟢 Jetzt geöffnet' : '🔴 Geschlossen'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* 🎯 Fangindex Location Insight */}
+              {selectedSpot.category === 'fangindex' && (
+                <View style={styles.fangindexInsight}>
+                  <Text style={styles.fangindexInsightIcon}>🎯</Text>
+                  <View style={styles.fangindexInsightContent}>
+                    <Text style={styles.fangindexInsightTitle}>Lokaler Fangindex</Text>
+                    <Text style={styles.fangindexInsightDesc}>
+                      Berechnet aus Wetter, Mondphase und saisonalen Faktoren
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* 💎 Hidden Gem Info */}
+              {selectedSpot.category === 'hidden' && (
+                <View style={styles.hiddenGemBanner}>
+                  <Text style={styles.hiddenGemIcon}>💎</Text>
+                  <View style={styles.hiddenGemContent}>
+                    <Text style={styles.hiddenGemTitle}>Versteckter Schatz</Text>
+                    <Text style={styles.hiddenGemDesc}>
+                      Weniger bekannt, oft weniger Angler
+                    </Text>
+                  </View>
+                </View>
+              )}
 
               {selectedSpot.fish_species?.length > 0 && (
                 <View style={styles.fishSection}>
@@ -973,8 +1040,43 @@ export const MapScreen: React.FC = () => {
               )}
             </View>
           ) : (
-            // Fish Filter View
+            // Explore View with Top 3 and Filters
             <View>
+              {/* 🏆 Top 3 Horizontal Scroll - Now in Bottom Sheet! */}
+              {top3.length > 0 && !top3[0]?.id?.startsWith('mock-') && (
+                <View style={styles.top3Section}>
+                  <Text style={[styles.sectionLabel, isDark && styles.textLight]}>🏆 Top 3 in deiner Nähe</Text>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.top3ScrollContent}
+                  >
+                    {top3.map((spot, index) => (
+                      <TouchableOpacity
+                        key={spot.id}
+                        style={[styles.top3CardNew, isDark && styles.top3CardNewDark]}
+                        onPress={() => handleMarkerPress(spot)}
+                        activeOpacity={0.9}
+                      >
+                        <View style={[styles.top3Rank, { backgroundColor: SPOT_CATEGORIES[spot.category].color }]}>
+                          <Text style={styles.top3RankText}>#{index + 1}</Text>
+                        </View>
+                        <Text style={[styles.top3NameNew, isDark && styles.textLight]} numberOfLines={2}>
+                          {spot.name}
+                        </Text>
+                        <View style={styles.top3Meta}>
+                          <Text style={styles.top3CategoryIcon}>{SPOT_CATEGORIES[spot.category].icon}</Text>
+                          <Text style={styles.top3DistanceNew}>{getDistance(spot.longitude, spot.latitude)}</Text>
+                        </View>
+                        <View style={[styles.top3Score, { backgroundColor: getScoreColor(spot.fangIndex) }]}>
+                          <Text style={styles.top3ScoreText}>{spot.fangIndex}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
               <Text style={[styles.filterLabel, isDark && styles.textLight]}>Fisch-Filter</Text>
               <View style={styles.filterGrid}>
                 {FISH_FILTERS.map((fish) => (
@@ -1071,13 +1173,9 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
-  // Category Filter Pills
+  // Category Filter Pills (inside wrapper)
   categoryFilterContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 105 : 85,
-    left: 0,
-    right: 0,
-    zIndex: 100,
+    // No position needed - wrapper handles it
   },
   categoryFilterContent: {
     paddingHorizontal: 16,
@@ -1122,6 +1220,66 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: colors.white,
+  },
+  categoryPillBadgeInactive: {
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  categoryPillBadgeTextInactive: {
+    color: colors.gray600,
+  },
+  
+  // Category Filter Wrapper (for tooltip positioning)
+  categoryFilterWrapper: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 105 : 85,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  
+  // Category Info Tooltip
+  categoryInfoTooltip: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    right: 16,
+    zIndex: 200,
+  },
+  categoryInfoCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  categoryInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  categoryInfoIcon: {
+    fontSize: 24,
+  },
+  categoryInfoTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.gray900,
+  },
+  categoryInfoDesc: {
+    fontSize: 14,
+    color: colors.gray600,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  categoryInfoHint: {
+    fontSize: 12,
+    color: colors.gray400,
+    fontStyle: 'italic',
   },
 
   // Top Bar
@@ -1244,6 +1402,203 @@ const styles = StyleSheet.create({
   top3Distance: { fontSize: 11, color: colors.gray400, marginTop: 2 },
   scoreCircle: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   scoreText: { color: colors.white, fontSize: 11, fontWeight: '700' },
+
+  // 🆕 Top 3 Cards - New Design (Inside Bottom Sheet)
+  top3Section: {
+    marginBottom: 20,
+  },
+  top3ScrollContent: {
+    paddingTop: 8,
+    gap: 12,
+  },
+  top3CardNew: {
+    width: 140,
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+    position: 'relative',
+  },
+  top3CardNewDark: {
+    backgroundColor: 'rgba(19,35,55,0.98)',
+  },
+  top3Rank: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  top3RankText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  top3NameNew: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.gray900,
+    marginTop: 4,
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  top3Meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  top3CategoryIcon: {
+    fontSize: 12,
+  },
+  top3DistanceNew: {
+    fontSize: 11,
+    color: colors.gray400,
+  },
+  top3Score: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  top3ScoreText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  // 🏢 Official Location Info Styles
+  officialInfoSection: {
+    marginBottom: 16,
+  },
+  officialBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    padding: 12,
+    borderRadius: 12,
+    gap: 12,
+    marginBottom: 12,
+  },
+  officialBannerIcon: {
+    fontSize: 24,
+    color: '#10B981',
+  },
+  officialBannerContent: {
+    flex: 1,
+  },
+  officialBannerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  officialBannerDesc: {
+    fontSize: 12,
+    color: '#10B981',
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  ratingStars: {
+    fontSize: 14,
+  },
+  ratingValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.gray900,
+  },
+  ratingLabel: {
+    fontSize: 12,
+    color: colors.gray400,
+  },
+  openStatus: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  openStatusOpen: {
+    backgroundColor: '#ECFDF5',
+  },
+  openStatusClosed: {
+    backgroundColor: '#FEF2F2',
+  },
+  openStatusText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // 🎯 Fangindex Insight Styles
+  fangindexInsight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    borderRadius: 12,
+    gap: 12,
+    marginBottom: 16,
+  },
+  fangindexInsightIcon: {
+    fontSize: 24,
+  },
+  fangindexInsightContent: {
+    flex: 1,
+  },
+  fangindexInsightTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#B45309',
+    marginBottom: 2,
+  },
+  fangindexInsightDesc: {
+    fontSize: 12,
+    color: '#D97706',
+    lineHeight: 16,
+  },
+
+  // 💎 Hidden Gem Styles
+  hiddenGemBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F3FF',
+    padding: 12,
+    borderRadius: 12,
+    gap: 12,
+    marginBottom: 16,
+  },
+  hiddenGemIcon: {
+    fontSize: 24,
+  },
+  hiddenGemContent: {
+    flex: 1,
+  },
+  hiddenGemTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#7C3AED',
+    marginBottom: 2,
+  },
+  hiddenGemDesc: {
+    fontSize: 12,
+    color: '#8B5CF6',
+    lineHeight: 16,
+  },
 
   // 🆕 Smart Fishing Intelligence Containers
   smartRecommendationsContainer: {

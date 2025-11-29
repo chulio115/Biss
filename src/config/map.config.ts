@@ -29,10 +29,10 @@ export type MapStyleKey = keyof typeof MAPBOX_STYLES;
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const REGIONS = {
-  // Zentrum der Zielregion (Lüneburg als Default)
+  // Zentrum der Zielregion: Bendestorf (21227) - Forellenhof Testgebiet
   center: {
-    longitude: 10.4141,
-    latitude: 53.2509,
+    longitude: 9.9732,
+    latitude: 53.3355,
   },
   
   // Bounding Box für NDS/HH/SH
@@ -44,6 +44,7 @@ export const REGIONS = {
   
   // Alternative Start-Regionen
   cities: {
+    bendestorf: { longitude: 9.9732, latitude: 53.3355, zoom: 13 }, // 🎯 Default!
     lueneburg: { longitude: 10.4141, latitude: 53.2509, zoom: 11 },
     hamburg: { longitude: 10.0, latitude: 53.55, zoom: 10 },
     bremen: { longitude: 8.8017, latitude: 53.0793, zoom: 11 },
