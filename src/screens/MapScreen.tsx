@@ -528,6 +528,7 @@ export const MapScreen: React.FC = () => {
   };
 
   const handleMarkerPress = useCallback((spot: MapWaterBody) => {
+    console.log('🎯 Marker pressed:', spot.name, 'Category:', spot.category);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedSpot(spot);
     cameraRef.current?.setCamera({
@@ -731,8 +732,10 @@ export const MapScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'top3' && styles.quickMenuBtnActive]}
             onPress={() => {
+              console.log('⭐ Top3 button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'top3' ? null : 'top3');
+              console.log('Active menu set to:', activeMenu === 'top3' ? null : 'top3');
             }}
           >
             <Star size={18} color={activeMenu === 'top3' ? '#F59E0B' : isDark ? colors.gray400 : colors.gray600} 
@@ -743,8 +746,10 @@ export const MapScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'categories' && styles.quickMenuBtnActive]}
             onPress={() => {
+              console.log('🏷️ Categories button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'categories' ? null : 'categories');
+              console.log('Active menu set to:', activeMenu === 'categories' ? null : 'categories');
             }}
           >
             <Navigation size={18} color={activeMenu === 'categories' ? colors.primary : isDark ? colors.gray400 : colors.gray600} />
@@ -754,8 +759,10 @@ export const MapScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'fish' && styles.quickMenuBtnActive]}
             onPress={() => {
+              console.log('🐟 Fish button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'fish' ? null : 'fish');
+              console.log('Active menu set to:', activeMenu === 'fish' ? null : 'fish');
             }}
           >
             <Fish size={18} color={activeMenu === 'fish' ? '#10B981' : isDark ? colors.gray400 : colors.gray600} />
@@ -765,8 +772,10 @@ export const MapScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'info' && styles.quickMenuBtnActive]}
             onPress={() => {
+              console.log('ℹ️ Info button pressed!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'info' ? null : 'info');
+              console.log('Active menu set to:', activeMenu === 'info' ? null : 'info');
             }}
           >
             <Info size={18} color={activeMenu === 'info' ? '#6366F1' : isDark ? colors.gray400 : colors.gray600} />
@@ -891,6 +900,16 @@ export const MapScreen: React.FC = () => {
             )}
           </View>
         )}
+      </View>
+
+      {/* TEMP: Test buttons in center of screen */}
+      <View style={{position: 'absolute', top: 300, left: 100, backgroundColor: 'red', padding: 20}}>
+        <TouchableOpacity 
+          style={{backgroundColor: 'blue', padding: 20, margin: 10}}
+          onPress={() => console.log('TEST BUTTON PRESSED!')}
+        >
+          <Text style={{color: 'white'}}>TEST BUTTON</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Zoom Controls - Increment/Decrement by 2 */}
