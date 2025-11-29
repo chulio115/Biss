@@ -3,7 +3,7 @@ import axios from 'axios';
 import { OCRResult, FangIndex, WeatherData, PegelData } from '../types';
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
-const XAI_API_KEY = process.env.XAI_API_KEY || '';
+const XAI_API_KEY = process.env.EXPO_PUBLIC_XAI_API_KEY || '';
 
 // Generic xAI API call
 const callXAI = async (prompt: string, imageBase64?: string): Promise<string> => {
@@ -26,7 +26,7 @@ const callXAI = async (prompt: string, imageBase64?: string): Promise<string> =>
     const response = await axios.post(
       XAI_API_URL,
       {
-        model: 'grok-vision-beta', // oder grok-beta für Text-only
+        model: 'grok-2-latest', // aktuelles Grok Model
         messages,
         max_tokens: 1000,
         temperature: 0.3,
@@ -78,80 +78,125 @@ Antworte NUR mit dem JSON, keine Erklärungen.`;
   }
 };
 
-// Fangindex: Calculate fishing score based on conditions
+// Fangindex: Calculate fishing score based on conditions (LOCAL - no API needed)
 export const calculateFangIndex = async (
   waterBodyName: string,
   weather: WeatherData,
   pegel: PegelData | null,
   targetFish?: string
 ): Promise<FangIndex> => {
-  // Calculate moon phase (simplified)
   const moonPhase = getMoonPhase();
+  const moonPhaseIndex = getMoonPhaseIndex();
   const timeOfDay = new Date().getHours();
 
-  const prompt = `Du bist ein erfahrener Angelexperte. Berechne einen Fangindex (0-100) für folgende Bedingungen:
-
-GEWÄSSER: ${waterBodyName}
-WETTER:
-- Temperatur: ${weather.temp}°C
-- Luftdruck: ${weather.pressure} hPa
-- Luftfeuchtigkeit: ${weather.humidity}%
-- Wind: ${weather.wind_speed} m/s
-- Bewölkung: ${weather.clouds}%
-- Beschreibung: ${weather.description}
-
-WASSERSTAND: ${pegel ? `${pegel.water_level}cm (${pegel.trend})` : 'Keine Daten'}
-MONDPHASE: ${moonPhase}
-UHRZEIT: ${timeOfDay}:00 Uhr
-${targetFish ? `ZIELFISCH: ${targetFish}` : ''}
-
-Antworte im JSON-Format:
-{
-  "score": 0-100,
-  "reasoning": "Kurze Begründung auf Deutsch",
-  "factors": {
-    "weather": 0-100,
-    "water_level": 0-100,
-    "moon_phase": 0-100,
-    "time_of_day": 0-100
-  },
-  "best_fish": ["Fisch1", "Fisch2"],
-  "recommendation": "Konkrete Empfehlung für heute"
-}`;
-
-  const response = await callXAI(prompt);
+  // === LOKALE BERECHNUNG (kein API-Call) ===
   
-  try {
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Kein JSON in Antwort');
-    return JSON.parse(jsonMatch[0]) as FangIndex;
-  } catch (e) {
-    console.error('Fangindex Parse Error:', e);
-    return {
-      score: 50,
-      reasoning: 'Konnte Bedingungen nicht vollständig analysieren',
-      factors: { weather: 50, water_level: 50, moon_phase: 50, time_of_day: 50 },
-      best_fish: [],
-      recommendation: 'Probiere es einfach aus!',
-    };
+  // 1. Wetter-Score (0-100)
+  let weatherScore = 50;
+  // Luftdruck: 1010-1020 hPa ist optimal
+  if (weather.pressure >= 1010 && weather.pressure <= 1020) weatherScore += 20;
+  else if (weather.pressure < 1000 || weather.pressure > 1030) weatherScore -= 15;
+  // Temperatur: 10-20°C optimal für die meisten Fische
+  if (weather.temp >= 10 && weather.temp <= 20) weatherScore += 15;
+  else if (weather.temp < 5 || weather.temp > 28) weatherScore -= 20;
+  // Wind: leichter Wind gut, starker Wind schlecht
+  if (weather.wind_speed < 3) weatherScore += 10;
+  else if (weather.wind_speed > 8) weatherScore -= 15;
+  // Bewölkung: leicht bewölkt ist gut
+  if (weather.clouds >= 30 && weather.clouds <= 70) weatherScore += 10;
+  weatherScore = Math.max(0, Math.min(100, weatherScore));
+
+  // 2. Tageszeit-Score (0-100)
+  let timeScore = 50;
+  // Früh morgens (5-8) und abends (17-21) sind beste Beißzeiten
+  if ((timeOfDay >= 5 && timeOfDay <= 8) || (timeOfDay >= 17 && timeOfDay <= 21)) {
+    timeScore = 90;
+  } else if ((timeOfDay >= 9 && timeOfDay <= 11) || (timeOfDay >= 15 && timeOfDay <= 16)) {
+    timeScore = 65;
+  } else if (timeOfDay >= 12 && timeOfDay <= 14) {
+    timeScore = 35; // Mittagshitze schlecht
+  } else {
+    timeScore = 20; // Nacht
   }
+
+  // 3. Mondphasen-Score (0-100)
+  // Neumond und Vollmond sind gut, Halbmonde weniger
+  const moonScores = [85, 60, 45, 60, 90, 60, 45, 60]; // Index 0=Neumond, 4=Vollmond
+  const moonScore = moonScores[moonPhaseIndex];
+
+  // 4. Wasserstand-Score (0-100)
+  let waterScore = 60; // Default wenn keine Daten
+  if (pegel) {
+    if (pegel.trend === 'gleichbleibend') waterScore = 75;
+    else if (pegel.trend === 'steigend') waterScore = 85; // Steigend ist oft gut
+    else waterScore = 50; // Fallend weniger gut
+  }
+
+  // Gesamtscore berechnen (gewichtet)
+  const totalScore = Math.round(
+    weatherScore * 0.35 + 
+    timeScore * 0.30 + 
+    moonScore * 0.20 + 
+    waterScore * 0.15
+  );
+
+  // Beste Fische basierend auf Bedingungen
+  const bestFish: string[] = [];
+  if (weather.temp < 12) {
+    bestFish.push('Forelle', 'Äsche');
+  } else if (weather.temp >= 12 && weather.temp <= 20) {
+    bestFish.push('Hecht', 'Zander', 'Barsch');
+  } else {
+    bestFish.push('Karpfen', 'Schleie', 'Wels');
+  }
+  if (weather.clouds > 60) bestFish.push('Aal');
+
+  // Empfehlung generieren
+  let recommendation = '';
+  if (totalScore >= 75) {
+    recommendation = `Hervorragende Bedingungen am ${waterBodyName}! Die ${moonPhase} und das aktuelle Wetter versprechen gute Fänge.`;
+  } else if (totalScore >= 50) {
+    recommendation = `Ordentliche Chancen heute. Konzentriere dich auf die frühen Morgen- oder späten Abendstunden.`;
+  } else {
+    recommendation = `Schwierige Bedingungen. Versuche es mit Grundangeln oder warte auf besseres Wetter.`;
+  }
+
+  // Begründung
+  const reasoning = `${moonPhase}, ${weather.temp.toFixed(0)}°C, Luftdruck ${weather.pressure} hPa. ` +
+    (timeScore >= 70 ? 'Gute Beißzeit!' : 'Nicht die optimale Tageszeit.');
+
+  return {
+    score: totalScore,
+    reasoning,
+    factors: {
+      weather: weatherScore,
+      water_level: waterScore,
+      moon_phase: moonScore,
+      time_of_day: timeScore,
+    },
+    best_fish: bestFish.slice(0, 3),
+    recommendation,
+  };
 };
 
-// Helper: Calculate moon phase (0-7, 0=Neumond, 4=Vollmond)
-const getMoonPhase = (): string => {
+// Helper: Get moon phase index (0-7)
+const getMoonPhaseIndex = (): number => {
   const date = new Date();
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
-  
-  // Simplified moon phase calculation
   const c = Math.floor(365.25 * year);
   const e = Math.floor(30.6 * month);
   const jd = c + e + day - 694039.09;
   const phase = jd / 29.53058867;
-  const phaseIndex = Math.floor((phase - Math.floor(phase)) * 8);
-  
+  return Math.floor((phase - Math.floor(phase)) * 8);
+};
+
+// Helper: Calculate moon phase name
+const getMoonPhase = (): string => {
+  const phaseIndex = getMoonPhaseIndex();
   const phases = ['Neumond', 'Zunehmend', 'Erstes Viertel', 'Zunehmend', 
                   'Vollmond', 'Abnehmend', 'Letztes Viertel', 'Abnehmend'];
   return phases[phaseIndex];
 };
+

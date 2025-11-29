@@ -13,18 +13,22 @@ import { useAuth } from '../hooks/useAuth';
 import { getWeather } from '../services/weather';
 import { calculateFangIndex } from '../services/xai';
 import { FangIndex, WeatherData } from '../types';
+import { NearbySpots } from '../components/NearbySpots';
 
-export const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  onNavigateToMap?: () => void;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigateToMap }) => {
   const { user, signOut } = useAuth();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [fangIndex, setFangIndex] = useState<FangIndex | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Demo coordinates (Berlin)
-  const DEMO_LAT = 52.52;
-  const DEMO_LON = 13.405;
-  const DEMO_WATER = 'Müggelsee';
+  // Demo coordinates (Bendestorf, 21227)
+  const DEMO_LAT = 53.3347;
+  const DEMO_LON = 9.9717;
 
   const loadData = async () => {
     try {
@@ -32,8 +36,8 @@ export const HomeScreen: React.FC = () => {
       const weatherData = await getWeather(DEMO_LAT, DEMO_LON);
       setWeather(weatherData);
 
-      // Calculate Fangindex via xAI
-      const index = await calculateFangIndex(DEMO_WATER, weatherData, null);
+      // Calculate local Fangindex (for current location, not specific water)
+      const index = await calculateFangIndex('Dein Standort', weatherData, null);
       setFangIndex(index);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -87,73 +91,77 @@ export const HomeScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Fangindex Card */}
-      {fangIndex && (
-        <View style={styles.indexCard}>
-          <Text style={styles.cardTitle}>🎣 Fangindex</Text>
-          <Text style={styles.waterName}>{DEMO_WATER}</Text>
+      {/* Compact Local Fangindex + Weather */}
+      {fangIndex && weather && (
+        <View style={styles.localIndexCard}>
+          <View style={styles.localIndexHeader}>
+            <Text style={styles.localIndexTitle}>🎣 Lokaler Fangindex</Text>
+            <Text style={styles.locationText}>📍 Bendestorf</Text>
+          </View>
           
-          <View style={styles.scoreContainer}>
-            <Text style={[styles.score, { color: getScoreColor(fangIndex.score) }]}>
-              {fangIndex.score}
-            </Text>
-            <Text style={styles.scoreMax}>/100</Text>
+          <View style={styles.localIndexContent}>
+            {/* Score */}
+            <View style={styles.localScoreSection}>
+              <Text style={[styles.localScore, { color: getScoreColor(fangIndex.score) }]}>
+                {fangIndex.score}
+              </Text>
+              <Text style={styles.localScoreLabel}>von 100</Text>
+            </View>
+
+            {/* Compact Weather */}
+            <View style={styles.compactWeather}>
+              <View style={styles.weatherRow}>
+                <Text style={styles.weatherEmoji}>🌡️</Text>
+                <Text style={styles.weatherText}>{weather.temp.toFixed(0)}°C</Text>
+              </View>
+              <View style={styles.weatherRow}>
+                <Text style={styles.weatherEmoji}>💨</Text>
+                <Text style={styles.weatherText}>{weather.wind_speed.toFixed(1)} m/s</Text>
+              </View>
+              <View style={styles.weatherRow}>
+                <Text style={styles.weatherEmoji}>📊</Text>
+                <Text style={styles.weatherText}>{weather.pressure} hPa</Text>
+              </View>
+            </View>
           </View>
 
-          <Text style={styles.reasoning}>{fangIndex.reasoning}</Text>
+          {/* Reasoning */}
+          <Text style={styles.localReasoning}>{fangIndex.reasoning}</Text>
 
-          {/* Factor Bars */}
-          <View style={styles.factors}>
-            <FactorBar label="Wetter" value={fangIndex.factors.weather} />
-            <FactorBar label="Wasserstand" value={fangIndex.factors.water_level} />
-            <FactorBar label="Mondphase" value={fangIndex.factors.moon_phase} />
-            <FactorBar label="Tageszeit" value={fangIndex.factors.time_of_day} />
-          </View>
-
-          {/* Best Fish */}
+          {/* Best Fish Tags */}
           {fangIndex.best_fish.length > 0 && (
-            <View style={styles.bestFish}>
-              <Text style={styles.bestFishTitle}>Beste Chancen auf:</Text>
-              <Text style={styles.bestFishList}>{fangIndex.best_fish.join(', ')}</Text>
+            <View style={styles.fishTags}>
+              {fangIndex.best_fish.map((fish, i) => (
+                <View key={i} style={styles.fishTag}>
+                  <Text style={styles.fishTagText}>🐟 {fish}</Text>
+                </View>
+              ))}
             </View>
           )}
-
-          {/* Recommendation */}
-          <View style={styles.recommendation}>
-            <Text style={styles.recommendationText}>💡 {fangIndex.recommendation}</Text>
-          </View>
         </View>
       )}
 
-      {/* Weather Card */}
-      {weather && (
-        <View style={styles.weatherCard}>
-          <Text style={styles.cardTitle}>🌤️ Aktuelles Wetter</Text>
-          <View style={styles.weatherGrid}>
-            <WeatherItem label="Temperatur" value={`${weather.temp.toFixed(1)}°C`} />
-            <WeatherItem label="Luftdruck" value={`${weather.pressure} hPa`} />
-            <WeatherItem label="Feuchtigkeit" value={`${weather.humidity}%`} />
-            <WeatherItem label="Wind" value={`${weather.wind_speed} m/s`} />
-          </View>
-          <Text style={styles.weatherDesc}>{weather.description}</Text>
-        </View>
-      )}
+      {/* Top 3 Nearby Spots */}
+      <NearbySpots />
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
         <TouchableOpacity style={styles.actionBtn}>
           <Text style={styles.actionIcon}>📋</Text>
-          <Text style={styles.actionText}>Schein hochladen</Text>
+          <Text style={styles.actionText}>Schein</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={onNavigateToMap}>
           <Text style={styles.actionIcon}>🗺️</Text>
-          <Text style={styles.actionText}>Gewässer finden</Text>
+          <Text style={styles.actionText}>Karte</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn}>
           <Text style={styles.actionIcon}>🎫</Text>
-          <Text style={styles.actionText}>Erlaubnis kaufen</Text>
+          <Text style={styles.actionText}>Kaufen</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Spacer for bottom */}
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 };
@@ -367,5 +375,81 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     textAlign: 'center',
+  },
+  // New compact local index styles
+  localIndexCard: {
+    backgroundColor: '#1e293b',
+    margin: 16,
+    borderRadius: 16,
+    padding: 16,
+  },
+  localIndexHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  localIndexTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  localIndexContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  localScoreSection: {
+    alignItems: 'center',
+    marginRight: 24,
+  },
+  localScore: {
+    fontSize: 48,
+    fontWeight: 'bold',
+  },
+  localScoreLabel: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  compactWeather: {
+    flex: 1,
+    gap: 6,
+  },
+  weatherRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  weatherEmoji: {
+    fontSize: 14,
+  },
+  weatherText: {
+    color: '#94a3b8',
+    fontSize: 14,
+  },
+  localReasoning: {
+    color: '#cbd5e1',
+    fontSize: 13,
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  fishTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  fishTag: {
+    backgroundColor: '#334155',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  fishTagText: {
+    color: '#4ade80',
+    fontSize: 12,
   },
 });

@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "99894004-93cb-4efa-8553-379b327622c6"
+      }
+    },
+    "owner": "chulio115"
   }
 }

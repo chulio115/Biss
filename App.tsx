@@ -1,5 +1,5 @@
 // BISS App - Dein digitaler Angelbegleiter
-// MVP Woche 1: Auth + Fangindex
+// MVP Woche 1: Auth + Fangindex + Map
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -7,13 +7,16 @@ import { useAuth } from './src/hooks/useAuth';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { RegisterScreen } from './src/screens/RegisterScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { MapScreen } from './src/screens/MapScreen';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 type AuthScreen = 'login' | 'register';
+type MainScreen = 'home' | 'map';
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
   const [authScreen, setAuthScreen] = useState<AuthScreen>('login');
+  const [mainScreen, setMainScreen] = useState<MainScreen>('home');
 
   // Loading state
   if (loading) {
@@ -42,7 +45,11 @@ export default function App() {
   // Authenticated - show main app
   return (
     <SafeAreaProvider>
-      <HomeScreen />
+      {mainScreen === 'home' ? (
+        <HomeScreen onNavigateToMap={() => setMainScreen('map')} />
+      ) : (
+        <MapScreen onBack={() => setMainScreen('home')} />
+      )}
       <StatusBar style="light" />
     </SafeAreaProvider>
   );
