@@ -725,60 +725,56 @@ export const MapScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* 🆕 Quick Action Menu - 4 Buttons */}
-      <View style={styles.quickMenuWrapper}>
+      {/* 🆕 Quick Action Menu - 4 Buttons - NOW BIG AND VISIBLE! */}
+      <View style={[styles.quickMenuWrapper, { zIndex: 9999 }]}>
         <View style={[styles.quickMenuBar, isDark && styles.quickMenuBarDark]}>
           {/* ⭐ Top 3 */}
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'top3' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('⭐ Top3 button pressed!');
+              console.log('⭐ TOP3 MENU OPENED!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'top3' ? null : 'top3');
-              console.log('Active menu set to:', activeMenu === 'top3' ? null : 'top3');
             }}
           >
-            <Star size={18} color={activeMenu === 'top3' ? '#F59E0B' : isDark ? colors.gray400 : colors.gray600} 
+            <Star size={24} color={activeMenu === 'top3' ? '#F59E0B' : isDark ? colors.white : colors.gray900}
               fill={activeMenu === 'top3' ? '#F59E0B' : 'transparent'} />
           </TouchableOpacity>
-          
+
           {/* 🏷️ Categories */}
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'categories' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('🏷️ Categories button pressed!');
+              console.log('🏷️ CATEGORIES MENU OPENED!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'categories' ? null : 'categories');
-              console.log('Active menu set to:', activeMenu === 'categories' ? null : 'categories');
             }}
           >
-            <Navigation size={18} color={activeMenu === 'categories' ? colors.primary : isDark ? colors.gray400 : colors.gray600} />
+            <Navigation size={24} color={activeMenu === 'categories' ? colors.primary : isDark ? colors.white : colors.gray900} />
           </TouchableOpacity>
-          
+
           {/* 🐟 Fish Filter */}
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'fish' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('🐟 Fish button pressed!');
+              console.log('🐟 FISH MENU OPENED!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'fish' ? null : 'fish');
-              console.log('Active menu set to:', activeMenu === 'fish' ? null : 'fish');
             }}
           >
-            <Fish size={18} color={activeMenu === 'fish' ? '#10B981' : isDark ? colors.gray400 : colors.gray600} />
+            <Fish size={24} color={activeMenu === 'fish' ? '#10B981' : isDark ? colors.white : colors.gray900} />
           </TouchableOpacity>
-          
+
           {/* ℹ️ Info */}
           <TouchableOpacity
             style={[styles.quickMenuBtn, activeMenu === 'info' && styles.quickMenuBtnActive]}
             onPress={() => {
-              console.log('ℹ️ Info button pressed!');
+              console.log('ℹ️ INFO MENU OPENED!');
               Haptics.selectionAsync();
               setActiveMenu(activeMenu === 'info' ? null : 'info');
-              console.log('Active menu set to:', activeMenu === 'info' ? null : 'info');
             }}
           >
-            <Info size={18} color={activeMenu === 'info' ? '#6366F1' : isDark ? colors.gray400 : colors.gray600} />
+            <Info size={24} color={activeMenu === 'info' ? '#6366F1' : isDark ? colors.white : colors.gray900} />
           </TouchableOpacity>
         </View>
 
@@ -900,16 +896,6 @@ export const MapScreen: React.FC = () => {
             )}
           </View>
         )}
-      </View>
-
-      {/* TEMP: Test buttons in center of screen */}
-      <View style={{position: 'absolute', top: 300, left: 100, backgroundColor: 'red', padding: 20}}>
-        <TouchableOpacity 
-          style={{backgroundColor: 'blue', padding: 20, margin: 10}}
-          onPress={() => console.log('TEST BUTTON PRESSED!')}
-        >
-          <Text style={{color: 'white'}}>TEST BUTTON</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Zoom Controls - Increment/Decrement by 2 */}
@@ -1320,9 +1306,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 12,
     alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1334,15 +1320,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(19,35,55,0.95)',
   },
   quickMenuBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   quickMenuBtnActive: {
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   
   // Menu Panels
