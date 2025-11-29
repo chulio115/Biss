@@ -52,7 +52,7 @@ import {
   Info,
 } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
-import { calculateFangIndex } from '../services/xai';
+import { enrichWithGooglePlaces } from '../services/dataAcquisition';
 import { getWeather } from '../services/weather';
 import { fetchPlaceDetails } from '../services/googlePlaces';
 import { SearchScreen } from './SearchScreen';
@@ -437,15 +437,87 @@ export const MapScreen: React.FC = () => {
       const { data, error } = await supabase.from('water_bodies').select('*');
       
       // Transform snake_case from Supabase to camelCase
-      const transformedData = data?.map(wb => ({
+      let transformedData = data?.map(wb => ({
         ...wb,
         placePhoto: wb.place_photo,
         placeRating: wb.place_rating,
         placeId: wb.place_id,
+        placeOpenNow: wb.place_open_now,
       })) || [];
+
+      // 🆕 SMART ENRICHMENT: Auto-enrich spots without Google Places data
+      if (transformedData.length > 0) {
+        console.log('🔍 Checking for spots needing Google Places enrichment...');
+        
+        const spotsNeedingEnrichment = transformedData.filter(wb => 
+          !wb.place_id && !wb.placeId && wb.category === 'official'
+        );
+        
+        if (spotsNeedingEnrichment.length > 0) {
+          console.log(`📍 Found ${spotsNeedingEnrichment.length} official spots needing enrichment`);
+          
+          // Auto-enrich in background
+          const enrichedSpots = await Promise.all(
+            spotsNeedingEnrichment.map(async (spot) => {
+              try {
+                console.log(`🔗 Enriching: ${spot.name}`);
+                
+                // Search Google Places for this spot
+                const googleData = await enrichWithGooglePlaces({
+                  id: spot.id,
+                  name: spot.name,
+                  type: spot.type as any,
+                  latitude: parseFloat(spot.latitude),
+                  longitude: parseFloat(spot.longitude),
+                });
+                
+                if (googleData.placeId) {
+                  // Update in database
+                  const { error: updateError } = await supabase
+                    .from('water_bodies')
+                    .update({
+                      place_id: googleData.placeId,
+                      place_photo: googleData.placePhoto || googleData.placePhoto,
+                      place_rating: googleData.placeRating,
+                      place_open_now: googleData.placeOpenNow,
+                    })
+                    .eq('id', spot.id);
+                  
+                  if (!updateError) {
+                    console.log(`✅ Enriched: ${spot.name}`);
+                    return {
+                      ...spot,
+                      placeId: googleData.placeId,
+                      placePhoto: googleData.placePhoto,
+                      placeRating: googleData.placeRating,
+                      placeOpenNow: googleData.placeOpenNow,
+                    };
+                  }
+                }
+                
+                console.log(`⚠️ Could not enrich: ${spot.name}`);
+                return spot; // Return unchanged if enrichment failed
+                
+              } catch (e) {
+                console.log(`❌ Error enriching ${spot.name}:`, e);
+                return spot;
+              }
+            })
+          );
+          
+          // Merge enriched spots back into data
+          transformedData = transformedData.map(spot => {
+            const enriched = enrichedSpots.find(e => e.id === spot.id);
+            return enriched || spot;
+          });
+          
+          console.log('🎉 Enrichment complete!');
+        }
+      }
       
-      // Use mock data as fallback if no DB data - BENDESTORF PROTOTYPE
+      // Use mock data as fallback if no DB data - ENHANCED WITH MORE SPOTS
       const waterBodyData = data?.length ? transformedData : [
+        // Forellenhof Bendestorf - PERFECT Google Places data
         {
           id: 'proto-forellenhof',
           name: 'Forellenhof Bendestorf',
@@ -456,15 +528,30 @@ export const MapScreen: React.FC = () => {
           fish_species: ['Forelle', 'Karpfen', 'Stör'],
           permit_price: 25,
           is_assumed: false,
-          // Google Places Data (Prototype)
           place_photo: 'https://images.unsplash.com/photo-1545450660-3378a7f3a364?w=800',
           place_rating: 4.6,
           place_id: 'ChIJ_forellenhof_bendestorf',
           place_open_now: true,
         },
+        // Other spots with enhanced mock data
         {
-          id: 'proto-hidden-1',
-          name: 'Kleiner Teich am Wald',
+          id: 'proto-angelteich-lueneburg',
+          name: 'Angelteich Lüneburg',
+          type: 'Angelteich',
+          latitude: '53.2465',
+          longitude: '10.4094',
+          region: 'Niedersachsen',
+          fish_species: ['Karpfen', 'Hecht', 'Zander'],
+          permit_price: 20,
+          is_assumed: true,
+          place_photo: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+          place_rating: 4.2,
+          place_id: 'ChIJ_example_lueneburg',
+          place_open_now: true,
+        },
+        {
+          id: 'proto-hidden-teich',
+          name: 'Versteckter Waldteich',
           type: 'pond',
           latitude: '53.3420',
           longitude: '9.9650',
@@ -472,9 +559,10 @@ export const MapScreen: React.FC = () => {
           fish_species: ['Karpfen', 'Schleie', 'Rotauge'],
           permit_price: null,
           is_assumed: true,
+          // No Google Places for hidden gems
         },
         {
-          id: 'proto-fangindex-1',
+          id: 'proto-seevetal',
           name: 'Seevetal See',
           type: 'See',
           latitude: '53.3180',
@@ -483,6 +571,10 @@ export const MapScreen: React.FC = () => {
           fish_species: ['Hecht', 'Zander', 'Barsch'],
           permit_price: 15,
           is_assumed: true,
+          place_photo: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800',
+          place_rating: 4.1,
+          place_id: 'ChIJ_example_seevetal',
+          place_open_now: false,
         },
       ];
 
