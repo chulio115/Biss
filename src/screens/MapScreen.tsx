@@ -29,6 +29,7 @@ import {
   Modal,
   Image,
   Animated,
+  ScrollView,
 } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -73,6 +74,40 @@ if (!process.env.EXPO_PUBLIC_MAPBOX_TOKEN) {
 }
 MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN);
 
+// Spot Categories - USP Feature
+export type SpotCategory = 'fangindex' | 'official' | 'hidden' | 'mystery';
+
+export const SPOT_CATEGORIES = {
+  fangindex: {
+    id: 'fangindex',
+    name: 'Fangindex',
+    icon: '🎯',
+    color: '#F59E0B', // Orange
+    description: 'Gebietsorientierter Fangindex',
+  },
+  official: {
+    id: 'official',
+    name: 'Offiziell',
+    icon: '✓',
+    color: '#10B981', // Green
+    description: 'Angelteiche & Forellenhöfe',
+  },
+  hidden: {
+    id: 'hidden',
+    name: 'Versteckt',
+    icon: '💎',
+    color: '#8B5CF6', // Purple
+    description: 'Kleine Teiche & Gebiete',
+  },
+  mystery: {
+    id: 'mystery',
+    name: 'Mystery',
+    icon: '🔮',
+    color: '#06B6D4', // Cyan
+    description: 'Geheimtipps - wenig frequentiert',
+  },
+} as const;
+
 // Types
 export interface MapWaterBody {
   id: string;
@@ -85,11 +120,14 @@ export interface MapWaterBody {
   permit_price: number | null;
   is_assumed: boolean;
   fangIndex: number;
+  // Category
+  category: SpotCategory;
   // Google Places enhanced data
   placePhoto?: string;
   placeRating?: number;
   placeOpenNow?: boolean;
   placeHours?: string[];
+  placeId?: string;
 }
 
 // Removed - now using map.config.ts
@@ -287,6 +325,29 @@ const FISH_FILTERS = [
   { id: 'aal', name: 'Aal', confidence: 'low' },
 ];
 
+// Auto-detect category from water body data
+const detectCategory = (wb: any): SpotCategory => {
+  const name = wb.name?.toLowerCase() || '';
+  const type = wb.type?.toLowerCase() || '';
+  
+  // Official: Angelteiche, Forellenhöfe, verified Google Places
+  const officialKeywords = ['angelteich', 'forellenteich', 'forellenhof', 'fischzucht', 'angelsee', 'angelpark', 'angelverein'];
+  if (officialKeywords.some(k => name.includes(k)) || wb.placeId) {
+    return 'official';
+  }
+  
+  // Hidden: Small ponds, less known
+  if (type === 'pond' && !name.includes('see')) {
+    return 'hidden';
+  }
+  
+  // Mystery: For later - based on low Google traffic (placeholder)
+  // TODO: Implement Google Popular Times analysis
+  
+  // Default: Fangindex (standard)
+  return 'fangindex';
+};
+
 // Default Location: Lüneburg, Germany (Fallback)
 const LUNEBURG_COORDS: [number, number] = [10.4141, 53.2509]; // [lng, lat]
 
@@ -309,6 +370,7 @@ export const MapScreen: React.FC = () => {
   const [selectedFish, setSelectedFish] = useState<string[]>([]);
   const [top3, setTop3] = useState<MapWaterBody[]>([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [activeCategories, setActiveCategories] = useState<SpotCategory[]>(['fangindex', 'official']);
   
   // Beißzeit-Radar State
   const [sunTimes, setSunTimes] = useState<{ sunrise: Date; sunset: Date } | null>(null);
@@ -414,15 +476,17 @@ export const MapScreen: React.FC = () => {
       // Get weather for scoring
       const weather = await getWeather(userLocation[1], userLocation[0]);
 
-      // Calculate scores
+      // Calculate scores and detect categories
       const scored = await Promise.all(
         waterBodyData.map(async (wb) => {
           const result = await calculateFangIndex(wb.name, weather, null);
+          const category = detectCategory(wb);
           return {
             ...wb,
             latitude: parseFloat(wb.latitude),
             longitude: parseFloat(wb.longitude),
             fangIndex: result.score,
+            category,
           };
         })
       );
@@ -515,49 +579,62 @@ export const MapScreen: React.FC = () => {
         {/* User Location */}
         <MapboxGL.UserLocation visible animated />
 
-        {/* Water Body Markers - Size based on score */}
-        {waterBodies.map((wb) => {
-          const markerSize = wb.fangIndex >= 80 ? 48 : wb.fangIndex >= 60 ? 40 : 32;
-          const fontSize = wb.fangIndex >= 80 ? 16 : wb.fangIndex >= 60 ? 14 : 12;
-          const isHotSpot = wb.fangIndex >= 80;
-          const isSelected = selectedSpot?.id === wb.id;
-          
-          return (
-            <MapboxGL.MarkerView
-              key={wb.id}
-              coordinate={[wb.longitude, wb.latitude]}
-              anchor={{ x: 0.5, y: 0.5 }}
-            >
-              <TouchableOpacity
-                onPress={() => handleMarkerPress(wb)}
-                style={styles.markerContainer}
-                activeOpacity={0.8}
+        {/* Water Body Markers - Filtered by Category */}
+        {waterBodies
+          .filter(wb => activeCategories.includes(wb.category))
+          .map((wb) => {
+            const markerSize = wb.fangIndex >= 80 ? 48 : wb.fangIndex >= 60 ? 40 : 32;
+            const fontSize = wb.fangIndex >= 80 ? 16 : wb.fangIndex >= 60 ? 14 : 12;
+            const isHotSpot = wb.fangIndex >= 80;
+            const isSelected = selectedSpot?.id === wb.id;
+            const categoryConfig = SPOT_CATEGORIES[wb.category];
+            
+            // Use category color for official/hidden/mystery, score color for fangindex
+            const markerColor = wb.category === 'fangindex' 
+              ? getScoreColor(wb.fangIndex)
+              : categoryConfig.color;
+            
+            return (
+              <MapboxGL.MarkerView
+                key={wb.id}
+                coordinate={[wb.longitude, wb.latitude]}
+                anchor={{ x: 0.5, y: 0.5 }}
               >
-                {/* Pulse ring for hot spots */}
-                {isHotSpot && (
-                  <View style={[styles.pulseRing, { width: markerSize + 20, height: markerSize + 20 }]} />
-                )}
-                {/* Selection ring */}
-                {isSelected && (
-                  <View style={[styles.selectionRing, { width: markerSize + 12, height: markerSize + 12 }]} />
-                )}
-                {/* Main marker */}
-                <View style={[
-                  styles.marker, 
-                  { 
-                    backgroundColor: getScoreColor(wb.fangIndex),
-                    width: markerSize,
-                    height: markerSize,
-                    borderRadius: markerSize / 2,
-                  },
-                  isHotSpot && styles.markerGlow,
-                ]}>
-                  <Text style={[styles.markerText, { fontSize }]}>{wb.fangIndex}</Text>
-                </View>
-              </TouchableOpacity>
-            </MapboxGL.MarkerView>
-          );
-        })}
+                <TouchableOpacity
+                  onPress={() => handleMarkerPress(wb)}
+                  style={styles.markerContainer}
+                  activeOpacity={0.8}
+                >
+                  {/* Pulse ring for hot spots */}
+                  {isHotSpot && wb.category === 'fangindex' && (
+                    <View style={[styles.pulseRing, { width: markerSize + 20, height: markerSize + 20 }]} />
+                  )}
+                  {/* Selection ring */}
+                  {isSelected && (
+                    <View style={[styles.selectionRing, { width: markerSize + 12, height: markerSize + 12 }]} />
+                  )}
+                  {/* Main marker */}
+                  <View style={[
+                    styles.marker, 
+                    { 
+                      backgroundColor: markerColor,
+                      width: markerSize,
+                      height: markerSize,
+                      borderRadius: markerSize / 2,
+                    },
+                    isHotSpot && wb.category === 'fangindex' && styles.markerGlow,
+                  ]}>
+                    {/* Show score for fangindex, icon for others */}
+                    {wb.category === 'fangindex' ? (
+                      <Text style={[styles.markerText, { fontSize }]}>{wb.fangIndex}</Text>
+                    ) : (
+                      <Text style={[styles.markerText, { fontSize: fontSize + 2 }]}>{categoryConfig.icon}</Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </MapboxGL.MarkerView>
+            );
+          })}
       </MapboxGL.MapView>
 
       {/* Top Bar */}
@@ -628,6 +705,51 @@ export const MapScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Category Filter Pills */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryFilterContainer}
+        contentContainerStyle={styles.categoryFilterContent}
+      >
+        {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => {
+          const isActive = activeCategories.includes(cat.id as SpotCategory);
+          return (
+            <TouchableOpacity
+              key={cat.id}
+              style={[
+                styles.categoryPill,
+                isDark && styles.categoryPillDark,
+                isActive && { backgroundColor: cat.color },
+              ]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setActiveCategories(prev => 
+                  prev.includes(cat.id as SpotCategory)
+                    ? prev.filter(c => c !== cat.id)
+                    : [...prev, cat.id as SpotCategory]
+                );
+              }}
+            >
+              <Text style={styles.categoryPillIcon}>{cat.icon}</Text>
+              <Text style={[
+                styles.categoryPillText,
+                isActive && styles.categoryPillTextActive,
+              ]}>
+                {cat.name}
+              </Text>
+              {isActive && (
+                <View style={styles.categoryPillBadge}>
+                  <Text style={styles.categoryPillBadgeText}>
+                    {waterBodies.filter(wb => wb.category === cat.id).length}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       {/* Zoom Controls - Increment/Decrement by 2 */}
       <View style={styles.zoomControls}>
@@ -777,7 +899,14 @@ export const MapScreen: React.FC = () => {
                   <Text style={styles.spotScoreText}>{selectedSpot.fangIndex}</Text>
                 </View>
                 <View style={styles.spotInfo}>
-                  <Text style={styles.spotType}>{selectedSpot.type.toUpperCase()}</Text>
+                  <View style={styles.spotTypeRow}>
+                    <Text style={styles.spotType}>{selectedSpot.type.toUpperCase()}</Text>
+                    {/* Category Badge */}
+                    <View style={[styles.categoryBadge, { backgroundColor: SPOT_CATEGORIES[selectedSpot.category].color }]}>
+                      <Text style={styles.categoryBadgeIcon}>{SPOT_CATEGORIES[selectedSpot.category].icon}</Text>
+                      <Text style={styles.categoryBadgeText}>{SPOT_CATEGORIES[selectedSpot.category].name}</Text>
+                    </View>
+                  </View>
                   <Text style={[styles.spotDistance, isDark && styles.textLight]}>
                     {getDistance(selectedSpot.longitude, selectedSpot.latitude)} entfernt
                   </Text>
@@ -942,6 +1071,59 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
+  // Category Filter Pills
+  categoryFilterContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 105 : 85,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  categoryFilterContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  categoryPillDark: {
+    backgroundColor: 'rgba(19,35,55,0.95)',
+  },
+  categoryPillIcon: {
+    fontSize: 14,
+  },
+  categoryPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.gray600,
+  },
+  categoryPillTextActive: {
+    color: colors.white,
+  },
+  categoryPillBadge: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 4,
+  },
+  categoryPillBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.white,
+  },
+
   // Top Bar
   topBar: {
     position: 'absolute',
@@ -1092,8 +1274,27 @@ const styles = StyleSheet.create({
   spotScoreCircle: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   spotScoreText: { color: colors.white, fontSize: 22, fontWeight: '700' },
   spotInfo: { flex: 1 },
-  spotType: { fontSize: 12, color: colors.primary, fontWeight: '600', marginBottom: 4 },
+  spotTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  spotType: { fontSize: 12, color: colors.primary, fontWeight: '600' },
   spotDistance: { fontSize: 14, color: colors.gray600 },
+  
+  // Category Badge in Bottom Sheet
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  categoryBadgeIcon: {
+    fontSize: 10,
+  },
+  categoryBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.white,
+  },
 
   // Google Photo in Bottom Sheet
   photoContainer: { 
