@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "biss-app",
+    "name": "BISS",
     "slug": "biss-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -13,19 +13,33 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.biss.angelapp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "BISS benötigt deinen Standort, um Gewässer in deiner Nähe zu finden."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.biss.angelapp",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "sk.placeholder",
+          "RNMapboxMapsVersion": "11.0.0"
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "99894004-93cb-4efa-8553-379b327622c6"
