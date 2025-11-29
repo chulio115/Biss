@@ -53,6 +53,7 @@ import { getWeather } from '../services/weather';
 import { fetchPlaceDetails } from '../services/googlePlaces';
 import { SearchScreen } from './SearchScreen';
 import { ActivityRing, PulseMarker, FishChip, PulsingBuyButton } from '../components/map';
+import { CAMERA_CONFIG, getStyleURL, shouldUseNightMode } from '../config/map.config';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -78,13 +79,7 @@ export interface MapWaterBody {
   placeHours?: string[];
 }
 
-type MapStyle = 'standard' | 'angelFokus' | 'angelNight';
-
-// Check if it's night time (after 18:30)
-const isNightTime = (): boolean => {
-  const now = new Date();
-  return now.getHours() > 18 || (now.getHours() === 18 && now.getMinutes() >= 30);
-};
+// Removed - now using map.config.ts
 
 // Design Tokens - 2026 Clean
 const colors = {
@@ -106,23 +101,7 @@ const colors = {
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CUSTOM MAPBOX STYLES - Replace with your Mapbox Studio URLs!
-// Upload the JSON files from /assets/mapstyles/ to Mapbox Studio
-// ═══════════════════════════════════════════════════════════════════════════════
-const mapStyles: Record<MapStyle, string> = {
-  // TODO: Replace these with your uploaded Mapbox Studio URLs:
-  // Format: mapbox://styles/YOUR_USERNAME/STYLE_ID
-  
-  // Style 1: Standard - Full navigation, gentle water
-  standard: process.env.EXPO_PUBLIC_MAPBOX_STYLE_STANDARD || 'mapbox://styles/mapbox/light-v11',
-  
-  // Style 2: Angel-Fokus - Water dominates, land faded (OUR USP!)
-  angelFokus: process.env.EXPO_PUBLIC_MAPBOX_STYLE_FOKUS || 'mapbox://styles/mapbox/outdoors-v12',
-  
-  // Style 3: Angel-Night - Dark with glowing neon water
-  angelNight: process.env.EXPO_PUBLIC_MAPBOX_STYLE_NIGHT || 'mapbox://styles/mapbox/dark-v11',
-};
+// Removed - now using map.config.ts
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // BEISSZEIT-RADAR: Sunrise/Sunset + Golden Hour Calculation
@@ -308,10 +287,12 @@ export const MapScreen: React.FC = () => {
   
   const [waterBodies, setWaterBodies] = useState<MapWaterBody[]>([]);
   const [selectedSpot, setSelectedSpot] = useState<MapWaterBody | null>(null);
-  const [userLocation, setUserLocation] = useState<[number, number]>(LUNEBURG_COORDS);
+  const [userLocation, setUserLocation] = useState<[number, number]>([
+    CAMERA_CONFIG.initial.center.longitude,
+    CAMERA_CONFIG.initial.center.latitude,
+  ]);
   const [loading, setLoading] = useState(true);
-  const [mapStyle, setMapStyle] = useState<MapStyle>('angelFokus');
-  const [isNightMode, setIsNightMode] = useState(isNightTime());
+  const [isNightMode, setIsNightMode] = useState(shouldUseNightMode());
   const [selectedFish, setSelectedFish] = useState<string[]>([]);
   const [top3, setTop3] = useState<MapWaterBody[]>([]);
   const [showSearch, setShowSearch] = useState(false);
@@ -406,21 +387,15 @@ export const MapScreen: React.FC = () => {
     });
   }, []);
 
-  const handleStyleChange = (style: MapStyle) => {
-    Haptics.selectionAsync();
-    setMapStyle(style);
-  };
-
   const handleNightToggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsNightMode(prev => !prev);
+    setIsNightMode((prev: boolean) => !prev);
   };
 
-  // Get current style URL
+  // Get current style URL from config
   const currentStyleURL = useMemo(() => {
-    if (isNightMode) return mapStyles.angelNight;
-    return mapStyles[mapStyle];
-  }, [mapStyle, isNightMode]);
+    return getStyleURL(isNightMode);
+  }, [isNightMode]);
 
   const getDistance = (lon: number, lat: number): string => {
     const R = 6371;
@@ -457,10 +432,12 @@ export const MapScreen: React.FC = () => {
       >
         <MapboxGL.Camera
           ref={cameraRef}
-          zoomLevel={12}
+          zoomLevel={CAMERA_CONFIG.initial.zoom}
           centerCoordinate={userLocation}
+          minZoomLevel={CAMERA_CONFIG.zoom.min}
+          maxZoomLevel={CAMERA_CONFIG.zoom.max}
           animationMode="flyTo"
-          animationDuration={1000}
+          animationDuration={CAMERA_CONFIG.animation.duration}
         />
         
         {/* User Location */}
@@ -520,33 +497,26 @@ export const MapScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Style Switcher */}
-        <View style={styles.modeSwitcher}>
-          <TouchableOpacity
-            style={[styles.modeBtn, mapStyle === 'standard' && !isNightMode && styles.modeBtnActive]}
-            onPress={() => handleStyleChange('standard')}
-          >
-            <MapPin size={18} color={mapStyle === 'standard' && !isNightMode ? colors.white : colors.gray600} strokeWidth={2} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.modeBtn, mapStyle === 'angelFokus' && !isNightMode && styles.modeBtnActive]}
-            onPress={() => handleStyleChange('angelFokus')}
-          >
-            <Waves size={18} color={mapStyle === 'angelFokus' && !isNightMode ? colors.white : colors.primary} strokeWidth={2} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.modeBtn, isNightMode && styles.modeBtnNight]}
-            onPress={handleNightToggle}
-          >
-            {isNightMode ? (
-              <Moon size={18} color={colors.accent} strokeWidth={2} />
-            ) : (
-              <Sun size={18} color={colors.gray600} strokeWidth={2} />
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Day/Night Toggle */}
+        <TouchableOpacity
+          style={[
+            styles.themeToggle,
+            isNightMode && styles.themeToggleNight,
+          ]}
+          onPress={handleNightToggle}
+        >
+          {isNightMode ? (
+            <Moon size={20} color={colors.white} strokeWidth={2} />
+          ) : (
+            <Sun size={20} color={colors.gray900} strokeWidth={2} />
+          )}
+          <Text style={[
+            styles.themeToggleText,
+            isNightMode && styles.themeToggleTextNight,
+          ]}>
+            {isNightMode ? 'Night' : 'Day'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Floating Search Button (oben rechts) */}
@@ -560,6 +530,28 @@ export const MapScreen: React.FC = () => {
       >
         <Search size={28} color={colors.primary} strokeWidth={1.8} />
       </TouchableOpacity>
+
+      {/* Zoom Controls */}
+      <View style={styles.zoomControls}>
+        <TouchableOpacity
+          style={[styles.zoomBtn, isDark && styles.zoomBtnDark]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            cameraRef.current?.zoomTo(CAMERA_CONFIG.zoom.max, CAMERA_CONFIG.animation.duration);
+          }}
+        >
+          <Text style={[styles.zoomBtnText, isDark && styles.textLight]}>+</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.zoomBtn, isDark && styles.zoomBtnDark]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            cameraRef.current?.zoomTo(CAMERA_CONFIG.zoom.min, CAMERA_CONFIG.animation.duration);
+          }}
+        >
+          <Text style={[styles.zoomBtnText, isDark && styles.textLight]}>−</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Search Modal */}
       <Modal
@@ -812,12 +804,60 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(19, 35, 55, 0.95)',
   },
 
-  // Mode Switcher
-  modeSwitcher: { flexDirection: 'row', gap: 8 },
-  modeBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gray100, justifyContent: 'center', alignItems: 'center' },
-  modeBtnActive: { backgroundColor: colors.primary },
-  modeBtnNight: { backgroundColor: colors.dark.surface },
-  modeBtnText: { fontSize: 18 },
+  // Zoom Controls
+  zoomControls: {
+    position: 'absolute',
+    right: 16,
+    bottom: 200,
+    gap: 12,
+  },
+  zoomBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  zoomBtnDark: {
+    backgroundColor: 'rgba(19, 35, 55, 0.95)',
+  },
+  zoomBtnText: {
+    fontSize: 24,
+    fontWeight: '300',
+    color: colors.gray900,
+  },
+
+  // Theme Toggle (Day/Night)
+  themeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gray100,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  themeToggleNight: {
+    backgroundColor: colors.dark.surface,
+  },
+  themeToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.gray900,
+  },
+  themeToggleTextNight: {
+    color: colors.white,
+  },
 
   // Golden Hour / Beißzeit Badge
   goldenHourBadge: { 
