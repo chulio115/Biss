@@ -366,8 +366,16 @@ export const MapScreen: React.FC = () => {
       // Fetch water bodies
       const { data, error } = await supabase.from('water_bodies').select('*');
       
+      // Transform snake_case from Supabase to camelCase
+      const transformedData = data?.map(wb => ({
+        ...wb,
+        placePhoto: wb.place_photo,
+        placeRating: wb.place_rating,
+        placeId: wb.place_id,
+      })) || [];
+      
       // Use mock data if DB is empty or error
-      let waterBodyData = data && data.length > 0 ? data : [
+      let waterBodyData = transformedData.length > 0 ? transformedData : [
         {
           id: 'mock-1',
           name: 'Müggelsee',
@@ -554,20 +562,34 @@ export const MapScreen: React.FC = () => {
 
       {/* Top Bar */}
       <View style={[styles.topBar, isDark && styles.topBarDark]}>
-        {/* My Location Button */}
-        <TouchableOpacity 
-          style={[styles.iconBtn, isDark && styles.iconBtnDark]} 
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            cameraRef.current?.setCamera({
-              centerCoordinate: userLocation,
-              zoomLevel: 13,
-              animationDuration: 800,
-            });
-          }}
-        >
-          <Navigation size={20} color={colors.primary} strokeWidth={2} />
-        </TouchableOpacity>
+        {/* Left Group: Location + Search */}
+        <View style={styles.topBarLeftGroup}>
+          {/* My Location Button */}
+          <TouchableOpacity 
+            style={[styles.iconBtn, isDark && styles.iconBtnDark]} 
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              cameraRef.current?.setCamera({
+                centerCoordinate: userLocation,
+                zoomLevel: 13,
+                animationDuration: 800,
+              });
+            }}
+          >
+            <Navigation size={20} color={colors.primary} strokeWidth={2} />
+          </TouchableOpacity>
+          
+          {/* Search Button - Moved here from floating FAB */}
+          <TouchableOpacity 
+            style={[styles.iconBtn, isDark && styles.iconBtnDark]} 
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setShowSearch(true);
+            }}
+          >
+            <Search size={20} color={colors.primary} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
 
         {/* Beißzeit-Radar Badge */}
         <View style={[
@@ -606,18 +628,6 @@ export const MapScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* Floating Search Button (oben rechts) */}
-      <TouchableOpacity
-        style={[styles.searchFab, isDark && styles.searchFabDark]}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          setShowSearch(true);
-        }}
-        activeOpacity={0.85}
-      >
-        <Search size={28} color={colors.primary} strokeWidth={1.8} />
-      </TouchableOpacity>
 
       {/* Zoom Controls - Increment/Decrement by 2 */}
       <View style={styles.zoomControls}>
@@ -746,6 +756,22 @@ export const MapScreen: React.FC = () => {
           {selectedSpot ? (
             // Spot Detail View
             <View>
+              {/* Google Photo - if available */}
+              {selectedSpot.placePhoto && (
+                <View style={styles.photoContainer}>
+                  <Image 
+                    source={{ uri: selectedSpot.placePhoto }}
+                    style={styles.spotPhoto}
+                    resizeMode="cover"
+                  />
+                  {selectedSpot.placeRating && (
+                    <View style={styles.ratingBadge}>
+                      <Text style={styles.ratingText}>⭐ {selectedSpot.placeRating.toFixed(1)}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
+              
               <View style={styles.spotHeader}>
                 <View style={[styles.spotScoreCircle, { backgroundColor: getScoreColor(selectedSpot.fangIndex) }]}>
                   <Text style={styles.spotScoreText}>{selectedSpot.fangIndex}</Text>
@@ -931,30 +957,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
   },
   topBarDark: { backgroundColor: 'rgba(10,26,47,0.95)' },
+  topBarLeftGroup: { flexDirection: 'row', gap: 8 },
   iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.gray100, justifyContent: 'center', alignItems: 'center' },
   iconBtnDark: { backgroundColor: colors.dark.surface },
-
-  // Floating Search Button
-  searchFab: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 116 : 96,
-    left: 16,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-    zIndex: 1000,
-  },
-  searchFabDark: {
-    backgroundColor: 'rgba(19, 35, 55, 0.95)',
-  },
 
   // Zoom Controls
   zoomControls: {
@@ -1089,6 +1094,33 @@ const styles = StyleSheet.create({
   spotInfo: { flex: 1 },
   spotType: { fontSize: 12, color: colors.primary, fontWeight: '600', marginBottom: 4 },
   spotDistance: { fontSize: 14, color: colors.gray600 },
+
+  // Google Photo in Bottom Sheet
+  photoContainer: { 
+    marginBottom: 16, 
+    borderRadius: 16, 
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  spotPhoto: { 
+    width: '100%', 
+    height: 180, 
+    borderRadius: 16,
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  ratingText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+  },
 
   // Fish Section
   fishSection: { marginBottom: 20 },

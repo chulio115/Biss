@@ -8,6 +8,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+// Generate deterministic UUID from string (so re-runs don't create duplicates)
+function stringToUUID(str) {
+  const hash = crypto.createHash('md5').update(str).digest('hex');
+  return `${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20,32)}`;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,9 +61,9 @@ async function main() {
   for (let i = 0; i < waterBodies.length; i += batchSize) {
     const batch = waterBodies.slice(i, i + batchSize);
     
-    // Transform for Supabase (ensure correct types)
+    // Transform for Supabase (convert ID to UUID)
     const records = batch.map(wb => ({
-      id: wb.id,
+      id: stringToUUID(wb.id),  // Convert OSM ID to UUID
       name: wb.name,
       type: wb.type,
       latitude: wb.latitude,
@@ -64,7 +71,6 @@ async function main() {
       region: wb.region,
       fish_species: wb.fish_species,
       permit_price: wb.permit_price,
-      permit_required: wb.permit_required,
       is_assumed: wb.is_assumed,
     }));
 
