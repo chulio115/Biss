@@ -30,8 +30,60 @@ export interface MapWaterBody {
   google_place_id?: string;
 }
 
-// Map types that work on iOS (Apple Maps doesn't support custom styles)
-type MapMode = 'standard' | 'satellite' | 'hybrid';
+type MapMode = 'water' | 'night' | 'standard';
+
+// Premium Custom Map Styles - USP: Gewässer-Fokus
+const mapStyles: Record<MapMode, any[]> = {
+  // WATER MODE - Gewässer hervorgehoben, Rest gedämpft
+  water: [
+    { elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#0d1b2a' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#4a6fa5' }] },
+    // WASSER - Stark hervorgehoben in leuchtendem Blau
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0077b6' }] },
+    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#90e0ef' }] },
+    { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#023e8a' }] },
+    // Straßen dezent
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1b263b' }] },
+    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0d1b2a' }] },
+    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2a3f5f' }] },
+    { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'simplified' }] },
+    // POIs aus
+    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1a3320' }, { visibility: 'on' }] },
+    // Transit aus
+    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    // Landschaft gedämpft
+    { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#112240' }] },
+    { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
+  ],
+  
+  // NIGHT MODE - Perfekt für Nachtangler
+  night: [
+    { elementType: 'geometry', stylers: [{ color: '#0a0a0f' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#0a0a0f' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#4a5568' }] },
+    // Wasser in dunklem Blau mit Leuchteffekt
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1a365d' }] },
+    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4ade80' }] },
+    // Straßen minimal
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
+    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2d2d44' }] },
+    { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+    // Alles andere aus
+    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+    { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0f0f1a' }] },
+  ],
+  
+  // STANDARD - Clean aber professionell
+  standard: [
+    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#4a90d9' }] },
+  ],
+};
 
 const getMarkerColor = (score: number): string => {
   if (score >= 70) return '#22c55e';
@@ -46,7 +98,7 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [selectedSpot, setSelectedSpot] = useState<MapWaterBody | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mapMode, setMapMode] = useState<MapMode>('standard');
+  const [mapMode, setMapMode] = useState<MapMode>('water');
   const [selectedFish, setSelectedFish] = useState<string | null>(null);
 
   const initialRegion: Region = {
@@ -138,7 +190,7 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   };
 
   const cycleMapMode = () => {
-    const modes: MapMode[] = ['standard', 'satellite', 'hybrid'];
+    const modes: MapMode[] = ['water', 'night', 'standard'];
     const currentIndex = modes.indexOf(mapMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setMapMode(modes[nextIndex]);
@@ -146,16 +198,16 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const getModeIcon = () => {
     switch (mapMode) {
-      case 'satellite': return '🛰️';
-      case 'hybrid': return '🗺️';
-      default: return '📍';
+      case 'water': return '💧';
+      case 'night': return '🌙';
+      default: return '🗺️';
     }
   };
 
   const getModeLabel = () => {
     switch (mapMode) {
-      case 'satellite': return 'Satellit';
-      case 'hybrid': return 'Hybrid';
+      case 'water': return 'Gewässer';
+      case 'night': return 'Nacht';
       default: return 'Standard';
     }
   };
@@ -175,12 +227,12 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       <MapView
         ref={mapRef}
         style={styles.map}
-        provider={PROVIDER_DEFAULT}
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
         initialRegion={initialRegion}
         showsUserLocation
         showsMyLocationButton={false}
         showsCompass={false}
-        mapType={mapMode}
+        customMapStyle={mapStyles[mapMode]}
         mapPadding={{ top: 100, right: 0, bottom: 100, left: 0 }}
       >
         {filteredBodies.map((wb) => (
