@@ -50,6 +50,7 @@ export interface EnrichedWaterBody extends RawWaterBody {
   placeHours?: string[];
   placeWebsite?: string;
   placePhone?: string;
+  geometry?: { location: { lat: number; lng: number } }; // 🆕 Precise coordinates
   
   // Wikidata
   wikidataId?: string;
@@ -244,7 +245,7 @@ export const enrichWithGooglePlaces = async (
           input: waterBody.name,
           inputtype: 'textquery',
           locationbias: `circle:5000@${waterBody.latitude},${waterBody.longitude}`,
-          fields: 'place_id,name,rating,user_ratings_total,photos,opening_hours,website,formatted_phone_number,formatted_address',
+          fields: 'place_id,name,rating,user_ratings_total,photos,opening_hours,website,formatted_phone_number,formatted_address,geometry',
           key: GOOGLE_PLACES_API_KEY,
           language: 'de',
         },
@@ -269,6 +270,7 @@ export const enrichWithGooglePlaces = async (
         placeWebsite: place.website,
         placePhone: place.formatted_phone_number,
         address: place.formatted_address,
+        geometry: place.geometry, // 🆕 Include precise coordinates
       };
     }
   } catch (error) {

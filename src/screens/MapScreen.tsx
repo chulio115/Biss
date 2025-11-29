@@ -504,9 +504,12 @@ export const MapScreen: React.FC = () => {
                     .from('water_bodies')
                     .update({
                       place_id: googleData.placeId,
-                      place_photo: googleData.placePhoto || googleData.placePhoto,
+                      place_photo: googleData.placePhoto,
                       place_rating: googleData.placeRating,
                       place_open_now: googleData.placeOpenNow,
+                      // 🆕 Also update coordinates if Google has better ones
+                      latitude: googleData.geometry?.location?.lat || wb.latitude,
+                      longitude: googleData.geometry?.location?.lng || wb.longitude,
                     })
                     .eq('id', spot.id);
                   
@@ -518,6 +521,9 @@ export const MapScreen: React.FC = () => {
                       placePhoto: googleData.placePhoto,
                       placeRating: googleData.placeRating,
                       placeOpenNow: googleData.placeOpenNow,
+                      // 🆕 Use Google's precise coordinates
+                      latitude: googleData.geometry?.location?.lat || parseFloat(spot.latitude),
+                      longitude: googleData.geometry?.location?.lng || parseFloat(spot.longitude),
                     };
                   }
                 }
@@ -619,9 +625,14 @@ export const MapScreen: React.FC = () => {
             wb.name, 
             parseFloat(wb.latitude), 
             parseFloat(wb.longitude),
-            wb.placeRating ? parseFloat(wb.latitude) : undefined, // Google lat if available
-            wb.placeRating ? parseFloat(wb.longitude) : undefined  // Google lng if available
+            wb.placeId ? parseFloat(wb.latitude) : undefined, // Use current lat if we have Google data
+            wb.placeId ? parseFloat(wb.longitude) : undefined  // Use current lng if we have Google data
           );
+          
+          // 🆕 Log coordinate corrections for debugging
+          if (coords.source !== 'osm') {
+            console.log(`📍 ${wb.name}: ${coords.source} coordinates (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
+          }
           
           return {
             ...wb,
