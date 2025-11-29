@@ -49,32 +49,49 @@ const COLORS = {
   },
 };
 
-// Mock data
+// Mock recent searches
 const RECENT_SEARCHES = [
   'Elbe-Seitenkanal',
   'Ilmenau',
   'Schaalssee',
 ];
 
-const TRENDING_WATERS = [
-  { id: '1', name: 'Elbe-Seitenkanal', region: 'Lüneburg', score: 78 },
-  { id: '2', name: 'Ilmenau', region: 'Uelzen', score: 72 },
-  { id: '3', name: 'Schaalsee', region: 'Zarrentin', score: 85 },
-  { id: '4', name: 'Ratzeburger See', region: 'Ratzeburg', score: 69 },
-];
+// Water body type from MapScreen
+interface WaterBody {
+  id: string;
+  name: string;
+  type: string;
+  latitude: number;
+  longitude: number;
+  region: string;
+  fish_species: string[];
+  permit_price: number | null;
+  fangIndex: number;
+}
 
 interface SearchScreenProps {
   onClose: () => void;
   onSelectSpot?: (spotId: string) => void;
+  waterBodies?: WaterBody[];
 }
 
-export const SearchScreen: React.FC<SearchScreenProps> = ({ onClose, onSelectSpot }) => {
+export const SearchScreen: React.FC<SearchScreenProps> = ({ onClose, onSelectSpot, waterBodies = [] }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
   
+  // Transform waterBodies to search format
+  const searchableData = waterBodies.map(wb => ({
+    id: wb.id,
+    name: wb.name,
+    region: wb.region,
+    score: wb.fangIndex,
+    type: wb.type,
+    fish_species: wb.fish_species,
+  }));
+  
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState(TRENDING_WATERS);
+  const [results, setResults] = useState(searchableData);
   const inputRef = useRef<TextInput>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -99,17 +116,23 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onClose, onSelectSpo
 
   const handleSearch = (text: string) => {
     setQuery(text);
-    // Filter results (mock)
+    // Filter results from actual waterBodies
     if (text.length > 0) {
-      const filtered = TRENDING_WATERS.filter(w => 
+      const filtered = searchableData.filter(w => 
         w.name.toLowerCase().includes(text.toLowerCase()) ||
-        w.region.toLowerCase().includes(text.toLowerCase())
+        w.region.toLowerCase().includes(text.toLowerCase()) ||
+        (w.fish_species && w.fish_species.some(f => f.toLowerCase().includes(text.toLowerCase())))
       );
       setResults(filtered);
     } else {
-      setResults(TRENDING_WATERS);
+      setResults(searchableData);
     }
   };
+  
+  // Update results when waterBodies change
+  useEffect(() => {
+    setResults(searchableData);
+  }, [waterBodies]);
 
   const handleSelect = (spotId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

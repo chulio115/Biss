@@ -573,22 +573,32 @@ export const MapScreen: React.FC = () => {
         <Search size={28} color={colors.primary} strokeWidth={1.8} />
       </TouchableOpacity>
 
-      {/* Zoom Controls */}
+      {/* Zoom Controls - Increment/Decrement by 2 */}
       <View style={styles.zoomControls}>
         <TouchableOpacity
           style={[styles.zoomBtn, isDark && styles.zoomBtnDark]}
-          onPress={() => {
+          onPress={async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            cameraRef.current?.zoomTo(CAMERA_CONFIG.zoom.max, CAMERA_CONFIG.animation.duration);
+            const currentZoom = await mapRef.current?.getZoom() || CAMERA_CONFIG.initial.zoom;
+            const newZoom = Math.min(currentZoom + 2, CAMERA_CONFIG.zoom.max);
+            cameraRef.current?.setCamera({
+              zoomLevel: newZoom,
+              animationDuration: 300,
+            });
           }}
         >
           <Text style={[styles.zoomBtnText, isDark && styles.textLight]}>+</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.zoomBtn, isDark && styles.zoomBtnDark]}
-          onPress={() => {
+          onPress={async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            cameraRef.current?.zoomTo(CAMERA_CONFIG.zoom.min, CAMERA_CONFIG.animation.duration);
+            const currentZoom = await mapRef.current?.getZoom() || CAMERA_CONFIG.initial.zoom;
+            const newZoom = Math.max(currentZoom - 2, CAMERA_CONFIG.zoom.min);
+            cameraRef.current?.setCamera({
+              zoomLevel: newZoom,
+              animationDuration: 300,
+            });
           }}
         >
           <Text style={[styles.zoomBtnText, isDark && styles.textLight]}>−</Text>
@@ -603,7 +613,9 @@ export const MapScreen: React.FC = () => {
       >
         <SearchScreen 
           onClose={() => setShowSearch(false)}
+          waterBodies={waterBodies}
           onSelectSpot={(spotId) => {
+            setShowSearch(false);
             const spot = waterBodies.find(w => w.id === spotId);
             if (spot) {
               handleMarkerPress(spot);
@@ -612,27 +624,29 @@ export const MapScreen: React.FC = () => {
         />
       </Modal>
 
-      {/* Top 3 Floating Cards */}
-      <View style={styles.top3Container}>
-        {top3.map((spot) => (
-          <TouchableOpacity
-            key={spot.id}
-            style={[styles.top3Card, isDark && styles.top3CardDark]}
-            onPress={() => handleMarkerPress(spot)}
-            activeOpacity={0.9}
-          >
-            <View style={styles.top3Content}>
-              <Text style={[styles.top3Name, isDark && styles.textLight]} numberOfLines={1}>
-                {spot.name}
-              </Text>
-              <Text style={styles.top3Distance}>{getDistance(spot.longitude, spot.latitude)}</Text>
-            </View>
-            <View style={[styles.scoreCircle, { backgroundColor: getScoreColor(spot.fangIndex) }]}>
-              <Text style={styles.scoreText}>{spot.fangIndex}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {/* Top 3 Floating Cards - Only show if not mock data */}
+      {top3.length > 0 && !top3[0]?.id?.startsWith('mock-') && (
+        <View style={styles.top3Container}>
+          {top3.map((spot) => (
+            <TouchableOpacity
+              key={spot.id}
+              style={[styles.top3Card, isDark && styles.top3CardDark]}
+              onPress={() => handleMarkerPress(spot)}
+              activeOpacity={0.9}
+            >
+              <View style={styles.top3Content}>
+                <Text style={[styles.top3Name, isDark && styles.textLight]} numberOfLines={1}>
+                  {spot.name}
+                </Text>
+                <Text style={styles.top3Distance}>{getDistance(spot.longitude, spot.latitude)}</Text>
+              </View>
+              <View style={[styles.scoreCircle, { backgroundColor: getScoreColor(spot.fangIndex) }]}>
+                <Text style={styles.scoreText}>{spot.fangIndex}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {/* Bottom Sheet */}
       <BottomSheet
