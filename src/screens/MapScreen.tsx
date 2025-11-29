@@ -435,10 +435,17 @@ export const MapScreen: React.FC = () => {
 
       // Fetch water bodies
       const { data, error } = await supabase.from('water_bodies').select('*');
-      console.log('🗄️ DB Data:', data?.length || 0, 'spots');
       
-      // TEMP: Force mock data for testing
-      const waterBodyData = [
+      // Transform snake_case from Supabase to camelCase
+      const transformedData = data?.map(wb => ({
+        ...wb,
+        placePhoto: wb.place_photo,
+        placeRating: wb.place_rating,
+        placeId: wb.place_id,
+      })) || [];
+      
+      // Use mock data as fallback if no DB data - BENDESTORF PROTOTYPE
+      const waterBodyData = data?.length ? transformedData : [
         {
           id: 'proto-forellenhof',
           name: 'Forellenhof Bendestorf',
@@ -449,7 +456,7 @@ export const MapScreen: React.FC = () => {
           fish_species: ['Forelle', 'Karpfen', 'Stör'],
           permit_price: 25,
           is_assumed: false,
-          // Google Places Data (Prototype) - Real-looking data
+          // Google Places Data (Prototype)
           place_photo: 'https://images.unsplash.com/photo-1545450660-3378a7f3a364?w=800',
           place_rating: 4.6,
           place_id: 'ChIJ_forellenhof_bendestorf',
@@ -487,14 +494,6 @@ export const MapScreen: React.FC = () => {
         waterBodyData.map(async (wb: any) => {
           const result = await calculateFangIndex(wb.name, weather, null);
           const category = detectCategory(wb);
-          console.log(`🔍 Spot ${wb.name}:`, {
-            type: wb.type,
-            name: wb.name,
-            placeId: wb.placeId || wb.place_id,
-            detectedCategory: category,
-            placeRating: wb.place_rating || wb.placeRating,
-            placePhoto: wb.place_photo || wb.placePhoto
-          });
           return {
             ...wb,
             latitude: parseFloat(wb.latitude),
@@ -971,18 +970,6 @@ export const MapScreen: React.FC = () => {
           {selectedSpot ? (
             // Spot Detail View
             <View>
-              {/* DEBUG: Log selected spot */}
-              {(() => {
-                console.log('🎯 Selected Spot:', {
-                  name: selectedSpot.name,
-                  category: selectedSpot.category,
-                  placeRating: selectedSpot.placeRating,
-                  placePhoto: selectedSpot.placePhoto,
-                  placeOpenNow: selectedSpot.placeOpenNow
-                });
-                return null;
-              })()}
-              
               {/* Google Photo - if available */}
               {selectedSpot.placePhoto && (
                 <View style={styles.photoContainer}>
