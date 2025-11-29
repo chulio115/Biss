@@ -1041,15 +1041,42 @@ export const MapScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* 🎯 Fangindex Location Insight */}
+              {/* 🎯 Fangindex Location Insight - Enhanced */}
               {selectedSpot.category === 'fangindex' && (
-                <View style={styles.fangindexInsight}>
-                  <Text style={styles.fangindexInsightIcon}>🎯</Text>
-                  <View style={styles.fangindexInsightContent}>
-                    <Text style={styles.fangindexInsightTitle}>Lokaler Fangindex</Text>
-                    <Text style={styles.fangindexInsightDesc}>
-                      Berechnet aus Wetter, Mondphase und saisonalen Faktoren
-                    </Text>
+                <View style={styles.fangindexSection}>
+                  <View style={styles.fangindexInsight}>
+                    <Text style={styles.fangindexInsightIcon}>🎯</Text>
+                    <View style={styles.fangindexInsightContent}>
+                      <Text style={styles.fangindexInsightTitle}>Fangindex: {selectedSpot.fangIndex}/100</Text>
+                      <Text style={styles.fangindexInsightDesc}>
+                        KI-berechnet aus aktuellen Bedingungen
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  {/* Fangindex Breakdown */}
+                  <View style={styles.fangindexBreakdown}>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownLabel}>🌤️ Wetter</Text>
+                      <View style={styles.breakdownBar}>
+                        <View style={[styles.breakdownFill, { width: '75%', backgroundColor: '#10B981' }]} />
+                      </View>
+                      <Text style={styles.breakdownValue}>Gut</Text>
+                    </View>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownLabel}>🌙 Mondphase</Text>
+                      <View style={styles.breakdownBar}>
+                        <View style={[styles.breakdownFill, { width: '60%', backgroundColor: '#F59E0B' }]} />
+                      </View>
+                      <Text style={styles.breakdownValue}>OK</Text>
+                    </View>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownLabel}>🕐 Tageszeit</Text>
+                      <View style={styles.breakdownBar}>
+                        <View style={[styles.breakdownFill, { width: goldenHourInfo?.isGolden ? '100%' : '50%', backgroundColor: goldenHourInfo?.isGolden ? '#10B981' : '#6B7280' }]} />
+                      </View>
+                      <Text style={styles.breakdownValue}>{goldenHourInfo?.isGolden ? 'Golden!' : 'Normal'}</Text>
+                    </View>
                   </View>
                 </View>
               )}
@@ -1804,6 +1831,46 @@ const styles = StyleSheet.create({
     color: '#D97706',
     lineHeight: 16,
   },
+  
+  // Fangindex Section & Breakdown
+  fangindexSection: {
+    marginBottom: 16,
+  },
+  fangindexBreakdown: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  breakdownLabel: {
+    fontSize: 12,
+    color: '#92400E',
+    width: 90,
+  },
+  breakdownBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  breakdownFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  breakdownValue: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#92400E',
+    width: 50,
+    textAlign: 'right',
+  },
 
   // 💎 Hidden Gem Styles
   hiddenGemBanner: {
@@ -1914,7 +1981,7 @@ const styles = StyleSheet.create({
   // Fish Section
   fishSection: { marginBottom: 20 },
   sectionLabel: { fontSize: 13, fontWeight: '600', color: colors.gray600, marginBottom: 12 },
-  fishGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // fishGrid moved to Quick Menu section
   fishTag: { backgroundColor: colors.gray100, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
   fishTagDark: { backgroundColor: colors.dark.bg },
   fishTagText: { fontSize: 13, color: colors.gray600 },
