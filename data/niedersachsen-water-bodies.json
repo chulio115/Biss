@@ -1,0 +1,3416 @@
+{
+  "metadata": {
+    "fetchedAt": "2025-11-29T18:59:38.501Z",
+    "region": "Niedersachsen",
+    "bbox": {
+      "south": 52.5,
+      "north": 53.8,
+      "west": 9,
+      "east": 11
+    },
+    "totalCount": 200,
+    "source": "OpenStreetMap"
+  },
+  "waterBodies": [
+    {
+      "id": "osm-way-304025307",
+      "name": "\"Pool\"",
+      "type": "pond",
+      "latitude": "52.9968641",
+      "longitude": "9.0240722",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-227748483",
+      "name": "Ahrensschulter See",
+      "type": "lake",
+      "latitude": "53.3321054",
+      "longitude": "10.626314",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-23534922",
+      "name": "Allermöher See",
+      "type": "lake",
+      "latitude": "53.4804979",
+      "longitude": "10.1627901",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-173354636",
+      "name": "Alte Kuhle",
+      "type": "lake",
+      "latitude": "53.6379462",
+      "longitude": "9.5757632",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-9487813",
+      "name": "Alte Süderelbe",
+      "type": "lake",
+      "latitude": "53.5217103",
+      "longitude": "9.8388555",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-36838475",
+      "name": "Alter Löschteich",
+      "type": "pond",
+      "latitude": "53.6358319",
+      "longitude": "10.2971271",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-751703223",
+      "name": "Angel- und Forellenteich Bargfeld-Stegen",
+      "type": "pond",
+      "latitude": "53.7519328",
+      "longitude": "10.1948552",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-24049585",
+      "name": "Angelbecksteich",
+      "type": "pond",
+      "latitude": "52.790569",
+      "longitude": "10.1274633",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-2518756793",
+      "name": "Angelpark Birkengrund",
+      "type": "pond",
+      "latitude": "53.0360953",
+      "longitude": "9.2016834",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-21879242",
+      "name": "Angelsee",
+      "type": "lake",
+      "latitude": "53.7300769",
+      "longitude": "9.9395725",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-43094311",
+      "name": "Angelsee Bendestorfer Mühle",
+      "type": "lake",
+      "latitude": "53.3360029",
+      "longitude": "9.9822728",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-653365651",
+      "name": "Angelsee Bokensdorf",
+      "type": "lake",
+      "latitude": "52.49891",
+      "longitude": "10.6985804",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1137818482",
+      "name": "Angelsportverein Petri Heil Heidenau",
+      "type": "pond",
+      "latitude": "53.304356",
+      "longitude": "9.6578821",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-31475446",
+      "name": "Angelteich",
+      "type": "pond",
+      "latitude": "53.5018073",
+      "longitude": "9.5869583",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-107164724",
+      "name": "Angelteich I",
+      "type": "pond",
+      "latitude": "53.5297434",
+      "longitude": "9.4318555",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-107164721",
+      "name": "Angelteich II",
+      "type": "pond",
+      "latitude": "53.5301803",
+      "longitude": "9.4313018",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-107164719",
+      "name": "Angelteich III",
+      "type": "pond",
+      "latitude": "53.5308098",
+      "longitude": "9.4301405",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-191010485",
+      "name": "Angelverein Hecht",
+      "type": "pond",
+      "latitude": "53.3056954",
+      "longitude": "9.5253978",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-165415469",
+      "name": "Anglerfreunde-Nord",
+      "type": "pond",
+      "latitude": "53.5432393",
+      "longitude": "10.0531071",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-1734590695",
+      "name": "Anglerheim",
+      "type": "pond",
+      "latitude": "53.2806483",
+      "longitude": "10.9295954",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-18951935",
+      "name": "Ankerscher See",
+      "type": "lake",
+      "latitude": "53.6900605",
+      "longitude": "10.6464718",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-20988018",
+      "name": "Appener See",
+      "type": "lake",
+      "latitude": "53.6320687",
+      "longitude": "9.7383388",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-115382465",
+      "name": "Arboretumsee",
+      "type": "lake",
+      "latitude": "53.7152169",
+      "longitude": "9.7785801",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-51218",
+      "name": "Außenalster",
+      "type": "lake",
+      "latitude": "53.5689171",
+      "longitude": "10.0059941",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-17861130",
+      "name": "Außenmühlenteich",
+      "type": "lake",
+      "latitude": "53.446758",
+      "longitude": "9.9776833",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-1629312",
+      "name": "Badesee",
+      "type": "lake",
+      "latitude": "52.7606679",
+      "longitude": "9.5922133",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-33887332",
+      "name": "Badeteich",
+      "type": "pond",
+      "latitude": "53.101978",
+      "longitude": "10.0514734",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-216596705",
+      "name": "Baggersee",
+      "type": "lake",
+      "latitude": "53.3352423",
+      "longitude": "10.1494515",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-163703268",
+      "name": "Baggersee Todtglüsingen",
+      "type": "lake",
+      "latitude": "53.2990181",
+      "longitude": "9.7340786",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-199430921",
+      "name": "Bannsee",
+      "type": "pond",
+      "latitude": "52.5073946",
+      "longitude": "9.3250856",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-11141549952",
+      "name": "Barrierefreier Angelplatz",
+      "type": "pond",
+      "latitude": "53.6321458",
+      "longitude": "10.6941372",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-542327993",
+      "name": "Belüftung",
+      "type": "reservoir",
+      "latitude": "53.3004645",
+      "longitude": "10.3745025",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Aal"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-23313987",
+      "name": "Bernsteinsee",
+      "type": "lake",
+      "latitude": "52.559822",
+      "longitude": "10.6671682",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-161580977",
+      "name": "Biotop",
+      "type": "lake",
+      "latitude": "53.5609726",
+      "longitude": "10.0844204",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-224709150",
+      "name": "Biotop und Feuerlöschteich",
+      "type": "pond",
+      "latitude": "52.7655483",
+      "longitude": "10.7826166",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-30475928",
+      "name": "Birkensee",
+      "type": "lake",
+      "latitude": "53.2970371",
+      "longitude": "9.3776769",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-22711641",
+      "name": "Birma-Teich",
+      "type": "pond",
+      "latitude": "53.5975837",
+      "longitude": "9.9407358",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-158141977",
+      "name": "Blanke Sohle",
+      "type": "pond",
+      "latitude": "52.53475",
+      "longitude": "10.7091035",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-806466008",
+      "name": "Bleicher Graben",
+      "type": "pond",
+      "latitude": "53.4729954",
+      "longitude": "9.6985072",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-584108466",
+      "name": "Blender See",
+      "type": "lake",
+      "latitude": "52.923452",
+      "longitude": "9.1366255",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-19379590",
+      "name": "Blocksberger Moor",
+      "type": "pond",
+      "latitude": "53.613539",
+      "longitude": "9.8482046",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-10624174",
+      "name": "Boberger See",
+      "type": "lake",
+      "latitude": "53.5147678",
+      "longitude": "10.1356097",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-12889666",
+      "name": "Bollwerder See",
+      "type": "lake",
+      "latitude": "52.569172",
+      "longitude": "9.1200368",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-43027238",
+      "name": "Borger See",
+      "type": "pond",
+      "latitude": "52.88295",
+      "longitude": "9.6204451",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-35739185",
+      "name": "Böttcherteich",
+      "type": "pond",
+      "latitude": "52.997876",
+      "longitude": "10.0874397",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-109111771",
+      "name": "Brack",
+      "type": "pond",
+      "latitude": "53.5011662",
+      "longitude": "10.1411115",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-30212832",
+      "name": "Brakenburger Brack",
+      "type": "lake",
+      "latitude": "53.4997425",
+      "longitude": "9.8767613",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-26795765",
+      "name": "Bramfelder Kiesgrube",
+      "type": "pond",
+      "latitude": "53.614888",
+      "longitude": "10.0893107",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-2515655",
+      "name": "Bramfelder See",
+      "type": "lake",
+      "latitude": "53.6183233",
+      "longitude": "10.0644568",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-74550467",
+      "name": "Brauerteich",
+      "type": "pond",
+      "latitude": "53.2668685",
+      "longitude": "10.3957341",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-22965169",
+      "name": "Brillensee",
+      "type": "lake",
+      "latitude": "53.0487617",
+      "longitude": "8.9994763",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-440746169",
+      "name": "Brinksee",
+      "type": "lake",
+      "latitude": "53.2183339",
+      "longitude": "9.1468025",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-29995673",
+      "name": "Brunausee",
+      "type": "lake",
+      "latitude": "53.108469",
+      "longitude": "9.974379",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-231239067",
+      "name": "Bullenteich",
+      "type": "pond",
+      "latitude": "53.4099761",
+      "longitude": "9.8883874",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1441731750",
+      "name": "Bürgerhaus-See",
+      "type": "lake",
+      "latitude": "53.5001413",
+      "longitude": "9.9965038",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-37757708",
+      "name": "Burggraben",
+      "type": "lake",
+      "latitude": "53.6615025",
+      "longitude": "9.6255862",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-19379996",
+      "name": "Cablesport Arena Pinneberg",
+      "type": "lake",
+      "latitude": "53.6504742",
+      "longitude": "9.8073044",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-252859224",
+      "name": "Campingplatz Stover Strand",
+      "type": "pond",
+      "latitude": "53.4258202",
+      "longitude": "10.2920121",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-32511985",
+      "name": "Cluvenhagener See",
+      "type": "lake",
+      "latitude": "52.9828749",
+      "longitude": "9.1438772",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-31286469",
+      "name": "Deinster Mühlenteich",
+      "type": "pond",
+      "latitude": "53.5295431",
+      "longitude": "9.4333689",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-454491030",
+      "name": "Die Fischerei in Helmstorf",
+      "type": "pond",
+      "latitude": "53.3632328",
+      "longitude": "9.993863",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-11734014",
+      "name": "Domsee",
+      "type": "lake",
+      "latitude": "53.7035676",
+      "longitude": "10.778108",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-33072516",
+      "name": "Dorfteich",
+      "type": "pond",
+      "latitude": "53.3851085",
+      "longitude": "10.5044661",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-258024550",
+      "name": "Dorfteich Vahrendörp",
+      "type": "pond",
+      "latitude": "53.4320119",
+      "longitude": "9.9048853",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-120336328",
+      "name": "Dovensee",
+      "type": "pond",
+      "latitude": "52.5298687",
+      "longitude": "10.6752802",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-42990295",
+      "name": "Dreikroner See",
+      "type": "pond",
+      "latitude": "52.8864924",
+      "longitude": "9.5779924",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-520319297",
+      "name": "Dunkgraben",
+      "type": "pond",
+      "latitude": "52.5848958",
+      "longitude": "9.040273",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-319673919",
+      "name": "ehem. Entenfang",
+      "type": "pond",
+      "latitude": "52.653349",
+      "longitude": "10.0195234",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1282246277",
+      "name": "ehemaliges Schwimmbad",
+      "type": "pond",
+      "latitude": "53.5855673",
+      "longitude": "10.233918",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-153954466",
+      "name": "Eichbaumsee",
+      "type": "lake",
+      "latitude": "53.4851722",
+      "longitude": "10.1032376",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-51931252",
+      "name": "Eichen-Teich",
+      "type": "pond",
+      "latitude": "53.6106742",
+      "longitude": "9.9363374",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-23762309",
+      "name": "Eichtalteich",
+      "type": "pond",
+      "latitude": "53.5791084",
+      "longitude": "10.0910977",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-21879420",
+      "name": "Elsensee",
+      "type": "lake",
+      "latitude": "53.7159738",
+      "longitude": "9.9097192",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1302861971",
+      "name": "Engelbekteich",
+      "type": "pond",
+      "latitude": "53.4507022",
+      "longitude": "9.985039",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-22335800",
+      "name": "Ententeich",
+      "type": "pond",
+      "latitude": "53.7349775",
+      "longitude": "9.9242889",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1286799213",
+      "name": "Entwässerungsanlage",
+      "type": "pond",
+      "latitude": "53.4501926",
+      "longitude": "9.9190533",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-310848466",
+      "name": "Erikasee",
+      "type": "lake",
+      "latitude": "52.5335377",
+      "longitude": "10.4923254",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-157264154",
+      "name": "Erlenteich",
+      "type": "lake",
+      "latitude": "53.3693552",
+      "longitude": "9.9943434",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-54179823",
+      "name": "Estorfer See",
+      "type": "lake",
+      "latitude": "52.5916094",
+      "longitude": "9.1323683",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-152246159",
+      "name": "Fam. Konau",
+      "type": "pond",
+      "latitude": "53.7562003",
+      "longitude": "10.26154",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1364846530",
+      "name": "Familie Ross",
+      "type": "pond",
+      "latitude": "53.7611225",
+      "longitude": "10.2504529",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-142928789",
+      "name": "Feenteich",
+      "type": "pond",
+      "latitude": "53.5722342",
+      "longitude": "10.0104157",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-158948097",
+      "name": "Feuerlöschteich",
+      "type": "lake",
+      "latitude": "53.6126069",
+      "longitude": "9.4556695",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-633889010",
+      "name": "Feuerlöschteich Göldenitz",
+      "type": "pond",
+      "latitude": "53.7213819",
+      "longitude": "10.6276442",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-405612572",
+      "name": "Feuerwehrteich",
+      "type": "pond",
+      "latitude": "52.515974",
+      "longitude": "10.8071392",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-13236611458",
+      "name": "Fischen bei Chrischen",
+      "type": "pond",
+      "latitude": "53.6717337",
+      "longitude": "10.3539165",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-97406619",
+      "name": "Fischteich",
+      "type": "pond",
+      "latitude": "53.2777152",
+      "longitude": "10.417606",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-51069723",
+      "name": "Fischteiche",
+      "type": "pond",
+      "latitude": "53.7086245",
+      "longitude": "9.0279538",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-90771386",
+      "name": "Flottbek",
+      "type": "lake",
+      "latitude": "53.5533294",
+      "longitude": "9.8700511",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-12118410776",
+      "name": "Forellenhof Marklohe An der Schleifmühle",
+      "type": "pond",
+      "latitude": "52.6686087",
+      "longitude": "9.1522472",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-node-10166323527",
+      "name": "Forellensee Mechtersen",
+      "type": "pond",
+      "latitude": "53.2850285",
+      "longitude": "10.3322303",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-103723968",
+      "name": "Forellenteich",
+      "type": "pond",
+      "latitude": "52.9785054",
+      "longitude": "9.8427691",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-195408183",
+      "name": "Forellenzucht",
+      "type": "pond",
+      "latitude": "52.9438854",
+      "longitude": "9.9853294",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-100151143",
+      "name": "Fredenbecker Badesee",
+      "type": "lake",
+      "latitude": "53.5119871",
+      "longitude": "9.3656871",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-174118102",
+      "name": "Freizeit und Campingplatz Tespe Angelsee",
+      "type": "pond",
+      "latitude": "53.3934837",
+      "longitude": "10.401036",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-627849994",
+      "name": "Froschteich",
+      "type": "pond",
+      "latitude": "53.6949453",
+      "longitude": "9.6879208",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-335905553",
+      "name": "Froschteich am Moorkamp",
+      "type": "pond",
+      "latitude": "53.0970465",
+      "longitude": "9.4041631",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-301242430",
+      "name": "Galgenbrack",
+      "type": "pond",
+      "latitude": "53.4902235",
+      "longitude": "10.0031275",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-161490234",
+      "name": "Gewehrkuhle",
+      "type": "lake",
+      "latitude": "52.9988884",
+      "longitude": "9.0062199",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-91762148",
+      "name": "Glockenkuhle",
+      "type": "pond",
+      "latitude": "52.9192987",
+      "longitude": "9.1339208",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-310723265",
+      "name": "Golfsee",
+      "type": "pond",
+      "latitude": "53.3239255",
+      "longitude": "10.402956",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-24999400",
+      "name": "Grabauer See",
+      "type": "lake",
+      "latitude": "53.8000635",
+      "longitude": "10.2630127",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-867042801",
+      "name": "Grassol",
+      "type": "pond",
+      "latitude": "53.4220718",
+      "longitude": "9.9013714",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-32725190",
+      "name": "Große Kaperkuhle",
+      "type": "lake",
+      "latitude": "52.9905123",
+      "longitude": "9.002332",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-32378",
+      "name": "Großensee",
+      "type": "lake",
+      "latitude": "53.6219128",
+      "longitude": "10.3515237",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-16093210",
+      "name": "Großer Bullensee",
+      "type": "lake",
+      "latitude": "53.0570998",
+      "longitude": "9.417111",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-305283786",
+      "name": "Großer Dorfteich",
+      "type": "pond",
+      "latitude": "53.5138771",
+      "longitude": "10.5194876",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-88436051",
+      "name": "Großer Forellenteich",
+      "type": "lake",
+      "latitude": "53.3641389",
+      "longitude": "9.9932884",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-11734013",
+      "name": "Großer Ratzeburger See",
+      "type": "lake",
+      "latitude": "53.7404935",
+      "longitude": "10.7521055",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-89565406",
+      "name": "Großer Suerbrookteich",
+      "type": "pond",
+      "latitude": "53.3676758",
+      "longitude": "9.9907461",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-365357902",
+      "name": "Gruft",
+      "type": "pond",
+      "latitude": "53.3403941",
+      "longitude": "10.394495",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-619079800",
+      "name": "Grundlose Kuhle",
+      "type": "pond",
+      "latitude": "52.9998464",
+      "longitude": "9.8534771",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-26528507",
+      "name": "Grundloser See",
+      "type": "lake",
+      "latitude": "52.9029069",
+      "longitude": "9.5503455",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-131560734",
+      "name": "Güllebecken",
+      "type": "reservoir",
+      "latitude": "52.5217632",
+      "longitude": "10.637989",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Aal"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-25395638",
+      "name": "Hardausee",
+      "type": "lake",
+      "latitude": "52.8711064",
+      "longitude": "10.4300255",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-514826728",
+      "name": "Heemser See",
+      "type": "pond",
+      "latitude": "52.6916255",
+      "longitude": "9.2642128",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-4315502",
+      "name": "Hegesee",
+      "type": "lake",
+      "latitude": "53.6306516",
+      "longitude": "10.7051372",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-31579214",
+      "name": "Heidesee",
+      "type": "lake",
+      "latitude": "53.1801179",
+      "longitude": "9.4868822",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-851880207",
+      "name": "Helmstorfer Seenplatte",
+      "type": "pond",
+      "latitude": "53.3601149",
+      "longitude": "9.9904788",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-97406618",
+      "name": "Herbst Teich",
+      "type": "pond",
+      "latitude": "53.2740133",
+      "longitude": "10.4190566",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-49970522",
+      "name": "Heye Glas See",
+      "type": "lake",
+      "latitude": "52.546665",
+      "longitude": "9.2412415",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-12889665",
+      "name": "Hilgermisser Kolk",
+      "type": "lake",
+      "latitude": "52.8428028",
+      "longitude": "9.1604364",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-9075175",
+      "name": "Hohendeicher See",
+      "type": "lake",
+      "latitude": "53.4401072",
+      "longitude": "10.1075632",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-26327365",
+      "name": "Holm-Seppensener Badeteich",
+      "type": "pond",
+      "latitude": "53.2819723",
+      "longitude": "9.8777336",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-22900658",
+      "name": "Horstsee",
+      "type": "lake",
+      "latitude": "53.5940198",
+      "longitude": "9.4617182",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-80764869",
+      "name": "Huvenhoopssee",
+      "type": "lake",
+      "latitude": "53.3738253",
+      "longitude": "9.1035577",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-126104622",
+      "name": "Ilster-Stau",
+      "type": "pond",
+      "latitude": "53.0272957",
+      "longitude": "10.078497",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-317400843",
+      "name": "Im Stau",
+      "type": "lake",
+      "latitude": "52.9185768",
+      "longitude": "9.1929405",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-185481601",
+      "name": "Ingels Teich",
+      "type": "pond",
+      "latitude": "53.3663068",
+      "longitude": "9.9851955",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-2323134",
+      "name": "Inselsee",
+      "type": "lake",
+      "latitude": "53.3034859",
+      "longitude": "10.4875675",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-29335731",
+      "name": "Inselteich",
+      "type": "pond",
+      "latitude": "53.3779367",
+      "longitude": "10.9379198",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-2326334",
+      "name": "Isenhagener See",
+      "type": "lake",
+      "latitude": "52.7302612",
+      "longitude": "10.6201919",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-35003722",
+      "name": "Jägerteich",
+      "type": "pond",
+      "latitude": "53.2479441",
+      "longitude": "10.3864118",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-152510975",
+      "name": "Jastorfer See",
+      "type": "lake",
+      "latitude": "53.038787",
+      "longitude": "10.5956925",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-24244572",
+      "name": "Kalkbruchsee",
+      "type": "lake",
+      "latitude": "53.2519688",
+      "longitude": "10.3818097",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-91853350",
+      "name": "Kanonenteich",
+      "type": "pond",
+      "latitude": "53.2457414",
+      "longitude": "10.428346",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-27585547",
+      "name": "Kiebitzsee",
+      "type": "lake",
+      "latitude": "52.5998251",
+      "longitude": "10.0469939",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-253240158",
+      "name": "Kieskuhle",
+      "type": "pond",
+      "latitude": "53.1508515",
+      "longitude": "9.2725354",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-171980344",
+      "name": "Kiessee Groß Pampau",
+      "type": "lake",
+      "latitude": "53.5291381",
+      "longitude": "10.5528308",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-360074967",
+      "name": "Kindergartenteich",
+      "type": "pond",
+      "latitude": "52.6150079",
+      "longitude": "9.2704292",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1179655450",
+      "name": "Kirch Teich",
+      "type": "pond",
+      "latitude": "53.2766949",
+      "longitude": "10.4170377",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-43030076",
+      "name": "Kl. Dreikroner See",
+      "type": "pond",
+      "latitude": "52.8854899",
+      "longitude": "9.5797468",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-886980796",
+      "name": "Kl. Suhl",
+      "type": "pond",
+      "latitude": "53.1182661",
+      "longitude": "10.7891292",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-24997162",
+      "name": "Kleine Flottbek",
+      "type": "pond",
+      "latitude": "53.5519412",
+      "longitude": "9.8584759",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-348798553",
+      "name": "Kleine Kaperkuhle",
+      "type": "pond",
+      "latitude": "52.9898615",
+      "longitude": "9.0044293",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-25792808",
+      "name": "Kleiner Bullensee",
+      "type": "lake",
+      "latitude": "53.0627199",
+      "longitude": "9.4097779",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-305283943",
+      "name": "Kleiner Dorfteich",
+      "type": "pond",
+      "latitude": "53.5143551",
+      "longitude": "10.5236869",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-121174712",
+      "name": "Kleiner Hatzsee",
+      "type": "lake",
+      "latitude": "53.0026142",
+      "longitude": "10.1534829",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-103723872",
+      "name": "Kleiner Inselteich",
+      "type": "pond",
+      "latitude": "52.9797238",
+      "longitude": "9.8422031",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-11734015",
+      "name": "Kleiner Küchensee",
+      "type": "lake",
+      "latitude": "53.6955955",
+      "longitude": "10.7796103",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-115093929",
+      "name": "Kleiner Maschsee",
+      "type": "lake",
+      "latitude": "52.5325307",
+      "longitude": "9.1136898",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-89565412",
+      "name": "Kleiner Suerbrookteich",
+      "type": "pond",
+      "latitude": "53.3679286",
+      "longitude": "9.9915508",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-4785705",
+      "name": "Klostersee",
+      "type": "pond",
+      "latitude": "52.8585647",
+      "longitude": "9.596541",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-19210515",
+      "name": "Klosterteiche",
+      "type": "pond",
+      "latitude": "53.4545574",
+      "longitude": "9.4909557",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-32319701",
+      "name": "Kolk",
+      "type": "pond",
+      "latitude": "53.5195131",
+      "longitude": "10.2393652",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-237116979",
+      "name": "Königsteiche",
+      "type": "pond",
+      "latitude": "53.0687514",
+      "longitude": "10.1978679",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-27609166",
+      "name": "Koppelteich",
+      "type": "pond",
+      "latitude": "52.8331214",
+      "longitude": "9.0044597",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-24272437",
+      "name": "Kösterkuhle",
+      "type": "pond",
+      "latitude": "53.7100682",
+      "longitude": "9.7132418",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-4309603",
+      "name": "Kreidebergsee",
+      "type": "lake",
+      "latitude": "53.2566877",
+      "longitude": "10.4059637",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-4733521",
+      "name": "Kreidesee Hemmoor",
+      "type": "pond",
+      "latitude": "53.6982076",
+      "longitude": "9.1352918",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-563841953",
+      "name": "Krelinger See",
+      "type": "lake",
+      "latitude": "52.7964693",
+      "longitude": "9.6449125",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-3220277",
+      "name": "Kretortteich",
+      "type": "pond",
+      "latitude": "53.4838338",
+      "longitude": "9.8782445",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-42147586",
+      "name": "Krötenteich",
+      "type": "pond",
+      "latitude": "53.4642433",
+      "longitude": "9.8228422",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-10714528",
+      "name": "Krupunder See",
+      "type": "lake",
+      "latitude": "53.6236528",
+      "longitude": "9.8735214",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-11734016",
+      "name": "Küchensee",
+      "type": "lake",
+      "latitude": "53.6885581",
+      "longitude": "10.7661168",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-29335745",
+      "name": "Küchenteich",
+      "type": "pond",
+      "latitude": "53.3777474",
+      "longitude": "10.9350751",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-150264665",
+      "name": "Kuckucksteich",
+      "type": "pond",
+      "latitude": "53.4906798",
+      "longitude": "9.9990168",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-294968722",
+      "name": "Kuehnbachteich",
+      "type": "pond",
+      "latitude": "53.5818559",
+      "longitude": "10.1289806",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-369398973",
+      "name": "Kuhle",
+      "type": "pond",
+      "latitude": "53.7401105",
+      "longitude": "9.3406122",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-142928802",
+      "name": "Kuhmühlenteich",
+      "type": "pond",
+      "latitude": "53.5663315",
+      "longitude": "10.0286376",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-22661139",
+      "name": "Kuhteich",
+      "type": "pond",
+      "latitude": "53.4490043",
+      "longitude": "9.5101125",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-148325870",
+      "name": "Kükenbrack",
+      "type": "pond",
+      "latitude": "53.4932554",
+      "longitude": "9.9955071",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-98210074",
+      "name": "Kulpiner See",
+      "type": "pond",
+      "latitude": "53.7106988",
+      "longitude": "10.6934197",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-369346606",
+      "name": "Kupfermühlenteich",
+      "type": "lake",
+      "latitude": "53.6525472",
+      "longitude": "10.4126217",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-442682736",
+      "name": "Kutschenteich",
+      "type": "pond",
+      "latitude": "52.7651277",
+      "longitude": "10.1184235",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-321985648",
+      "name": "Landschaftssee Steimbke",
+      "type": "lake",
+      "latitude": "52.6589641",
+      "longitude": "9.3872748",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-268901536",
+      "name": "Lange Seegen",
+      "type": "reservoir",
+      "latitude": "53.2937212",
+      "longitude": "9.4946536",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Aal"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-25873730",
+      "name": "Langer Sal",
+      "type": "pond",
+      "latitude": "53.3279676",
+      "longitude": "9.886814",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-25442213",
+      "name": "Lanzer See",
+      "type": "lake",
+      "latitude": "53.4146669",
+      "longitude": "10.6005707",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-33688003",
+      "name": "Lehmkuhle",
+      "type": "pond",
+      "latitude": "53.6172068",
+      "longitude": "10.1467078",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-785307471",
+      "name": "Libellensee",
+      "type": "lake",
+      "latitude": "52.5043476",
+      "longitude": "9.605463",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-30878597",
+      "name": "Lohmoorsee",
+      "type": "pond",
+      "latitude": "53.1253337",
+      "longitude": "9.5470758",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-24160822",
+      "name": "Lönssee",
+      "type": "pond",
+      "latitude": "52.5300324",
+      "longitude": "9.7067071",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-211087667",
+      "name": "Löschteich",
+      "type": "pond",
+      "latitude": "53.4934721",
+      "longitude": "10.532713",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-497867221",
+      "name": "Löschteich 2",
+      "type": "pond",
+      "latitude": "53.4933691",
+      "longitude": "10.5708684",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1039984550",
+      "name": "Löschwasserstelle",
+      "type": "reservoir",
+      "latitude": "53.0147412",
+      "longitude": "9.9322127",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Aal"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-943836913",
+      "name": "Lürader Teich",
+      "type": "pond",
+      "latitude": "53.4251864",
+      "longitude": "9.9341547",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-304098596",
+      "name": "Lüssen Kieshafen",
+      "type": "lake",
+      "latitude": "52.9943409",
+      "longitude": "9.0084166",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-10904821",
+      "name": "Lütjensee",
+      "type": "lake",
+      "latitude": "53.6510865",
+      "longitude": "10.3721459",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1213390636",
+      "name": "Lüttensee",
+      "type": "pond",
+      "latitude": "53.6997961",
+      "longitude": "9.7265639",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-68030247",
+      "name": "Lutterbach",
+      "type": "pond",
+      "latitude": "52.8402296",
+      "longitude": "10.0986968",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-1073106410",
+      "name": "Luttmersen Teich",
+      "type": "lake",
+      "latitude": "52.5799889",
+      "longitude": "9.5747487",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-148325875",
+      "name": "Mahlbusen",
+      "type": "pond",
+      "latitude": "53.4921832",
+      "longitude": "9.994655",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-74481118",
+      "name": "Mahlmanns See",
+      "type": "lake",
+      "latitude": "52.8059228",
+      "longitude": "9.1820574",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-157397744",
+      "name": "Maschener See",
+      "type": "lake",
+      "latitude": "53.3941275",
+      "longitude": "10.0630798",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-relation-3467552",
+      "name": "Mechower See",
+      "type": "lake",
+      "latitude": "53.7203238",
+      "longitude": "10.8224972",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-913262493",
+      "name": "Meyers Teich",
+      "type": "pond",
+      "latitude": "53.3809004",
+      "longitude": "9.8986795",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-24062032",
+      "name": "Modellbootbecken",
+      "type": "pond",
+      "latitude": "53.5921701",
+      "longitude": "10.0296092",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Forelle",
+        "Karpfen",
+        "Schleie",
+        "Barsch"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-22983211",
+      "name": "Molchteich",
+      "type": "lake",
+      "latitude": "53.5671856",
+      "longitude": "9.7636737",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    },
+    {
+      "id": "osm-way-10904860",
+      "name": "Mönchsteich",
+      "type": "lake",
+      "latitude": "53.6300135",
+      "longitude": "10.3756908",
+      "region": "Niedersachsen",
+      "fish_species": [
+        "Hecht",
+        "Zander",
+        "Barsch",
+        "Karpfen"
+      ],
+      "permit_price": null,
+      "permit_required": true,
+      "is_assumed": true
+    }
+  ]
+}
