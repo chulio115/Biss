@@ -972,13 +972,16 @@ export const MapScreen: React.FC = () => {
             // Spot Detail View
             <View>
               {/* DEBUG: Log selected spot */}
-              {console.log('🎯 Selected Spot:', {
-                name: selectedSpot.name,
-                category: selectedSpot.category,
-                placeRating: selectedSpot.placeRating,
-                placePhoto: selectedSpot.placePhoto,
-                placeOpenNow: selectedSpot.placeOpenNow
-              })}
+              {(() => {
+                console.log('🎯 Selected Spot:', {
+                  name: selectedSpot.name,
+                  category: selectedSpot.category,
+                  placeRating: selectedSpot.placeRating,
+                  placePhoto: selectedSpot.placePhoto,
+                  placeOpenNow: selectedSpot.placeOpenNow
+                });
+                return null;
+              })()}
               
               {/* Google Photo - if available */}
               {selectedSpot.placePhoto && (
