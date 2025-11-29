@@ -364,10 +364,10 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   
-  // Compact Card
+  // Compact Card - Sized to fit 3 cards on screen
   compactContainer: {
-    marginRight: 12,
-    width: 160,
+    marginRight: 8,
+    width: 115,
   },
   compactTouchable: {
     borderRadius: 16,
@@ -379,50 +379,50 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   compactGradient: {
-    padding: 12,
-    minHeight: 120,
+    padding: 10,
+    minHeight: 100,
     justifyContent: 'space-between',
   },
   compactCategoryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   compactCategoryIcon: {
-    fontSize: 14,
+    fontSize: 12,
   },
   compactCategoryLabel: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.9)',
     textTransform: 'uppercase',
   },
   compactScoreContainer: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   compactScore: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '700',
   },
   compactSpotName: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginTop: 8,
+    marginTop: 4,
   },
   compactDistance: {
-    fontSize: 11,
+    fontSize: 9,
     color: 'rgba(255,255,255,0.8)',
-    marginTop: 2,
+    marginTop: 1,
   },
   
   // Lists

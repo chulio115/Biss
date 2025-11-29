@@ -193,7 +193,7 @@ export const SmartInsightCard: React.FC<SmartInsightCardProps> = ({
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Smart Insight Banner - Compact Version for Map Overlay
+// Smart Insight Banner - Expandable Version for Map Overlay
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface SmartInsightBannerProps {
@@ -207,14 +207,75 @@ export const SmartInsightBanner: React.FC<SmartInsightBannerProps> = ({
 }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const [isExpanded, setIsExpanded] = React.useState(false);
   
-  // Only show highest priority insight
+  // Only show highest priority insight when collapsed
   const topInsight = insights[0];
   
   if (!topInsight) return null;
   
   const typeColors = COLORS[topInsight.type] || COLORS.tip;
   
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (insights.length > 1) {
+      setIsExpanded(!isExpanded);
+    } else {
+      onInsightPress?.(topInsight);
+    }
+  };
+  
+  // Expanded View - Shows all insights
+  if (isExpanded) {
+    return (
+      <View style={styles.expandedContainer}>
+        {/* Header with close button */}
+        <View style={styles.expandedHeader}>
+          <Text style={[styles.expandedTitle, isDark && { color: '#FFFFFF' }]}>
+            🎣 Aktuelle Tipps
+          </Text>
+          <TouchableOpacity onPress={() => setIsExpanded(false)}>
+            <Text style={styles.closeButton}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* All insights */}
+        {insights.map((insight, index) => {
+          const colors = COLORS[insight.type] || COLORS.tip;
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.expandedInsight,
+                {
+                  backgroundColor: isDark ? colors.bgDark : colors.bg,
+                  borderLeftColor: colors.border,
+                },
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onInsightPress?.(insight);
+                setIsExpanded(false);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.expandedIcon}>{insight.icon}</Text>
+              <View style={styles.expandedTextContainer}>
+                <Text style={[styles.expandedInsightTitle, { color: isDark ? colors.textDark : colors.text }]}>
+                  {insight.title}
+                </Text>
+                <Text style={[styles.expandedInsightMessage, { color: isDark ? colors.textDark : colors.text }]}>
+                  {insight.message}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  }
+  
+  // Collapsed View - Shows only top insight
   return (
     <TouchableOpacity
       style={[
@@ -224,10 +285,7 @@ export const SmartInsightBanner: React.FC<SmartInsightBannerProps> = ({
           borderColor: typeColors.border,
         },
       ]}
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onInsightPress?.(topInsight);
-      }}
+      onPress={handlePress}
       activeOpacity={0.8}
     >
       <Text style={styles.bannerIcon}>{topInsight.icon}</Text>
@@ -251,7 +309,7 @@ export const SmartInsightBanner: React.FC<SmartInsightBannerProps> = ({
         </Text>
       </View>
       {insights.length > 1 && (
-        <View style={styles.moreIndicator}>
+        <View style={[styles.moreIndicator, { backgroundColor: typeColors.border }]}>
           <Text style={styles.moreText}>+{insights.length - 1}</Text>
         </View>
       )}
@@ -359,7 +417,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   moreIndicator: {
-    backgroundColor: 'rgba(0,0,0,0.1)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
@@ -367,7 +424,61 @@ const styles = StyleSheet.create({
   moreText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#666',
+    color: '#FFFFFF',
+  },
+  
+  // Expanded View Styles
+  expandedContainer: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  expandedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  expandedTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  closeButton: {
+    fontSize: 20,
+    color: '#9CA3AF',
+    padding: 4,
+  },
+  expandedInsight: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+  },
+  expandedIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  expandedTextContainer: {
+    flex: 1,
+  },
+  expandedInsightTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  expandedInsightMessage: {
+    fontSize: 12,
+    lineHeight: 16,
   },
 });
 
