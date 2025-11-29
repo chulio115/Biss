@@ -344,14 +344,50 @@ export const MapScreen: React.FC = () => {
 
       // Fetch water bodies
       const { data, error } = await supabase.from('water_bodies').select('*');
-      if (error) throw error;
+      
+      // Use mock data if DB is empty or error
+      let waterBodyData = data && data.length > 0 ? data : [
+        {
+          id: 'mock-1',
+          name: 'Müggelsee',
+          type: 'See',
+          latitude: '53.2509',
+          longitude: '10.4141',
+          region: 'Niedersachsen',
+          fish_species: ['Hecht', 'Zander', 'Barsch', 'Karpfen'],
+          permit_price: 15,
+          is_assumed: true,
+        },
+        {
+          id: 'mock-2',
+          name: 'Wannsee',
+          type: 'See',
+          latitude: '53.2609',
+          longitude: '10.4241',
+          region: 'Niedersachsen',
+          fish_species: ['Hecht', 'Barsch', 'Rotauge'],
+          permit_price: 12,
+          is_assumed: true,
+        },
+        {
+          id: 'mock-3',
+          name: 'Tegeler See',
+          type: 'See',
+          latitude: '53.2709',
+          longitude: '10.4341',
+          region: 'Niedersachsen',
+          fish_species: ['Zander', 'Barsch', 'Aal'],
+          permit_price: 18,
+          is_assumed: true,
+        },
+      ];
 
       // Get weather for scoring
       const weather = await getWeather(userLocation[1], userLocation[0]);
 
       // Calculate scores
       const scored = await Promise.all(
-        (data || []).map(async (wb) => {
+        waterBodyData.map(async (wb) => {
           const result = await calculateFangIndex(wb.name, weather, null);
           return {
             ...wb,
@@ -432,6 +468,10 @@ export const MapScreen: React.FC = () => {
         attributionEnabled={false}
         compassEnabled={false}
         scaleBarEnabled={false}
+        rotateEnabled={false}
+        pitchEnabled={false}
+        scrollEnabled={true}
+        zoomEnabled={true}
       >
         <MapboxGL.Camera
           ref={cameraRef}
@@ -451,7 +491,7 @@ export const MapScreen: React.FC = () => {
           <MapboxGL.MarkerView
             key={wb.id}
             coordinate={[wb.longitude, wb.latitude]}
-            anchor={{ x: 0.5, y: 1 }}
+            anchor={{ x: 0.5, y: 0.5 }}
           >
             <TouchableOpacity
               onPress={() => handleMarkerPress(wb)}
@@ -461,7 +501,6 @@ export const MapScreen: React.FC = () => {
               <View style={[styles.marker, { backgroundColor: getScoreColor(wb.fangIndex) }]}>
                 <Text style={styles.markerText}>{wb.fangIndex}</Text>
               </View>
-              <View style={[styles.markerArrow, { borderTopColor: getScoreColor(wb.fangIndex) }]} />
             </TouchableOpacity>
           </MapboxGL.MarkerView>
         ))}
