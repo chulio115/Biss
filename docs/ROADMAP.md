@@ -7,21 +7,25 @@
 ## 📊 Status Overview
 
 ```
-████████████████████████████████████ 95% MVP Complete
+██████████████░░░░░░░░░░░░░░░░ 40% MVP Complete
 ```
 
 | Phase | Status | Beschreibung |
 |-------|--------|--------------|
 | Foundation | ✅ 100% | Auth, Services, APIs |
 | Navigation | ✅ 100% | 5 Tabs, Screens |
-| Map Core | ✅ 100% | Mapbox, Styles, Markers |
-| USP Features | ✅ 100% | Beißzeit, Schonzeit, KI-Fangindex |
-| Smart Intelligence | ✅ 100% | Kontextbewusste Empfehlungen |
-| Daten | ✅ 100% | 200+ echte OSM-Gewässer + Google Places |
+| Map Core | ✅ 70% | Mapbox, Styles, Markers (nur Basis-Map) |
+| USP Features | ✅ 50% | Beißzeit, Schonzeit (technisch okay) |
+| Smart Intelligence | ✅ 30% | Basis-Kontext (noch keine echten Insights) |
+| Daten | ✅ 80% | 200+ OSM-Gewässer + Google Places |
 | Categories | ✅ 100% | 4 Spot-Kategorien + Filter |
-| UI/UX Rework | ✅ 100% | Above and Beyond Design |
+| UI/UX Rework | ✅ 60% | Ordentlich, aber nicht beeindruckend |
 | Bottom Sheet | ✅ 100% | Details + Auto-Open |
-| Location Fixes | 🟡 80% | Bekannte Spots korrigiert, Auto-Enrichment läuft |
+| Location Fixes | 🟡 80% | Bekannte Spots korrigiert |
+| **Angel-App Features** | 🔴 10% | Fang-Tagebuch, Bewertungen, Community |
+| **Gamification** | 🔴 0% | Achievements, Streaks, Leaderboards |
+| **Social Features** | 🔴 0% | Spot-Sharing, Freunde, Gruppen |
+| **AR Features** | 🔴 0% | AR-Angeln, Spot-Preview |
 | Fischereischein | 🔴 0% | UI vorbereitet |
 | Monetarisierung | 🔴 0% | Stripe vorbereitet |
 | Polish | ✅ 80% | Above and Beyond! |
@@ -122,10 +126,13 @@
 
 | Task | Aufwand | Beschreibung |
 |------|---------|--------------|
+| Fang-Tagebuch | 1 Woche | Fänge loggen, Fotos, Notizen |
+| Gamification | 1 Woche | Achievements, Streaks, Leaderboards |
+| Spot-Bewertungen | 3 Tage | User können Spots bewerten |
+| Social Features | 1 Woche | Spot-Sharing, Freunde, Gruppen |
 | Fischereischein-Upload | 4h | OCR + Wallet UI |
 | 3-5 Partner-Teiche | 2 Tage | Echte Daten statt Mock |
 | Stripe Live | 4h | Payment Flow aktivieren |
-| Supabase Seeding | 1h | Daten in Prod-DB |
 | Location Fixes | 2h | Bekannte Spots korrigieren (Nice-to-have) |
 
 ### Prio 2: Fischereischein 🟡 WICHTIG
@@ -214,13 +221,17 @@
 ### M2: Closed Beta 📅
 > Ziel: 10 Tester aus der Region
 
-- [x] 200+ echte Gewässer (haben viel mehr!)
-- [x] Mapbox Styles aktiv (haben 4!)
+- [x] Technische Basis fertig
+- [x] 200+ Gewässer verfügbar
+- [x] Mapbox Styles aktiv
+- [ ] Fang-Tagebuch implementiert
+- [ ] Gamification fertig
+- [ ] Spot-Bewertungen verfügbar
+- [ ] Social Features
 - [ ] Fischereischein-Upload
-- [ ] 3-5 Partner-Teiche kontaktieren
 - [ ] Feedback-Formular
 - [ ] TestFlight Build
-- **Deadline:** +2 Wochen
+- **Deadline:** +8 Wochen (nach echten Features)
 
 ### M3: Partner Launch 📅
 > Ziel: Erste Monetarisierung
@@ -287,6 +298,7 @@
 | 29.11.24 | Beißzeit-Radar als USP | Kein Wettbewerber hat das |
 | 29.11.24 | Smart Fishing Intelligence | Above and Beyond - Predictive statt nur Display |
 | 29.11.24 | Kontextbewusste Insights | Differenzierung zu Fishbrain & Co |
-| 29.11.25 | MVP bei 95% belassen | Location Fixes nice-to-have, nicht kritisch |
-| 29.11.25 | Fischereischein als Prio 1 | Core Feature für Zielgruppe |
-| 29.11.25 | 200+ OSM Gewässer reichen für Beta | Qualität durch Google Places gesteigert |
+| 29.11.25 | MVP bei 40% belassen | Technische Basis fertig, aber keine echte Angel-App |
+| 29.11.25 | Fang-Tagebuch als Prio 1 | Core Feature für echte Angler |
+| 29.11.25 | Gamification vor Monetarisierung | Spaß kommt vor Geld |
+| 29.11.25 | Social Features kritisch | Community macht Angel-Apps erfolgreich |
