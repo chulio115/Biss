@@ -1,4 +1,5 @@
-// MapScreen - Gewässer-Karte mit Custom Styles
+// MapScreen - Premium Gewässer-Karte (iOS + Android)
+// NO app switching - everything in-app!
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -7,14 +8,19 @@ import {
   Text,
   ActivityIndicator,
   Platform,
+  Animated,
+  Dimensions,
+  ScrollView,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Region } from 'react-native-maps';
+import MapView, { Marker, Circle, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../services/supabase';
 import { calculateFangIndex } from '../services/xai';
 import { getWeather } from '../services/weather';
-import { SpotBottomSheet } from '../components/SpotBottomSheet';
 import { MapFilters } from '../components/MapFilters';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface MapWaterBody {
   id: string;
@@ -30,65 +36,25 @@ export interface MapWaterBody {
   google_place_id?: string;
 }
 
-type MapMode = 'water' | 'night' | 'standard';
+// Map view modes - all work on iOS!
+type MapMode = 'satellite' | 'hybrid' | 'standard';
 
-// Premium Custom Map Styles - USP: Gewässer-Fokus
-const mapStyles: Record<MapMode, any[]> = {
-  // WATER MODE - Gewässer hervorgehoben, Rest gedämpft
-  water: [
-    { elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#0d1b2a' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#4a6fa5' }] },
-    // WASSER - Stark hervorgehoben in leuchtendem Blau
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0077b6' }] },
-    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#90e0ef' }] },
-    { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#023e8a' }] },
-    // Straßen dezent
-    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1b263b' }] },
-    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0d1b2a' }] },
-    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2a3f5f' }] },
-    { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'simplified' }] },
-    // POIs aus
-    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1a3320' }, { visibility: 'on' }] },
-    // Transit aus
-    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    // Landschaft gedämpft
-    { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#112240' }] },
-    { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
-  ],
-  
-  // NIGHT MODE - Perfekt für Nachtangler
-  night: [
-    { elementType: 'geometry', stylers: [{ color: '#0a0a0f' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#0a0a0f' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#4a5568' }] },
-    // Wasser in dunklem Blau mit Leuchteffekt
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1a365d' }] },
-    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4ade80' }] },
-    // Straßen minimal
-    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2d2d44' }] },
-    { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-    // Alles andere aus
-    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-    { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0f0f1a' }] },
-  ],
-  
-  // STANDARD - Clean aber professionell
-  standard: [
-    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#4a90d9' }] },
-  ],
+// Premium marker colors based on Fangindex
+const getMarkerColors = (score: number) => {
+  if (score >= 70) return { bg: '#22c55e', glow: '#4ade80', text: '#052e16' };
+  if (score >= 50) return { bg: '#f59e0b', glow: '#fbbf24', text: '#451a03' };
+  return { bg: '#ef4444', glow: '#f87171', text: '#450a0a' };
 };
 
-const getMarkerColor = (score: number): string => {
-  if (score >= 70) return '#22c55e';
-  if (score >= 50) return '#eab308';
-  return '#ef4444';
+// Get type icon
+const getTypeIcon = (type: string): string => {
+  switch (type?.toLowerCase()) {
+    case 'teich': return '🎣';
+    case 'see': return '🏞️';
+    case 'fluss': return '🌊';
+    case 'kanal': return '⛵';
+    default: return '🐟';
+  }
 };
 
 export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
@@ -98,14 +64,18 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [selectedSpot, setSelectedSpot] = useState<MapWaterBody | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mapMode, setMapMode] = useState<MapMode>('water');
+  const [mapMode, setMapMode] = useState<MapMode>('hybrid');
   const [selectedFish, setSelectedFish] = useState<string | null>(null);
+  const [showDetailSheet, setShowDetailSheet] = useState(false);
+  
+  // Animation for bottom sheet
+  const sheetAnim = useRef(new Animated.Value(0)).current;
 
   const initialRegion: Region = {
     latitude: 53.3347,
     longitude: 9.9717,
-    latitudeDelta: 0.3,
-    longitudeDelta: 0.3,
+    latitudeDelta: 0.15,
+    longitudeDelta: 0.15,
   };
 
   useEffect(() => {
@@ -115,6 +85,16 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   useEffect(() => {
     filterWaterBodies();
   }, [waterBodies, selectedFish]);
+
+  useEffect(() => {
+    // Animate sheet
+    Animated.spring(sheetAnim, {
+      toValue: selectedSpot ? 1 : 0,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 11,
+    }).start();
+  }, [selectedSpot]);
 
   const loadData = async () => {
     try {
@@ -189,8 +169,23 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     }
   };
 
+  const focusOnSpot = (spot: MapWaterBody) => {
+    setSelectedSpot(spot);
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: spot.latitude - 0.015, // Offset to show marker above sheet
+          longitude: spot.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        },
+        400
+      );
+    }
+  };
+
   const cycleMapMode = () => {
-    const modes: MapMode[] = ['water', 'night', 'standard'];
+    const modes: MapMode[] = ['hybrid', 'satellite', 'standard'];
     const currentIndex = modes.indexOf(mapMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setMapMode(modes[nextIndex]);
@@ -198,18 +193,38 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const getModeIcon = () => {
     switch (mapMode) {
-      case 'water': return '💧';
-      case 'night': return '🌙';
-      default: return '🗺️';
+      case 'satellite': return '🛰️';
+      case 'hybrid': return '🗺️';
+      default: return '📍';
     }
   };
 
   const getModeLabel = () => {
     switch (mapMode) {
-      case 'water': return 'Gewässer';
-      case 'night': return 'Nacht';
+      case 'satellite': return 'Satellit';
+      case 'hybrid': return 'Hybrid';
       default: return 'Standard';
     }
+  };
+
+  // Get all unique fish species
+  const allFish = [...new Set(waterBodies.flatMap((wb) => wb.fish_species || []))];
+
+  // Calculate distance from user
+  const getDistance = (lat: number, lon: number): string => {
+    if (!userLocation) return '';
+    const R = 6371;
+    const dLat = ((lat - userLocation.lat) * Math.PI) / 180;
+    const dLon = ((lon - userLocation.lon) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((userLocation.lat * Math.PI) / 180) *
+        Math.cos((lat * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c;
+    return d < 1 ? `${Math.round(d * 1000)}m` : `${d.toFixed(1)}km`;
   };
 
   if (loading) {
@@ -227,33 +242,58 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       <MapView
         ref={mapRef}
         style={styles.map}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
+        provider={PROVIDER_DEFAULT}
         initialRegion={initialRegion}
         showsUserLocation
         showsMyLocationButton={false}
         showsCompass={false}
-        customMapStyle={mapStyles[mapMode]}
-        mapPadding={{ top: 100, right: 0, bottom: 100, left: 0 }}
+        mapType={mapMode}
+        mapPadding={{ top: 120, right: 0, bottom: selectedSpot ? 320 : 100, left: 0 }}
+        onPress={() => setSelectedSpot(null)}
       >
-        {filteredBodies.map((wb) => (
-          <Marker
-            key={wb.id}
-            coordinate={{
-              latitude: wb.latitude,
-              longitude: wb.longitude,
-            }}
-            onPress={() => setSelectedSpot(wb)}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <View style={styles.markerContainer}>
-              <View style={[styles.marker, { backgroundColor: getMarkerColor(wb.fangIndex) }]}>
-                <Text style={styles.markerScore}>{wb.fangIndex}</Text>
-              </View>
-              <View style={[styles.markerArrow, { borderTopColor: getMarkerColor(wb.fangIndex) }]} />
-            </View>
-          </Marker>
-        ))}
+        {/* Water body markers with glow effect */}
+        {filteredBodies.map((wb) => {
+          const colors = getMarkerColors(wb.fangIndex);
+          return (
+            <React.Fragment key={wb.id}>
+              {/* Glow circle behind marker */}
+              <Circle
+                center={{ latitude: wb.latitude, longitude: wb.longitude }}
+                radius={150}
+                fillColor={`${colors.glow}30`}
+                strokeColor={`${colors.glow}50`}
+                strokeWidth={1}
+              />
+              <Marker
+                coordinate={{
+                  latitude: wb.latitude,
+                  longitude: wb.longitude,
+                }}
+                onPress={() => focusOnSpot(wb)}
+                anchor={{ x: 0.5, y: 1 }}
+              >
+                <View style={styles.markerWrapper}>
+                  {/* Outer glow */}
+                  <View style={[styles.markerGlow, { backgroundColor: colors.glow }]} />
+                  {/* Main marker */}
+                  <View style={[styles.marker, { backgroundColor: colors.bg }]}>
+                    <Text style={[styles.markerScore, { color: colors.text }]}>{wb.fangIndex}</Text>
+                  </View>
+                  {/* Arrow */}
+                  <View style={[styles.markerArrow, { borderTopColor: colors.bg }]} />
+                </View>
+              </Marker>
+            </React.Fragment>
+          );
+        })}
       </MapView>
+
+      {/* Top gradient overlay */}
+      <LinearGradient
+        colors={['rgba(10,22,40,0.95)', 'rgba(10,22,40,0.7)', 'transparent']}
+        style={styles.topGradient}
+        pointerEvents="none"
+      />
 
       {/* Header */}
       <View style={styles.header}>
@@ -262,9 +302,9 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
         )}
-        <View style={styles.headerTitle}>
-          <Text style={styles.headerText}>🎣 Gewässer-Karte</Text>
-          <Text style={styles.headerSubtext}>{filteredBodies.length} Spots</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Gewässer-Karte</Text>
+          <Text style={styles.headerSubtitle}>{filteredBodies.length} Spots</Text>
         </View>
         <TouchableOpacity style={styles.modeBtn} onPress={cycleMapMode}>
           <Text style={styles.modeBtnIcon}>{getModeIcon()}</Text>
@@ -276,16 +316,13 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       <MapFilters
         selectedFish={selectedFish}
         onSelectFish={setSelectedFish}
-        availableFish={['Forelle', 'Karpfen', 'Hecht', 'Zander', 'Barsch', 'Aal']}
+        availableFish={allFish}
       />
 
-      {/* Action Buttons */}
+      {/* Action buttons */}
       <View style={styles.actionButtons}>
         <TouchableOpacity style={styles.actionBtn} onPress={centerOnUser}>
-          <Text style={styles.actionBtnText}>📍</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={loadData}>
-          <Text style={styles.actionBtnText}>🔄</Text>
+          <Text style={styles.actionBtnIcon}>📍</Text>
         </TouchableOpacity>
       </View>
 
@@ -296,8 +333,8 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           <Text style={styles.legendText}>70+</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#eab308' }]} />
-          <Text style={styles.legendText}>50-69</Text>
+          <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+          <Text style={styles.legendText}>50+</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
@@ -305,9 +342,140 @@ export const MapScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         </View>
       </View>
 
-      {/* Bottom Sheet */}
+      {/* Premium Bottom Sheet - IN APP, NO EXTERNAL LINKS */}
       {selectedSpot && (
-        <SpotBottomSheet spot={selectedSpot} onClose={() => setSelectedSpot(null)} />
+        <Animated.View
+          style={[
+            styles.bottomSheet,
+            {
+              transform: [
+                {
+                  translateY: sheetAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [400, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={['#0f1729', '#0a1628']}
+            style={styles.sheetGradient}
+          >
+            {/* Handle */}
+            <View style={styles.sheetHandle} />
+
+            {/* Close button */}
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={() => setSelectedSpot(null)}
+            >
+              <Text style={styles.closeBtnText}>✕</Text>
+            </TouchableOpacity>
+
+            {/* Content */}
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.sheetContent}>
+              {/* Header with Score */}
+              <View style={styles.sheetHeader}>
+                <View style={styles.sheetHeaderLeft}>
+                  <View style={styles.typeChip}>
+                    <Text style={styles.typeChipText}>
+                      {getTypeIcon(selectedSpot.type)} {selectedSpot.type}
+                    </Text>
+                  </View>
+                  <Text style={styles.spotName}>{selectedSpot.name}</Text>
+                  <Text style={styles.spotRegion}>📍 {selectedSpot.region}</Text>
+                  {userLocation && (
+                    <Text style={styles.spotDistance}>
+                      🚗 {getDistance(selectedSpot.latitude, selectedSpot.longitude)} entfernt
+                    </Text>
+                  )}
+                </View>
+                <View style={[styles.scoreCircle, { backgroundColor: getMarkerColors(selectedSpot.fangIndex).bg }]}>
+                  <Text style={[styles.scoreValue, { color: getMarkerColors(selectedSpot.fangIndex).text }]}>
+                    {selectedSpot.fangIndex}
+                  </Text>
+                  <Text style={[styles.scoreLabel, { color: getMarkerColors(selectedSpot.fangIndex).text }]}>
+                    {selectedSpot.fangIndex >= 70 ? 'TOP' : selectedSpot.fangIndex >= 50 ? 'GUT' : 'MÄSSIG'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Assumed Badge */}
+              {selectedSpot.is_assumed && (
+                <View style={styles.assumedBadge}>
+                  <Text style={styles.assumedText}>
+                    💡 Vorgeschlagener Spot – noch nicht verifiziert
+                  </Text>
+                </View>
+              )}
+
+              {/* Fish Species */}
+              {selectedSpot.fish_species && selectedSpot.fish_species.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Fischarten</Text>
+                  <View style={styles.fishGrid}>
+                    {selectedSpot.fish_species.map((fish, i) => (
+                      <View key={i} style={styles.fishChip}>
+                        <Text style={styles.fishChipText}>🐟 {fish}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Price */}
+              {selectedSpot.permit_price && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Tageskarte</Text>
+                  <View style={styles.priceCard}>
+                    <Text style={styles.priceValue}>€{selectedSpot.permit_price}</Text>
+                    <Text style={styles.priceLabel}>pro Tag</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Coordinates (useful info, no external link needed) */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Koordinaten</Text>
+                <View style={styles.coordsCard}>
+                  <Text style={styles.coordsText}>
+                    {selectedSpot.latitude.toFixed(5)}° N, {selectedSpot.longitude.toFixed(5)}° E
+                  </Text>
+                </View>
+              </View>
+
+              {/* Actions - ALL IN-APP */}
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={styles.primaryAction}
+                  onPress={() => {
+                    if (mapRef.current) {
+                      mapRef.current.animateToRegion(
+                        {
+                          latitude: selectedSpot.latitude,
+                          longitude: selectedSpot.longitude,
+                          latitudeDelta: 0.01,
+                          longitudeDelta: 0.01,
+                        },
+                        500
+                      );
+                    }
+                  }}
+                >
+                  <Text style={styles.primaryActionText}>🔍 Zoom In</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.secondaryAction}>
+                  <Text style={styles.secondaryActionIcon}>❤️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.secondaryAction}>
+                  <Text style={styles.secondaryActionIcon}>📤</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </LinearGradient>
+        </Animated.View>
       )}
     </View>
   );
@@ -320,98 +488,103 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0a1628',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#0a1628',
   },
   loadingText: {
-    color: '#94a3b8',
+    color: '#64748b',
     marginTop: 16,
     fontSize: 16,
   },
   map: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+  },
+  topGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
   },
   header: {
     position: 'absolute',
-    top: 50,
+    top: Platform.OS === 'ios' ? 60 : 40,
     left: 16,
     right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(10, 22, 40, 0.95)',
-    borderRadius: 16,
-    padding: 12,
-    gap: 12,
+    justifyContent: 'space-between',
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1e293b',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   backBtnText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 24,
+  },
+  headerCenter: {
+    alignItems: 'center',
   },
   headerTitle: {
-    flex: 1,
-  },
-  headerText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  headerSubtext: {
-    color: '#64748b',
-    fontSize: 12,
+  headerSubtitle: {
+    color: '#4ade80',
+    fontSize: 13,
+    marginTop: 2,
   },
   modeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e293b',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 20,
     gap: 6,
   },
   modeBtnIcon: {
     fontSize: 16,
   },
   modeBtnText: {
-    color: '#94a3b8',
-    fontSize: 12,
+    color: '#fff',
+    fontSize: 13,
     fontWeight: '500',
   },
   actionButtons: {
     position: 'absolute',
     right: 16,
-    bottom: 140,
-    gap: 8,
+    bottom: 120,
+    gap: 12,
   },
   actionBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(10, 22, 40, 0.95)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(15,23,41,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  actionBtnText: {
+  actionBtnIcon: {
     fontSize: 22,
   },
   legend: {
     position: 'absolute',
     left: 16,
-    bottom: 140,
-    backgroundColor: 'rgba(10, 22, 40, 0.95)',
+    bottom: 120,
+    backgroundColor: 'rgba(15,23,41,0.9)',
     borderRadius: 12,
     padding: 10,
     gap: 6,
@@ -428,22 +601,36 @@ const styles = StyleSheet.create({
   },
   legendText: {
     color: '#94a3b8',
-    fontSize: 11,
+    fontSize: 12,
+    fontWeight: '500',
   },
-  markerContainer: {
+  // Marker styles
+  markerWrapper: {
     alignItems: 'center',
+  },
+  markerGlow: {
+    position: 'absolute',
+    top: -4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    opacity: 0.4,
   },
   marker: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minWidth: 36,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   markerScore: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '800',
   },
   markerArrow: {
     width: 0,
@@ -453,6 +640,204 @@ const styles = StyleSheet.create({
     borderTopWidth: 8,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    marginTop: -1,
+    marginTop: -2,
+  },
+  // Bottom Sheet styles
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: SCREEN_HEIGHT * 0.55,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 20,
+  },
+  sheetGradient: {
+    flex: 1,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#334155',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  closeBtnText: {
+    color: '#94a3b8',
+    fontSize: 16,
+  },
+  sheetContent: {
+    paddingHorizontal: 20,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  sheetHeaderLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  typeChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(74,222,128,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  typeChipText: {
+    color: '#4ade80',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  spotName: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  spotRegion: {
+    color: '#94a3b8',
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  spotDistance: {
+    color: '#64748b',
+    fontSize: 13,
+  },
+  scoreCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scoreValue: {
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  scoreLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    opacity: 0.8,
+  },
+  assumedBadge: {
+    backgroundColor: 'rgba(251,191,36,0.15)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  assumedText: {
+    color: '#fbbf24',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  section: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  fishGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  fishChip: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  fishChipText: {
+    color: '#e2e8f0',
+    fontSize: 13,
+  },
+  priceCard: {
+    backgroundColor: 'rgba(74,222,128,0.1)',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  priceValue: {
+    color: '#4ade80',
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  priceLabel: {
+    color: '#4ade80',
+    fontSize: 14,
+  },
+  coordsCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 12,
+  },
+  coordsText: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  primaryAction: {
+    flex: 1,
+    backgroundColor: '#4ade80',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  primaryActionText: {
+    color: '#052e16',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  secondaryAction: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  secondaryActionIcon: {
+    fontSize: 22,
   },
 });
+
+export default MapScreen;
