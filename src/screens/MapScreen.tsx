@@ -332,12 +332,13 @@ const detectCategory = (wb: any): SpotCategory => {
   
   // Official: Angelteiche, Forellenhöfe, verified Google Places
   const officialKeywords = ['angelteich', 'forellenteich', 'forellenhof', 'fischzucht', 'angelsee', 'angelpark', 'angelverein'];
-  if (officialKeywords.some(k => name.includes(k)) || wb.placeId) {
+  const hasGooglePlace = wb.placeId || wb.place_id;
+  if (officialKeywords.some(k => name.includes(k)) || hasGooglePlace) {
     return 'official';
   }
   
   // Hidden: Small ponds, less known
-  if (type === 'pond' && !name.includes('see')) {
+  if ((type === 'pond' || type.includes('teich')) && !name.includes('see') && !name.includes('angel')) {
     return 'hidden';
   }
   
@@ -438,39 +439,44 @@ export const MapScreen: React.FC = () => {
         placeId: wb.place_id,
       })) || [];
       
-      // Use mock data if DB is empty or error
-      let waterBodyData = transformedData.length > 0 ? transformedData : [
+      // Use mock data as fallback if no DB data - BENDESTORF PROTOTYPE
+      const waterBodyData = data?.length ? data : [
         {
-          id: 'mock-1',
-          name: 'Müggelsee',
-          type: 'See',
-          latitude: '53.2509',
-          longitude: '10.4141',
+          id: 'proto-forellenhof',
+          name: 'Forellenhof Bendestorf',
+          type: 'Angelteich',
+          latitude: '53.3355',
+          longitude: '9.9732',
           region: 'Niedersachsen',
-          fish_species: ['Hecht', 'Zander', 'Barsch', 'Karpfen'],
+          fish_species: ['Forelle', 'Karpfen', 'Stör'],
+          permit_price: 25,
+          is_assumed: false,
+          // Google Places Data (Prototype) - Real-looking data
+          place_photo: 'https://images.unsplash.com/photo-1545450660-3378a7f3a364?w=800',
+          place_rating: 4.6,
+          place_id: 'ChIJ_forellenhof_bendestorf',
+          place_open_now: true,
+        },
+        {
+          id: 'proto-hidden-1',
+          name: 'Kleiner Teich am Wald',
+          type: 'pond',
+          latitude: '53.3420',
+          longitude: '9.9650',
+          region: 'Niedersachsen',
+          fish_species: ['Karpfen', 'Schleie', 'Rotauge'],
+          permit_price: null,
+          is_assumed: true,
+        },
+        {
+          id: 'proto-fangindex-1',
+          name: 'Seevetal See',
+          type: 'See',
+          latitude: '53.3180',
+          longitude: '9.9890',
+          region: 'Niedersachsen',
+          fish_species: ['Hecht', 'Zander', 'Barsch'],
           permit_price: 15,
-          is_assumed: true,
-        },
-        {
-          id: 'mock-2',
-          name: 'Wannsee',
-          type: 'See',
-          latitude: '53.2609',
-          longitude: '10.4241',
-          region: 'Niedersachsen',
-          fish_species: ['Hecht', 'Barsch', 'Rotauge'],
-          permit_price: 12,
-          is_assumed: true,
-        },
-        {
-          id: 'mock-3',
-          name: 'Tegeler See',
-          type: 'See',
-          latitude: '53.2709',
-          longitude: '10.4341',
-          region: 'Niedersachsen',
-          fish_species: ['Zander', 'Barsch', 'Aal'],
-          permit_price: 18,
           is_assumed: true,
         },
       ];
@@ -480,7 +486,7 @@ export const MapScreen: React.FC = () => {
 
       // Calculate scores and detect categories
       const scored = await Promise.all(
-        waterBodyData.map(async (wb) => {
+        waterBodyData.map(async (wb: any) => {
           const result = await calculateFangIndex(wb.name, weather, null);
           const category = detectCategory(wb);
           return {
@@ -489,6 +495,11 @@ export const MapScreen: React.FC = () => {
             longitude: parseFloat(wb.longitude),
             fangIndex: result.score,
             category,
+            // Transform place data from snake_case
+            placePhoto: wb.place_photo || wb.placePhoto,
+            placeRating: wb.place_rating || wb.placeRating,
+            placeId: wb.place_id || wb.placeId,
+            placeOpenNow: wb.place_open_now || wb.placeOpenNow,
           };
         })
       );
@@ -829,36 +840,8 @@ export const MapScreen: React.FC = () => {
         />
       </Modal>
 
-      {/* 🆕 Smart Fishing Intelligence - Contextual Recommendations */}
-      {smartRecommendations.length > 0 && (
-        <View style={styles.smartRecommendationsContainer}>
-          <SmartRecommendationsList
-            recommendations={smartRecommendations}
-            onRecommendationPress={(spotId) => {
-              const spot = waterBodies.find(w => w.id === spotId);
-              if (spot) handleMarkerPress(spot);
-            }}
-            variant="horizontal"
-          />
-        </View>
-      )}
-
-      {/* 🆕 Smart Insight Banner - Shows contextual tips */}
-      {smartInsights.length > 0 && (
-        <View style={styles.smartInsightContainer}>
-          <SmartInsightBanner
-            insights={smartInsights}
-            onInsightPress={(insight) => {
-              // Handle insight actions (filter, navigate, info)
-              if (insight.actionable?.action === 'filter' && insight.actionable.payload?.fish) {
-                setSelectedFish(insight.actionable.payload.fish);
-              }
-            }}
-          />
-        </View>
-      )}
-
-      {/* Top 3 Cards moved to Bottom Sheet - no more overlap! */}
+      {/* Smart Recommendations REMOVED from floating - now in Bottom Sheet only */}
+      {/* This prevents the overlap issue */}
 
       {/* Bottom Sheet */}
       <BottomSheet
