@@ -7,7 +7,7 @@
 ## 📊 Status Overview
 
 ```
-████████████████████░░░░░░░░ 65% MVP Complete
+██████████████████████████░░ 85% MVP Complete
 ```
 
 | Phase | Status | Beschreibung |
@@ -16,9 +16,11 @@
 | Navigation | ✅ 100% | 5 Tabs, Screens |
 | Map Core | ✅ 100% | Mapbox, Styles, Markers |
 | USP Features | ✅ 100% | Beißzeit, Schonzeit |
-| Daten | 🟡 10% | Noch Mock-Daten |
+| Smart Intelligence | ✅ 100% | Kontextbewusste Empfehlungen |
+| Daten | ✅ 80% | 200 echte Gewässer (OSM) |
+| Categories | ✅ 100% | 4 Spot-Kategorien |
 | Monetarisierung | 🔴 0% | Stripe vorbereitet |
-| Polish | 🟡 30% | Animations fertig |
+| Polish | 🟡 50% | Animations + UI fertig |
 
 ---
 
@@ -73,8 +75,23 @@
 - [x] Smart Recommendations (Kategorisiert, nicht nur sortiert)
 - [x] useSmartFishing Hook mit Auto-Refresh
 - [x] SmartInsightCard & SmartRecommendationCard Components
-- [ ] Integration in MapScreen
-- [ ] Testing mit echten Daten
+- [x] Integration in MapScreen
+- [x] Testing mit echten Daten
+
+### Echte Gewässer-Daten (OSM Integration) ✅
+- [x] OpenStreetMap Overpass API Integration
+- [x] 200+ echte Gewässer in Niedersachsen
+- [x] Automatische Fischarten-Zuweisung
+- [x] Data Acquisition Service (dataAcquisition.ts)
+- [x] Supabase Import Script
+- [x] Google Places Enrichment vorbereitet
+
+### Spot Categories System ✅
+- [x] 4 Kategorien: Fangindex, Offiziell, Versteckt, Mystery
+- [x] Auto-Kategorisierung nach Keywords
+- [x] Filter Pills UI mit Count Badge
+- [x] Kategorie-spezifische Marker (Farbe + Icon)
+- [x] Category Badge im Bottom Sheet
 
 ### Mapbox Styles Aktivierung ✅
 - [x] 4 JSON Styles erstellt
@@ -141,27 +158,48 @@
 
 | Task | Aufwand | Beschreibung |
 |------|---------|--------------|
+| **Mystery Spots 🔮** | 1 Woche | Google Popular Times, Low-Traffic Prediction |
 | Tiefenkarten | 1 Woche | Wo Daten verfügbar |
 | Wetter-Overlay | 4h | Regen-Radar Layer |
 | Fangfotos | 1 Woche | Upload + Score |
 | Social Feed | 2 Wochen | Community Features |
 
+### Mystery Spots - Konzept 🔮
+> ABOVE AND BEYOND USP - Geheimtipps auf der Karte
+
+**Idee:** Öffentliche Gewässer identifizieren, die wenig frequentiert sind:
+
+1. **Google Popular Times** - Analysiere Besuchermuster
+2. **Traffic-Prediction** - Machine Learning auf historische Daten
+3. **Öffentliche Gewässer** - Ohne Tageskarte nutzbar
+4. **Community-Verified** - User bestätigen "Hidden Gems"
+
+**Marker:**
+- Cyan/Türkis Farbe
+- 🔮 Icon
+- "Mystery" Badge
+- Confidence Score basierend auf Datenqualität
+
+**Monetarisierung:**
+- Mystery Spots = Premium Feature
+- "Geheimtipp freischalten" für €0.99
+
 ---
 
 ## 🎯 Milestones
 
-### M1: Internal Alpha ⏳
+### M1: Internal Alpha ✅
 > Ziel: App läuft mit echten Daten
 
-- [ ] 25 echte Gewässer in DB
-- [ ] Custom Mapbox Styles aktiv
-- [ ] Auf eigenem Gerät testen
-- **Deadline:** +1 Woche
+- [x] 200 echte Gewässer in DB (übertroffen!)
+- [x] Custom Mapbox Styles aktiv
+- [x] Auf eigenem Gerät testen
+- **Erreicht:** Nov 2025
 
 ### M2: Closed Beta 📅
 > Ziel: 10 Tester aus der Region
 
-- [ ] 50 Gewässer
+- [x] 50 Gewässer (haben 200!)
 - [ ] Fischereischein-Upload
 - [ ] Feedback-Formular
 - [ ] TestFlight Build
