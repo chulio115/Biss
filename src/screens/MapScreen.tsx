@@ -138,6 +138,8 @@ export interface MapWaterBody {
   placeAddress?: string;
   placePhone?: string;
   placeWebsite?: string;
+  // Coordinate source tracking
+  coordinateSource?: 'google' | 'manual' | 'osm';
 }
 
 // Removed - now using map.config.ts
@@ -167,6 +169,27 @@ const colors = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // BEISSZEIT-RADAR: Sunrise/Sunset + Golden Hour Calculation
 // ═══════════════════════════════════════════════════════════════════════════════
+// 🆕 Deutsche Gewässer-Typ Namen (Above and Beyond UX)
+const WATER_TYPE_NAMES: Record<string, string> = {
+  'lake': 'See',
+  'pond': 'Teich',
+  'river': 'Fluss',
+  'stream': 'Bach',
+  'canal': 'Kanal',
+  'reservoir': 'Stausee',
+  'see': 'See',
+  'teich': 'Teich',
+  'angelteich': 'Angelteich',
+  'forellenteich': 'Forellenteich',
+  'karpfenteich': 'Karpfenteich',
+};
+
+const getWaterTypeName = (type: string): string => {
+  if (!type) return 'Gewässer';
+  const normalized = type.toLowerCase().trim();
+  return WATER_TYPE_NAMES[normalized] || type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+};
+
 const calculateSunTimes = (lat: number, lng: number): { sunrise: Date; sunset: Date; goldenHour: { morning: Date; evening: Date } } => {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
@@ -364,6 +387,8 @@ const detectCategory = (wb: any): SpotCategory => {
 const KNOWN_SPOT_CORRECTIONS: Record<string, { lat: number; lng: number }> = {
   // Forellenhof Bendestorf - Korrekte Koordinaten
   'Forellenhof Bendestorf': { lat: 53.3355, lng: 9.9732 },
+  // Angelsee Bendestorfer Mühle - Mühlenteich (21227 Bendestorf)
+  'Angelsee Bendestorfer Mühle': { lat: 53.3347, lng: 9.9717 },
   'Angelteich Jesteburg': { lat: 53.3035, lng: 9.9618 },
   'Forellenteich Jesteburg': { lat: 53.3035, lng: 9.9618 },
   'Angelteich Buchholz': { lat: 53.3281, lng: 9.8800 },
@@ -1096,14 +1121,21 @@ export const MapScreen: React.FC = () => {
                 </View>
                 <View style={styles.spotInfo}>
                   <View style={styles.spotTypeRow}>
-                    <Text style={styles.spotType}>{selectedSpot.type.toUpperCase()}</Text>
+                    {/* Schönerer Typ-Name */}
+                    <Text style={styles.spotType}>
+                      {getWaterTypeName(selectedSpot.type)}
+                    </Text>
                     {/* Category Badge */}
                     <View style={[styles.categoryBadge, { backgroundColor: SPOT_CATEGORIES[selectedSpot.category].color }]}>
                       <Text style={styles.categoryBadgeIcon}>{SPOT_CATEGORIES[selectedSpot.category].icon}</Text>
                       <Text style={styles.categoryBadgeText}>{SPOT_CATEGORIES[selectedSpot.category].name}</Text>
                     </View>
                   </View>
+                  {/* Adresse oder Entfernung */}
                   <Text style={[styles.spotDistance, isDark && styles.textLight]}>
+                    {selectedSpot.placeAddress 
+                      ? selectedSpot.placeAddress.split(',')[0] + ' • '
+                      : ''}
                     {getDistance(selectedSpot.longitude, selectedSpot.latitude)} entfernt
                   </Text>
                 </View>
