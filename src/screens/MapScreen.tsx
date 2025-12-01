@@ -319,11 +319,41 @@ const FISH_SEASONS: Record<string, FishSeason> = {
   },
 };
 
-const getFishSeasonStatus = (fishName: string): 'open' | 'closed' | 'best' => {
+// 🆕 Prüft ob ein Gewässer ein Besatz-Teich ist (keine echte Schonzeit)
+const isBesatzteich = (spotName: string, spotType: string): boolean => {
+  const nameLower = spotName.toLowerCase();
+  const typeLower = spotType.toLowerCase();
+  
+  // Forellenteiche, Angelteiche, etc. sind typischerweise Besatzgewässer
+  const besatzKeywords = ['forellenteich', 'forellenhof', 'angelteich', 'angelpark', 
+                          'fischteich', 'karpfenteich', 'put and take', 'put & take'];
+  
+  return besatzKeywords.some(keyword => 
+    nameLower.includes(keyword) || typeLower.includes(keyword)
+  );
+};
+
+const getFishSeasonStatus = (
+  fishName: string, 
+  options?: { spotName?: string; spotType?: string }
+): 'open' | 'closed' | 'best' => {
   const fish = FISH_SEASONS[fishName.toLowerCase()];
   if (!fish) return 'open';
   
   const currentMonth = new Date().getMonth() + 1; // 1-indexed
+  
+  // 🆕 Besatz-Teiche haben KEINE echte Schonzeit für Forellen/Saiblinge
+  // (Die Fische werden eingesetzt und dürfen das ganze Jahr gefangen werden)
+  if (options?.spotName && options?.spotType) {
+    if (isBesatzteich(options.spotName, options.spotType)) {
+      const besatzFische = ['forelle', 'saibling', 'regenbogenforelle', 'bachforelle', 'lachs'];
+      if (besatzFische.includes(fishName.toLowerCase())) {
+        // Bei Besatzteichen: Prüfe nur beste Monate, keine Schonzeit
+        if (fish.bestMonths.includes(currentMonth)) return 'best';
+        return 'open';
+      }
+    }
+  }
   
   // Check if in Schonzeit
   for (const [start, end] of fish.schonzeit) {
@@ -441,6 +471,9 @@ export const MapScreen: React.FC = () => {
   // 🆕 Menu System - 4 Buttons: ⭐ Top3, 🏷️ Categories, 🐟 Fish, ℹ️ Info
   type MenuType = 'top3' | 'categories' | 'fish' | 'info' | null;
   const [activeMenu, setActiveMenu] = useState<MenuType>(null);
+  
+  // 🆕 Fangindex Info Modal
+  const [showFangindexInfo, setShowFangindexInfo] = useState(false);
   
   // Beißzeit-Radar State
   const [sunTimes, setSunTimes] = useState<{ sunrise: Date; sunset: Date } | null>(null);
@@ -1073,6 +1106,94 @@ export const MapScreen: React.FC = () => {
         />
       </Modal>
 
+      {/* 🆕 Fangindex Info Modal - Professionelle Erklärung */}
+      <Modal
+        visible={showFangindexInfo}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowFangindexInfo(false)}
+      >
+        <View style={styles.fangindexModalOverlay}>
+          <View style={styles.fangindexModalContent}>
+            {/* Header */}
+            <View style={styles.fangindexModalHeader}>
+              <View style={styles.fangindexModalIcon}>
+                <Text style={styles.fangindexModalIconText}>🎯</Text>
+              </View>
+              <Text style={styles.fangindexModalTitle}>Der BISS Fangindex</Text>
+              <TouchableOpacity 
+                onPress={() => setShowFangindexInfo(false)}
+                style={styles.fangindexModalClose}
+              >
+                <Text style={styles.fangindexModalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Description */}
+            <Text style={styles.fangindexModalDesc}>
+              Unser KI-gestützter Algorithmus berechnet die Fangwahrscheinlichkeit 
+              basierend auf wissenschaftlich belegten Faktoren.
+            </Text>
+
+            {/* Factors */}
+            <View style={styles.fangindexFactors}>
+              <View style={styles.fangindexFactor}>
+                <Text style={styles.factorIcon}>🌤️</Text>
+                <View style={styles.factorContent}>
+                  <Text style={styles.factorTitle}>Wetter (35%)</Text>
+                  <Text style={styles.factorDesc}>Luftdruck, Temperatur, Wind & Bewölkung</Text>
+                </View>
+              </View>
+              <View style={styles.fangindexFactor}>
+                <Text style={styles.factorIcon}>🕐</Text>
+                <View style={styles.factorContent}>
+                  <Text style={styles.factorTitle}>Tageszeit (30%)</Text>
+                  <Text style={styles.factorDesc}>Beißzeiten: Morgen- & Abenddämmerung</Text>
+                </View>
+              </View>
+              <View style={styles.fangindexFactor}>
+                <Text style={styles.factorIcon}>🌙</Text>
+                <View style={styles.factorContent}>
+                  <Text style={styles.factorTitle}>Mondphase (20%)</Text>
+                  <Text style={styles.factorDesc}>Neu- und Vollmond steigern Aktivität</Text>
+                </View>
+              </View>
+              <View style={styles.fangindexFactor}>
+                <Text style={styles.factorIcon}>💧</Text>
+                <View style={styles.factorContent}>
+                  <Text style={styles.factorTitle}>Wasserstand (15%)</Text>
+                  <Text style={styles.factorDesc}>Steigende Pegel oft vorteilhaft</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Legend */}
+            <View style={styles.fangindexLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: colors.green }]} />
+                <Text style={styles.legendText}>70+ Sehr gut</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: colors.yellow }]} />
+                <Text style={styles.legendText}>50-69 Gut</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: colors.red }]} />
+                <Text style={styles.legendText}>&lt;50 Mäßig</Text>
+              </View>
+            </View>
+
+            {/* Footer */}
+            <TouchableOpacity 
+              style={styles.fangindexModalButton}
+              onPress={() => setShowFangindexInfo(false)}
+            >
+              <Text style={styles.fangindexModalButtonText}>Verstanden</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Smart Recommendations REMOVED from floating - now in Bottom Sheet only */}
       {/* This prevents the overlap issue */}
 
@@ -1116,9 +1237,21 @@ export const MapScreen: React.FC = () => {
               )}
               
               <View style={styles.spotHeader}>
-                <View style={[styles.spotScoreCircle, { backgroundColor: getScoreColor(selectedSpot.fangIndex) }]}>
-                  <Text style={styles.spotScoreText}>{selectedSpot.fangIndex}</Text>
-                </View>
+                {/* 🆕 Klickbarer Score mit Info */}
+                <TouchableOpacity 
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowFangindexInfo(true);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.spotScoreCircle, { backgroundColor: getScoreColor(selectedSpot.fangIndex) }]}>
+                    <Text style={styles.spotScoreText}>{selectedSpot.fangIndex}</Text>
+                    <View style={styles.scoreInfoBadge}>
+                      <Info size={10} color="#FFFFFF" />
+                    </View>
+                  </View>
+                </TouchableOpacity>
                 <View style={styles.spotInfo}>
                   <View style={styles.spotTypeRow}>
                     {/* Schönerer Typ-Name */}
@@ -1235,7 +1368,11 @@ export const MapScreen: React.FC = () => {
                   <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Fischarten (Saison-Status)</Text>
                   <View style={styles.fishGrid}>
                     {selectedSpot.fish_species.map((fish, i) => {
-                      const status = getFishSeasonStatus(fish);
+                      // 🆕 Übergebe Spot-Info für Besatzteich-Erkennung
+                      const status = getFishSeasonStatus(fish, { 
+                        spotName: selectedSpot.name, 
+                        spotType: selectedSpot.type 
+                      });
                       const fishData = FISH_SEASONS[fish.toLowerCase()];
                       return (
                         <View 
@@ -1269,7 +1406,10 @@ export const MapScreen: React.FC = () => {
                       );
                     })}
                   </View>
-                  {selectedSpot.fish_species.some(f => getFishSeasonStatus(f) === 'closed') && (
+                  {/* 🆕 Schonzeit-Warnung nur wenn wirklich Schonzeit */}
+                  {selectedSpot.fish_species.some(f => 
+                    getFishSeasonStatus(f, { spotName: selectedSpot.name, spotType: selectedSpot.type }) === 'closed'
+                  ) && (
                     <Text style={styles.schonzeitWarning}>
                       ⚠️ Einige Fischarten haben aktuell Schonzeit
                     </Text>
@@ -2310,6 +2450,143 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     lineHeight: 18,
+  },
+
+  // 🆕 Score Info Badge (kleines i auf dem Score)
+  scoreInfoBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // 🆕 Fangindex Modal Styles
+  fangindexModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  fangindexModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 360,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  fangindexModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  fangindexModalIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  fangindexModalIconText: {
+    fontSize: 22,
+  },
+  fangindexModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    flex: 1,
+  },
+  fangindexModalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fangindexModalCloseText: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  fangindexModalDesc: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  fangindexFactors: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  fangindexFactor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 12,
+  },
+  factorIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  factorContent: {
+    flex: 1,
+  },
+  factorTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  factorDesc: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  fangindexLegend: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    marginBottom: 16,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  legendText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  fangindexModalButton: {
+    backgroundColor: '#0066FF',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  fangindexModalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 
