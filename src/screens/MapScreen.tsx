@@ -432,8 +432,8 @@ export const MapScreen: React.FC = () => {
     loading: smartLoading,
   } = useSmartFishing(waterBodies, userLocation);
 
-  // Bottom sheet snap points
-  const snapPoints = [90, 320, 550];
+  // Bottom sheet snap points - Increased for Action Buttons
+  const snapPoints = [90, 450, '90%'];
 
   useEffect(() => {
     loadData();
@@ -558,68 +558,12 @@ export const MapScreen: React.FC = () => {
         }
       }
       
-      // Use mock data as fallback if no DB data - ENHANCED WITH MORE SPOTS
-      const waterBodyData = data?.length ? transformedData : [
-        // Forellenhof Bendestorf - PERFECT Google Places data
-        {
-          id: 'proto-forellenhof',
-          name: 'Forellenhof Bendestorf',
-          type: 'Angelteich',
-          latitude: '53.3355',
-          longitude: '9.9732',
-          region: 'Niedersachsen',
-          fish_species: ['Forelle', 'Karpfen', 'Stör'],
-          permit_price: 25,
-          is_assumed: false,
-          place_photo: 'https://images.unsplash.com/photo-1545450660-3378a7f3a364?w=800',
-          place_rating: 4.6,
-          place_id: 'ChIJ_forellenhof_bendestorf',
-          place_open_now: true,
-        },
-        // Other spots with enhanced mock data
-        {
-          id: 'proto-angelteich-lueneburg',
-          name: 'Angelteich Lüneburg',
-          type: 'Angelteich',
-          latitude: '53.2465',
-          longitude: '10.4094',
-          region: 'Niedersachsen',
-          fish_species: ['Karpfen', 'Hecht', 'Zander'],
-          permit_price: 20,
-          is_assumed: true,
-          place_photo: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-          place_rating: 4.2,
-          place_id: 'ChIJ_example_lueneburg',
-          place_open_now: true,
-        },
-        {
-          id: 'proto-hidden-teich',
-          name: 'Versteckter Waldteich',
-          type: 'pond',
-          latitude: '53.3420',
-          longitude: '9.9650',
-          region: 'Niedersachsen',
-          fish_species: ['Karpfen', 'Schleie', 'Rotauge'],
-          permit_price: null,
-          is_assumed: true,
-          // No Google Places for hidden gems
-        },
-        {
-          id: 'proto-seevetal',
-          name: 'Seevetal See',
-          type: 'See',
-          latitude: '53.3180',
-          longitude: '9.9890',
-          region: 'Niedersachsen',
-          fish_species: ['Hecht', 'Zander', 'Barsch'],
-          permit_price: 15,
-          is_assumed: true,
-          place_photo: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800',
-          place_rating: 4.1,
-          place_id: 'ChIJ_example_seevetal',
-          place_open_now: false,
-        },
-      ];
+      // Use real data only - no more mock fallback
+      const waterBodyData = transformedData || [];
+      
+      if (waterBodyData.length === 0) {
+        console.log('⚠️ No water bodies found in database');
+      }
 
       // Get weather for scoring
       const weather = await getWeather(userLocation[1], userLocation[0]);
@@ -1313,7 +1257,10 @@ export const MapScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* 🆕 Action Buttons */}
+              {/* 🆕 Action Buttons - v2 */}
+              <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 16, marginBottom: 8 }}>
+                Aktionen
+              </Text>
               <View style={styles.actionSection}>
                 {/* Route Button */}
                 <TouchableOpacity 
@@ -1387,7 +1334,7 @@ export const MapScreen: React.FC = () => {
             // Explore View with Top 3 and Filters
             <View>
               {/* 🏆 Top 3 Horizontal Scroll - Now in Bottom Sheet! */}
-              {top3.length > 0 && !top3[0]?.id?.startsWith('mock-') && (
+              {top3.length > 0 && (
                 <View style={styles.top3Section}>
                   <Text style={[styles.sectionLabel, isDark && styles.textLight]}>🏆 Top 3 in deiner Nähe</Text>
                   <ScrollView 
