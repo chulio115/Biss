@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS water_bodies (
   place_rating NUMERIC,
   place_website TEXT,
   place_phone TEXT,
+  place_address TEXT,
+  place_open_now BOOLEAN,
+  place_hours TEXT[],
   
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),

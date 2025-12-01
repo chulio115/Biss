@@ -30,6 +30,7 @@ import {
   Image,
   Animated,
   ScrollView,
+  Linking,
 } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -50,6 +51,9 @@ import {
   Waves,
   Camera,
   Info,
+  Phone,
+  ExternalLink,
+  Share2,
 } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 import { enrichWithGooglePlaces } from '../services/dataAcquisition';
@@ -130,6 +134,10 @@ export interface MapWaterBody {
   placeOpenNow?: boolean;
   placeHours?: string[];
   placeId?: string;
+  // 🆕 Additional contact data
+  placeAddress?: string;
+  placePhone?: string;
+  placeWebsite?: string;
 }
 
 // Removed - now using map.config.ts
@@ -648,6 +656,10 @@ export const MapScreen: React.FC = () => {
             placeRating: wb.place_rating || wb.placeRating,
             placeId: wb.place_id || wb.placeId,
             placeOpenNow: wb.place_open_now || wb.placeOpenNow,
+            // 🆕 Additional contact data
+            placeAddress: wb.place_address || wb.placeAddress || wb.address,
+            placePhone: wb.place_phone || wb.placePhone,
+            placeWebsite: wb.place_website || wb.placeWebsite,
           };
         })
       );
@@ -1298,6 +1310,76 @@ export const MapScreen: React.FC = () => {
                       <Text style={styles.buyBtnText}>Kaufen</Text>
                     </TouchableOpacity>
                   </View>
+                </View>
+              )}
+
+              {/* 🆕 Action Buttons */}
+              <View style={styles.actionSection}>
+                {/* Route Button */}
+                <TouchableOpacity 
+                  style={styles.actionBtnPrimary}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    const url = Platform.select({
+                      ios: `maps:?q=${selectedSpot.name}&ll=${selectedSpot.latitude},${selectedSpot.longitude}`,
+                      android: `geo:${selectedSpot.latitude},${selectedSpot.longitude}?q=${selectedSpot.name}`,
+                    });
+                    if (url) Linking.openURL(url);
+                  }}
+                >
+                  <Navigation size={18} color="#FFFFFF" strokeWidth={2.5} />
+                  <Text style={styles.actionBtnPrimaryText}>Route</Text>
+                </TouchableOpacity>
+
+                {/* Google Maps Button */}
+                <TouchableOpacity 
+                  style={styles.actionBtn}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    const url = selectedSpot.placeId 
+                      ? `https://www.google.com/maps/place/?q=place_id:${selectedSpot.placeId}`
+                      : `https://www.google.com/maps/search/?api=1&query=${selectedSpot.latitude},${selectedSpot.longitude}`;
+                    Linking.openURL(url);
+                  }}
+                >
+                  <MapPin size={18} color="#4285F4" strokeWidth={2} />
+                  <Text style={styles.actionBtnText}>Maps</Text>
+                </TouchableOpacity>
+
+                {/* Phone Button - if available */}
+                {selectedSpot.placePhone && (
+                  <TouchableOpacity 
+                    style={styles.actionBtn}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      Linking.openURL(`tel:${selectedSpot.placePhone?.replace(/\s/g, '')}`);
+                    }}
+                  >
+                    <Phone size={18} color="#10B981" strokeWidth={2} />
+                    <Text style={styles.actionBtnText}>Anrufen</Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Website Button - if available */}
+                {selectedSpot.placeWebsite && (
+                  <TouchableOpacity 
+                    style={styles.actionBtn}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      Linking.openURL(selectedSpot.placeWebsite!);
+                    }}
+                  >
+                    <ExternalLink size={18} color="#6B7280" strokeWidth={2} />
+                    <Text style={styles.actionBtnText}>Web</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* 🆕 Address Display */}
+              {selectedSpot.placeAddress && (
+                <View style={styles.addressSection}>
+                  <MapPin size={14} color="#6B7280" />
+                  <Text style={styles.addressText}>{selectedSpot.placeAddress}</Text>
                 </View>
               )}
             </View>
@@ -2189,6 +2271,67 @@ const styles = StyleSheet.create({
   confidenceBadge: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.gray400 },
   confidenceHigh: { backgroundColor: colors.green },
   confidenceMedium: { backgroundColor: colors.yellow },
+
+  // 🆕 Action Buttons
+  actionSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    marginBottom: 16,
+    gap: 10,
+  },
+  actionBtnPrimary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    borderRadius: 14,
+    gap: 8,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  actionBtnPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 14,
+    borderRadius: 14,
+    gap: 6,
+  },
+  actionBtnText: {
+    color: '#374151',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // 🆕 Address Section
+  addressSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 12,
+    gap: 8,
+    marginBottom: 16,
+  },
+  addressText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#6B7280',
+    lineHeight: 18,
+  },
 });
 
 export default MapScreen;

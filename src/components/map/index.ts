@@ -15,3 +15,9 @@ export { PulsingBuyButton } from './PulsingBuyButton';
 // ─── Smart Intelligence Components ───
 export { SmartInsightCard, SmartInsightBanner } from './SmartInsightCard';
 export { SmartRecommendationCard, SmartRecommendationsList } from './SmartRecommendationCard';
+
+// ─── 🆕 Above and Beyond Components ───
+export { EnhancedMarker } from './EnhancedMarker';
+export { PhotoGallery } from './PhotoGallery';
+export { PlaceReviews } from './PlaceReviews';
+export { PlaceContactCard } from './PlaceContactCard';
