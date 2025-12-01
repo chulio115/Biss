@@ -6,7 +6,15 @@
 
 ## 📊 Aktueller Status nach Fixes
 
-### ✅ Gerade behoben:
+### ✅ Session 01.12.2024 - Above and Beyond:
+- [x] **Action Buttons** - Route, Maps, Anrufen, Website im Bottom Sheet
+- [x] **Deutsche Gewässer-Namen** - See, Teich, Fluss statt LAKE, POND
+- [x] **Koordinaten-Korrekturen** - Manuelle Fixes für bekannte Spots
+- [x] **Google Places Integration** - Adresse, Öffnungszeiten, Rating
+- [x] **Snap Points optimiert** - [90, 450, '90%'] für mehr Content
+- [x] **Mock-Daten entfernt** - Nur echte Supabase-Daten
+
+### ✅ Frühere Fixes:
 - [x] Zoom +/- geht jetzt in 2er-Schritten (statt direkt zu min/max)
 - [x] Top 3 Cards nur bei echten Daten sichtbar
 - [x] Suche verbunden mit echten waterBodies
