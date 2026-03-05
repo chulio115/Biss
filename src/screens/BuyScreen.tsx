@@ -19,24 +19,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ticket, MapPin, Calendar, CreditCard, Search, ChevronRight } from 'lucide-react-native';
-
-// Design Tokens
-const COLORS = {
-  primary: '#00A3FF',
-  accent: '#0066FF',
-  green: '#4ADE80',
-  white: '#FFFFFF',
-  gray100: '#F5F5F5',
-  gray200: '#E0E0E0',
-  gray400: '#9CA3AF',
-  gray600: '#4B5563',
-  gray900: '#111827',
-  dark: {
-    bg: '#0A1A2F',
-    surface: '#132337',
-    card: '#1A2D44',
-  },
-};
+import { COLORS } from '../constants/colors';
 
 // Mock data for popular permits
 const POPULAR_PERMITS = [

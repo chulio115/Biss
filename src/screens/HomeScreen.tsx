@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { getWeather } from '../services/weather';
-import { calculateFangIndex } from '../services/xai';
+import { calculateFangIndex } from '../utils/fangindex';
 import { FangIndex, WeatherData } from '../types';
 import { NearbySpots } from '../components/NearbySpots';
 

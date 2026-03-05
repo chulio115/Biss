@@ -51,9 +51,20 @@ export interface FangIndex {
     water_level: number;
     moon_phase: number;
     time_of_day: number;
+    solunar?: number;
   };
   best_fish: string[];
   recommendation: string;
+  solunar?: {
+    moonrise: Date | null;
+    moonset: Date | null;
+    moonTransit: Date | null;
+    moonUnderfoot: Date | null;
+    periods: Array<{ type: 'major' | 'minor'; start: Date; end: Date; label: string }>;
+    currentPeriod: { type: 'major' | 'minor'; start: Date; end: Date; label: string } | null;
+    nextPeriod: { type: 'major' | 'minor'; start: Date; end: Date; label: string } | null;
+    solunarScore: number;
+  };
 }
 
 export interface WeatherData {
@@ -70,4 +81,26 @@ export interface PegelData {
   water_level: number;
   trend: 'steigend' | 'fallend' | 'gleichbleibend';
   timestamp: string;
+}
+
+export interface Catch {
+  id: string;
+  user_id: string;
+  water_body_id?: string;
+  water_body_name: string;
+  fish_species: string;
+  weight_kg?: number;
+  length_cm?: number;
+  method?: string;
+  bait?: string;
+  photo_url?: string;
+  notes?: string;
+  weather_temp?: number;
+  weather_desc?: string;
+  fang_index?: number;
+  latitude?: number;
+  longitude?: number;
+  caught_at: string;
+  created_at: string;
+  updated_at: string;
 }

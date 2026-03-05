@@ -30,24 +30,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-
-// Design Tokens
-const COLORS = {
-  primary: '#00A3FF',
-  accent: '#0066FF',
-  green: '#4ADE80',
-  white: '#FFFFFF',
-  gray100: '#F5F5F5',
-  gray200: '#E0E0E0',
-  gray400: '#9CA3AF',
-  gray600: '#4B5563',
-  gray900: '#111827',
-  dark: {
-    bg: '#0A1A2F',
-    surface: '#132337',
-    card: '#1A2D44',
-  },
-};
+import { COLORS, getScoreColor } from '../constants/colors';
 
 // Mock recent searches
 const RECENT_SEARCHES = [
@@ -144,12 +127,6 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ onClose, onSelectSpo
     Haptics.selectionAsync();
     setQuery(search);
     handleSearch(search);
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return COLORS.green;
-    if (score >= 50) return '#FACC15';
-    return '#EF4444';
   };
 
   return (
@@ -289,7 +266,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray200,
+    borderBottomColor: COLORS.gray200 as string,
   },
   searchBar: {
     flex: 1,

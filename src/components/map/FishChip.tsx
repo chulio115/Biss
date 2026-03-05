@@ -3,19 +3,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-
-const COLORS = {
-  primary: '#00A3FF',
-  white: '#FFFFFF',
-  gray100: '#F5F5F5',
-  gray800: '#262626',
-  scoreHigh: '#4ADE80',
-  scoreMedium: '#FACC15',
-  scoreLow: '#EF4444',
-  dark: {
-    card: '#243B4D',
-  },
-};
+import { COLORS } from '../../constants/colors';
 
 // Fish database with icons
 const FISH_DATABASE: Record<string, { name: string; icon: string; color: string }> = {
@@ -52,13 +40,13 @@ export const FishChip: React.FC<FishChipProps> = ({
   const fishData = FISH_DATABASE[normalized] || { 
     name: fishName, 
     icon: '🐟', 
-    color: COLORS.primary 
+    color: COLORS.accent 
   };
 
   const confidenceColor = {
-    high: COLORS.scoreHigh,
-    medium: COLORS.scoreMedium,
-    low: COLORS.scoreLow,
+    high: COLORS.green,
+    medium: COLORS.yellow,
+    low: COLORS.red,
   }[confidence];
 
   return (
@@ -91,7 +79,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   containerNight: {
-    backgroundColor: COLORS.dark.card,
+    backgroundColor: COLORS.dark.card as string,
   },
   iconCircle: {
     width: 32,

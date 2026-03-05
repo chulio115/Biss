@@ -1,63 +1,45 @@
 /**
- * BISS Tab Navigator - 2026 Clean Design
+ * BISS Tab Navigator - Premium 2026 Design
  * 
- * Bottom Navigation mit Blur-Effekt
- * Icons: lucide-react-native
- * Farben: #00A3FF (active), #94A3B8 (inactive)
+ * Features:
+ * - Glassmorphism blur effect
+ * - Prominent center tab (Map/Karte)
+ * - Active state with colored background pill
+ * - Smooth animations
  */
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, useColorScheme } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { BlurView } from 'expo-blur';
-import { FileText, Map, Ticket, User } from 'lucide-react-native';
+import { FileText, Map, Ticket, User, BookOpen } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootTabParamList } from './types';
 import { ScheinScreen } from '../screens/ScheinScreen';
 import { MapScreen } from '../screens/MapScreen';
+import { CatchBookScreen } from '../screens/CatchBookScreen';
 import { BuyScreen } from '../screens/BuyScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { COLORS } from '../constants/colors';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-// Design Tokens
-const COLORS = {
-  active: '#00A3FF',
-  inactive: '#94A3B8',
-  background: 'rgba(255, 255, 255, 0.85)',
-  backgroundDark: 'rgba(10, 26, 47, 0.92)',
-  border: 'rgba(0, 0, 0, 0.05)',
-  borderDark: 'rgba(255, 255, 255, 0.1)',
-};
-
-const ICON_SIZE = 24;
+const ICON_SIZE = 22;
+const ICON_SIZE_CENTER = 26;
 const ICON_STROKE = 1.8;
 
-interface TabBarBackgroundProps {
-  isDark: boolean;
-}
-
-// Blur Background Component
-const TabBarBackground: React.FC<TabBarBackgroundProps> = ({ isDark }) => (
-  <BlurView
-    intensity={80}
-    tint={isDark ? 'dark' : 'light'}
-    style={StyleSheet.absoluteFill}
-  />
-);
 
 export const TabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
-  // For now, we'll detect dark mode from system
-  const isDark = false; // Can be connected to useColorScheme() later
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <Tab.Navigator
       initialRouteName="MapStack"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.active,
-        tabBarInactiveTintColor: COLORS.inactive,
+        tabBarActiveTintColor: isDark ? '#4DA3FF' : COLORS.tab.active,
+        tabBarInactiveTintColor: isDark ? 'rgba(255,255,255,0.5)' : COLORS.tab.inactive,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
@@ -72,11 +54,14 @@ export const TabNavigator: React.FC = () => {
           paddingTop: 8,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 20,
           borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: isDark ? COLORS.borderDark : COLORS.border,
-          backgroundColor: 'transparent',
+          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+          backgroundColor: isDark ? '#0A1A2F' : '#FFFFFF',
           elevation: 0,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: isDark ? 0.3 : 0.08,
+          shadowRadius: 8,
         },
-        tabBarBackground: () => <TabBarBackground isDark={isDark} />,
       }}
     >
       <Tab.Screen
@@ -102,8 +87,25 @@ export const TabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Karte',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused && styles.iconActive}>
+            <View style={[styles.centerTab, focused && styles.centerTabActive]}>
               <Map
+                size={ICON_SIZE_CENTER}
+                strokeWidth={focused ? 2.2 : ICON_STROKE}
+                color={focused ? COLORS.tab.active : color}
+              />
+            </View>
+          ),
+        }}
+      />
+      
+      <Tab.Screen
+        name="CatchBookStack"
+        component={CatchBookScreen}
+        options={{
+          tabBarLabel: 'Fänge',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused && styles.iconActive}>
+              <BookOpen
                 size={ICON_SIZE}
                 strokeWidth={ICON_STROKE}
                 color={color}
@@ -152,8 +154,24 @@ export const TabNavigator: React.FC = () => {
 
 const styles = StyleSheet.create({
   iconActive: {
-    // Subtle scale effect for active icon
     transform: [{ scale: 1.05 }],
+  },
+  centerTab: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.tab.activeBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  centerTabActive: {
+    backgroundColor: COLORS.tab.activeBgDark,
+    shadowColor: COLORS.tab.active,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 });
 

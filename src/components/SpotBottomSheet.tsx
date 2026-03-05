@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { MapWaterBody } from '../screens/MapScreen';
+import { MapWaterBody } from '../types/map';
 
 interface SpotBottomSheetProps {
   spot: MapWaterBody;
@@ -53,8 +53,8 @@ export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose 
 
   const openGoogleMaps = () => {
     // If we have a Google Place ID, use it for more accurate link
-    if (spot.google_place_id) {
-      const url = `https://www.google.com/maps/place/?q=place_id:${spot.google_place_id}`;
+    if (spot.placeId) {
+      const url = `https://www.google.com/maps/place/?q=place_id:${spot.placeId}`;
       Linking.openURL(url);
     } else {
       // Fallback to coordinates search

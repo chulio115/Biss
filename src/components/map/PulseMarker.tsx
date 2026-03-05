@@ -3,19 +3,7 @@
  */
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
-
-const COLORS = {
-  white: '#FFFFFF',
-  scoreHigh: '#4ADE80',
-  scoreMedium: '#FACC15',
-  scoreLow: '#EF4444',
-};
-
-const getScoreColor = (score: number): string => {
-  if (score >= 70) return COLORS.scoreHigh;
-  if (score >= 50) return COLORS.scoreMedium;
-  return COLORS.scoreLow;
-};
+import { COLORS, getScoreColor } from '../../constants/colors';
 
 interface PulseMarkerProps {
   score: number;

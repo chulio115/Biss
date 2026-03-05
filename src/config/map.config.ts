@@ -14,7 +14,7 @@
 export const MAPBOX_STYLES = {
   // Day Mode - BISS Standard Style (heller Angelkarten-Style)
   standard: process.env.EXPO_PUBLIC_MAPBOX_STYLE_STANDARD 
-    || 'mapbox://styles/mapbox/outdoors-v12', // Fallback: Outdoors (zeigt Gewässer gut)
+    || 'mapbox://styles/chulio115/cmikk7vsv003301qvgta39zfb', // Fallback: BISS Angel-Day (custom Style)
   
   // Night Mode - BISS Angel-Night Style (dunkler Style mit leuchtenden Gewässern)
   night: process.env.EXPO_PUBLIC_MAPBOX_STYLE_NIGHT 

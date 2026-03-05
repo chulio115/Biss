@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { supabase } from '../services/supabase';
-import { calculateFangIndex } from '../services/xai';
+import { calculateFangIndex } from '../utils/fangindex';
 import { getWeather } from '../services/weather';
 import { WeatherData } from '../types';
 

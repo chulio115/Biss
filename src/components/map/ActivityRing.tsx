@@ -4,20 +4,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, Animated, Easing } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-
-const COLORS = {
-  scoreHigh: '#4ADE80',
-  scoreMedium: '#FACC15',
-  scoreLow: '#EF4444',
-  gray200: '#E5E5E5',
-  gray500: '#737373',
-};
-
-const getScoreColor = (score: number): string => {
-  if (score >= 70) return COLORS.scoreHigh;
-  if (score >= 50) return COLORS.scoreMedium;
-  return COLORS.scoreLow;
-};
+import { COLORS, getScoreColor } from '../../constants/colors';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 

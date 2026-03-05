@@ -6,11 +6,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native
 import { LinearGradient } from 'expo-linear-gradient';
 import { ShoppingCart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-
-const COLORS = {
-  white: '#FFFFFF',
-  scoreHigh: '#4ADE80',
-};
+import { COLORS } from '../../constants/colors';
 
 interface PulsingBuyButtonProps {
   price: number;
@@ -60,7 +56,7 @@ export const PulsingBuyButton: React.FC<PulsingBuyButtonProps> = ({
         style={styles.container}
       >
         <LinearGradient
-          colors={[COLORS.scoreHigh, '#22C55E']}
+          colors={[COLORS.green, COLORS.greenDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
@@ -86,7 +82,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: COLORS.scoreHigh,
+    shadowColor: COLORS.green,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,

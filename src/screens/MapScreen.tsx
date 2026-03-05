@@ -1,2479 +1,604 @@
 /**
- * ═══════════════════════════════════════════════════════════════════════════════
- * BISS ULTIMATE MAP - Die schönste Angelkarte Europas
- * ═══════════════════════════════════════════════════════════════════════════════
- * 
- * Features:
- * - 3 Map Styles: Standard, Angel-Fokus, Angel-Night
- * - Auto Night Mode (18:30)
- * - 🆕 Smart Fishing Intelligence (Kontextbewusste Empfehlungen)
- * - 🆕 Predictive Insights (Wetter, Mond, Tageszeit)
- * - Google Places Integration (Photos, Hours, Ratings)
- * - Apple Watch Activity Ring for Fangindex
- * - Pulse Animation for Hot Spots (80+)
- * - Premium BottomSheet with Parallax Hero
- * - Animated Fish Species Chips
- * 
- * „Das ist die mit Abstand schönste Angelkarte Europas – Punkt."
+ * BISS Map Screen - Refactored
+ * Clean orchestrator: delegates data to useMapData, UI to sub-components.
+ * Includes Mapbox marker clustering for performance.
  */
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
-  Dimensions,
   ActivityIndicator,
   Platform,
   Modal,
-  Image,
-  Animated,
   ScrollView,
-  Linking,
+  Image,
 } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import * as Location from 'expo-location';
+import BottomSheet from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import { 
-  Search, 
-  Navigation, 
-  Sun, 
-  Moon, 
-  Fish,
-  MapPin,
-  Clock,
-  Star,
-  Waves,
-  Camera,
-  Info,
-  Phone,
-  ExternalLink,
-  Share2,
-} from 'lucide-react-native';
-import { supabase } from '../services/supabase';
-import { enrichWithGooglePlaces } from '../services/dataAcquisition';
-import { getWeather } from '../services/weather';
-import { fetchPlaceDetails } from '../services/googlePlaces';
-import { calculateFangIndex } from '../services/xai';
 import { SearchScreen } from './SearchScreen';
-import { 
-  ActivityRing, 
-  PulseMarker, 
-  FishChip, 
-  PulsingBuyButton,
-  SmartInsightBanner,
-  SmartRecommendationsList,
-} from '../components/map';
-import { CAMERA_CONFIG, getStyleURL, shouldUseNightMode } from '../config/map.config';
+import { MapTopBar, MapZoomControls, MapBottomSheet, BiteTimeModal, RatingModal, MapFilterSheet, FilterFAB, DEFAULT_FILTERS } from '../components/map';
+import type { MapFilters } from '../components/map';
+import { CAMERA_CONFIG, getStyleURL, shouldUseNightMode, MARKER_CONFIG } from '../config/map.config';
+import { useMapData } from '../hooks/useMapData';
 import { useSmartFishing } from '../hooks/useSmartFishing';
+import { useFavorites } from '../hooks/useFavorites';
+import { useRatings } from '../hooks/useRatings';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { OfflineBanner } from '../components/ui/OfflineBanner';
+import { COLORS, getScoreColor } from '../constants/colors';
+import { SPOT_CATEGORIES } from '../constants/fishing';
+import { MapWaterBody } from '../types/map';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-// Initialize Mapbox - Token MUST be in .env (never hardcode!)
+// Initialize Mapbox
 if (!process.env.EXPO_PUBLIC_MAPBOX_TOKEN) {
   throw new Error('EXPO_PUBLIC_MAPBOX_TOKEN is missing in .env');
 }
 MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN);
 
-// Spot Categories - USP Feature
-export type SpotCategory = 'fangindex' | 'official' | 'hidden' | 'mystery';
+// ─── GeoJSON Helpers ───
 
-export const SPOT_CATEGORIES = {
-  fangindex: {
-    id: 'fangindex',
-    name: 'Fangindex',
-    icon: '🎯',
-    color: '#F59E0B', // Orange
-    description: 'Gebietsorientierter Fangindex',
-  },
-  official: {
-    id: 'official',
-    name: 'Offiziell',
-    icon: '✓',
-    color: '#10B981', // Green
-    description: 'Angelteiche & Forellenhöfe',
-  },
-  hidden: {
-    id: 'hidden',
-    name: 'Versteckt',
-    icon: '💎',
-    color: '#8B5CF6', // Purple
-    description: 'Kleine Teiche & Gebiete',
-  },
-  mystery: {
-    id: 'mystery',
-    name: 'Mystery',
-    icon: '🔮',
-    color: '#06B6D4', // Cyan
-    description: 'Geheimtipps - wenig frequentiert',
-  },
-} as const;
+const buildGeoJSON = (waterBodies: MapWaterBody[]): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: waterBodies.map((wb) => ({
+    type: 'Feature' as const,
+    id: wb.id,
+    geometry: {
+      type: 'Point' as const,
+      coordinates: [wb.longitude, wb.latitude],
+    },
+    properties: {
+      id: wb.id,
+      name: wb.name,
+      fangIndex: wb.fangIndex,
+      category: wb.category,
+      color: getScoreColor(wb.fangIndex),
+      categoryColor: SPOT_CATEGORIES[wb.category]?.color || '#F59E0B',
+      categoryIcon: SPOT_CATEGORIES[wb.category]?.icon || '🎯',
+    },
+  })),
+});
 
-// Types
-export interface MapWaterBody {
-  id: string;
-  name: string;
-  type: string;
-  latitude: number;
-  longitude: number;
-  region: string;
-  fish_species: string[];
-  permit_price: number | null;
-  is_assumed: boolean;
-  fangIndex: number;
-  // Category
-  category: SpotCategory;
-  // Google Places enhanced data
-  placePhoto?: string;
-  placeRating?: number;
-  placeOpenNow?: boolean;
-  placeHours?: string[];
-  placeId?: string;
-  // 🆕 Additional contact data
-  placeAddress?: string;
-  placePhone?: string;
-  placeWebsite?: string;
-  // Coordinate source tracking
-  coordinateSource?: 'google' | 'manual' | 'osm';
-}
-
-// Removed - now using map.config.ts
-
-// Design Tokens - 2026 Clean
-const colors = {
-  white: '#FFFFFF',
-  gray100: '#F5F5F5',
-  gray200: '#E0E0E0',
-  gray400: '#9CA3AF',
-  gray600: '#4B5563',
-  gray900: '#111827',
-  primary: '#0066FF',
-  accent: '#00A3FF',
-  green: '#4ADE80',
-  yellow: '#FACC15',
-  red: '#EF4444',
-  dark: {
-    bg: '#0A1A2F',
-    surface: '#132337',
-    water: '#00A3FF',
-  },
-};
-
-// Removed - now using map.config.ts
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// BEISSZEIT-RADAR: Sunrise/Sunset + Golden Hour Calculation
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🆕 Deutsche Gewässer-Typ Namen (Above and Beyond UX)
-const WATER_TYPE_NAMES: Record<string, string> = {
-  'lake': 'See',
-  'pond': 'Teich',
-  'river': 'Fluss',
-  'stream': 'Bach',
-  'canal': 'Kanal',
-  'reservoir': 'Stausee',
-  'see': 'See',
-  'teich': 'Teich',
-  'angelteich': 'Angelteich',
-  'forellenteich': 'Forellenteich',
-  'karpfenteich': 'Karpfenteich',
-};
-
-const getWaterTypeName = (type: string): string => {
-  if (!type) return 'Gewässer';
-  const normalized = type.toLowerCase().trim();
-  return WATER_TYPE_NAMES[normalized] || type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
-};
-
-const calculateSunTimes = (lat: number, lng: number): { sunrise: Date; sunset: Date; goldenHour: { morning: Date; evening: Date } } => {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  const oneDay = 1000 * 60 * 60 * 24;
-  const dayOfYear = Math.floor(diff / oneDay);
-  
-  // Simplified sunrise/sunset calculation
-  const zenith = 90.833;
-  const D2R = Math.PI / 180;
-  const R2D = 180 / Math.PI;
-  
-  const lngHour = lng / 15;
-  const t_rise = dayOfYear + ((6 - lngHour) / 24);
-  const t_set = dayOfYear + ((18 - lngHour) / 24);
-  
-  const M_rise = (0.9856 * t_rise) - 3.289;
-  const M_set = (0.9856 * t_set) - 3.289;
-  
-  let L_rise = M_rise + (1.916 * Math.sin(M_rise * D2R)) + (0.020 * Math.sin(2 * M_rise * D2R)) + 282.634;
-  let L_set = M_set + (1.916 * Math.sin(M_set * D2R)) + (0.020 * Math.sin(2 * M_set * D2R)) + 282.634;
-  
-  L_rise = L_rise % 360;
-  L_set = L_set % 360;
-  
-  const sinDec_rise = 0.39782 * Math.sin(L_rise * D2R);
-  const sinDec_set = 0.39782 * Math.sin(L_set * D2R);
-  const cosDec_rise = Math.cos(Math.asin(sinDec_rise));
-  const cosDec_set = Math.cos(Math.asin(sinDec_set));
-  
-  const cosH_rise = (Math.cos(zenith * D2R) - (sinDec_rise * Math.sin(lat * D2R))) / (cosDec_rise * Math.cos(lat * D2R));
-  const cosH_set = (Math.cos(zenith * D2R) - (sinDec_set * Math.sin(lat * D2R))) / (cosDec_set * Math.cos(lat * D2R));
-  
-  const H_rise = 360 - (Math.acos(cosH_rise) * R2D);
-  const H_set = Math.acos(cosH_set) * R2D;
-  
-  const T_rise = H_rise / 15 + (0.06571 * t_rise) - 6.622 - lngHour + 1; // +1 for CET
-  const T_set = H_set / 15 + (0.06571 * t_set) - 6.622 - lngHour + 1;
-  
-  const sunrise = new Date(now);
-  sunrise.setHours(Math.floor(T_rise % 24), Math.floor((T_rise % 1) * 60), 0);
-  
-  const sunset = new Date(now);
-  sunset.setHours(Math.floor(T_set % 24), Math.floor((T_set % 1) * 60), 0);
-  
-  // Golden Hour: 1h after sunrise, 1h before sunset
-  const goldenMorning = new Date(sunrise.getTime() + 60 * 60 * 1000);
-  const goldenEvening = new Date(sunset.getTime() - 60 * 60 * 1000);
-  
-  return { sunrise, sunset, goldenHour: { morning: goldenMorning, evening: goldenEvening } };
-};
-
-// Check if we're in Golden Hour
-const isGoldenHour = (lat: number, lng: number): { isGolden: boolean; nextGolden: string } => {
-  const now = new Date();
-  const { sunrise, sunset, goldenHour } = calculateSunTimes(lat, lng);
-  
-  const nearSunrise = Math.abs(now.getTime() - sunrise.getTime()) < 60 * 60 * 1000;
-  const nearSunset = Math.abs(now.getTime() - sunset.getTime()) < 60 * 60 * 1000;
-  
-  if (nearSunrise || nearSunset) {
-    return { isGolden: true, nextGolden: 'JETZT! 🔥' };
-  }
-  
-  // Next golden hour
-  if (now < goldenHour.morning) {
-    return { isGolden: false, nextGolden: `${goldenHour.morning.getHours()}:${String(goldenHour.morning.getMinutes()).padStart(2, '0')}` };
-  } else if (now < goldenHour.evening) {
-    return { isGolden: false, nextGolden: `${goldenHour.evening.getHours()}:${String(goldenHour.evening.getMinutes()).padStart(2, '0')}` };
-  }
-  
-  return { isGolden: false, nextGolden: 'Morgen früh' };
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// FISH SEASON DATA - Germany Fishing Seasons
-// ═══════════════════════════════════════════════════════════════════════════════
-interface FishSeason {
-  name: string;
-  icon: string;
-  schonzeit: [number, number][]; // [startMonth, endMonth] pairs (1-indexed)
-  bestMonths: number[];
-}
-
-const FISH_SEASONS: Record<string, FishSeason> = {
-  forelle: { 
-    name: 'Forelle', 
-    icon: '🐟', 
-    schonzeit: [[10, 3]], // Oct-Mar
-    bestMonths: [4, 5, 6, 9] 
-  },
-  karpfen: { 
-    name: 'Karpfen', 
-    icon: '🐡', 
-    schonzeit: [], // No closed season in most areas
-    bestMonths: [5, 6, 7, 8, 9] 
-  },
-  hecht: { 
-    name: 'Hecht', 
-    icon: '🦈', 
-    schonzeit: [[2, 4]], // Feb-Apr (spawning)
-    bestMonths: [5, 6, 10, 11] 
-  },
-  zander: { 
-    name: 'Zander', 
-    icon: '🐠', 
-    schonzeit: [[3, 5]], // Mar-May
-    bestMonths: [6, 7, 8, 9, 10] 
-  },
-  barsch: { 
-    name: 'Barsch', 
-    icon: '🎣', 
-    schonzeit: [], // No closed season
-    bestMonths: [3, 4, 5, 9, 10, 11] 
-  },
-  aal: { 
-    name: 'Aal', 
-    icon: '🐍', 
-    schonzeit: [], // Complex regulations
-    bestMonths: [5, 6, 7, 8, 9] 
-  },
-  wels: {
-    name: 'Wels',
-    icon: '🐋',
-    schonzeit: [[5, 6]], // May-Jun
-    bestMonths: [7, 8, 9]
-  },
-};
-
-// 🆕 Prüft ob ein Gewässer ein Besatz-Teich ist (keine echte Schonzeit)
-const isBesatzteich = (spotName: string, spotType: string): boolean => {
-  const nameLower = spotName.toLowerCase();
-  const typeLower = spotType.toLowerCase();
-  
-  // Forellenteiche, Angelteiche, etc. sind typischerweise Besatzgewässer
-  const besatzKeywords = ['forellenteich', 'forellenhof', 'angelteich', 'angelpark', 
-                          'fischteich', 'karpfenteich', 'put and take', 'put & take'];
-  
-  return besatzKeywords.some(keyword => 
-    nameLower.includes(keyword) || typeLower.includes(keyword)
-  );
-};
-
-const getFishSeasonStatus = (
-  fishName: string, 
-  options?: { spotName?: string; spotType?: string }
-): 'open' | 'closed' | 'best' => {
-  const fish = FISH_SEASONS[fishName.toLowerCase()];
-  if (!fish) return 'open';
-  
-  const currentMonth = new Date().getMonth() + 1; // 1-indexed
-  
-  // 🆕 Besatz-Teiche haben KEINE echte Schonzeit für Forellen/Saiblinge
-  // (Die Fische werden eingesetzt und dürfen das ganze Jahr gefangen werden)
-  if (options?.spotName && options?.spotType) {
-    if (isBesatzteich(options.spotName, options.spotType)) {
-      const besatzFische = ['forelle', 'saibling', 'regenbogenforelle', 'bachforelle', 'lachs'];
-      if (besatzFische.includes(fishName.toLowerCase())) {
-        // Bei Besatzteichen: Prüfe nur beste Monate, keine Schonzeit
-        if (fish.bestMonths.includes(currentMonth)) return 'best';
-        return 'open';
-      }
-    }
-  }
-  
-  // Check if in Schonzeit
-  for (const [start, end] of fish.schonzeit) {
-    if (start <= end) {
-      if (currentMonth >= start && currentMonth <= end) return 'closed';
-    } else {
-      // Wraps around year (e.g., Oct-Mar = 10-3)
-      if (currentMonth >= start || currentMonth <= end) return 'closed';
-    }
-  }
-  
-  // Check if best month
-  if (fish.bestMonths.includes(currentMonth)) return 'best';
-  
-  return 'open';
-};
-
-// Score color helper
-const getScoreColor = (score: number): string => {
-  if (score >= 70) return colors.green;
-  if (score >= 50) return colors.yellow;
-  return colors.red;
-};
-
-// Fish filter options
-const FISH_FILTERS = [
-  { id: 'forelle', name: 'Forelle', confidence: 'high' },
-  { id: 'karpfen', name: 'Karpfen', confidence: 'high' },
-  { id: 'hecht', name: 'Hecht', confidence: 'medium' },
-  { id: 'zander', name: 'Zander', confidence: 'medium' },
-  { id: 'barsch', name: 'Barsch', confidence: 'high' },
-  { id: 'aal', name: 'Aal', confidence: 'low' },
-];
-
-// Auto-detect category from water body data
-const detectCategory = (wb: any): SpotCategory => {
-  const name = wb.name?.toLowerCase() || '';
-  const type = wb.type?.toLowerCase() || '';
-  
-  // Official: Angelteiche, Forellenhöfe, verified Google Places
-  const officialKeywords = ['angelteich', 'forellenteich', 'forellenhof', 'fischzucht', 'angelsee', 'angelpark', 'angelverein'];
-  const hasGooglePlace = wb.placeId || wb.place_id;
-  if (officialKeywords.some(k => name.includes(k)) || hasGooglePlace) {
-    return 'official';
-  }
-  
-  // Hidden: Small ponds, less known
-  if ((type === 'pond' || type.includes('teich')) && !name.includes('see') && !name.includes('angel')) {
-    return 'hidden';
-  }
-  
-  // Mystery: For later - based on low Google traffic (placeholder)
-  // TODO: Implement Google Popular Times analysis
-  
-  // Default: Fangindex (standard)
-  return 'fangindex';
-};
-
-// 🆕 COORDINATE CORRECTIONS - Above and Beyond Accuracy!
-// Bekannte Angelteiche mit korrekten Koordinaten
-const KNOWN_SPOT_CORRECTIONS: Record<string, { lat: number; lng: number }> = {
-  // Forellenhof Bendestorf - Korrekte Koordinaten
-  'Forellenhof Bendestorf': { lat: 53.3355, lng: 9.9732 },
-  // Angelsee Bendestorfer Mühle - Mühlenteich (21227 Bendestorf)
-  'Angelsee Bendestorfer Mühle': { lat: 53.3347, lng: 9.9717 },
-  'Angelteich Jesteburg': { lat: 53.3035, lng: 9.9618 },
-  'Forellenteich Jesteburg': { lat: 53.3035, lng: 9.9618 },
-  'Angelteich Buchholz': { lat: 53.3281, lng: 9.8800 },
-  'Forellenteich Seevetal': { lat: 53.4180, lng: 10.0325 },
-  'Angelteich Hittfeld': { lat: 53.3632, lng: 9.9831 },
-  'Forellenteich Hittfeld': { lat: 53.3632, lng: 9.9831 },
-};
-
-// Default Location: Bendestorf (21227), Germany (Fallback)
-// Forellenhof Bendestorf ist hier - perfekt zum Testen!
-const BENDESTORF_COORDS: [number, number] = [9.9732, 53.3355]; // [lng, lat]
-function getCorrectedCoordinates(name: string, originalLat: number, originalLng: number, googleLat?: number, googleLng?: number) {
-  // 1. Google Places coordinates have highest priority (most accurate)
-  if (googleLat && googleLng) {
-    return { lat: googleLat, lng: googleLng, source: 'google' };
-  }
-  
-  // 2. Manual corrections for known spots
-  const correction = KNOWN_SPOT_CORRECTIONS[name];
-  if (correction) {
-    return { lat: correction.lat, lng: correction.lng, source: 'manual' };
-  }
-  
-  // 3. OSM coordinates as fallback
-  return { lat: originalLat, lng: originalLng, source: 'osm' };
-}
+// ─── Component ───
 
 export const MapScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  
+
   const mapRef = useRef<MapboxGL.MapView>(null);
   const cameraRef = useRef<MapboxGL.Camera>(null);
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  
-  const [waterBodies, setWaterBodies] = useState<MapWaterBody[]>([]);
-  const [selectedSpot, setSelectedSpot] = useState<MapWaterBody | null>(null);
-  const [userLocation, setUserLocation] = useState<[number, number]>([
-    CAMERA_CONFIG.initial.center.longitude,
-    CAMERA_CONFIG.initial.center.latitude,
-  ]);
-  const [loading, setLoading] = useState(true);
-  const [isNightMode, setIsNightMode] = useState(shouldUseNightMode());
-  const [selectedFish, setSelectedFish] = useState<string[]>([]);
-  const [top3, setTop3] = useState<MapWaterBody[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
-  const [activeCategories, setActiveCategories] = useState<SpotCategory[]>(['fangindex', 'official']);
-  const [showCategoryInfo, setShowCategoryInfo] = useState<SpotCategory | null>(null);
-  
-  // 🆕 Menu System - 4 Buttons: ⭐ Top3, 🏷️ Categories, 🐟 Fish, ℹ️ Info
-  type MenuType = 'top3' | 'categories' | 'fish' | 'info' | null;
-  const [activeMenu, setActiveMenu] = useState<MenuType>(null);
-  
-  // 🆕 Fangindex Info Modal
-  const [showFangindexInfo, setShowFangindexInfo] = useState(false);
-  
-  // Beißzeit-Radar State
-  const [sunTimes, setSunTimes] = useState<{ sunrise: Date; sunset: Date } | null>(null);
-  const [goldenHourInfo, setGoldenHourInfo] = useState<{ isGolden: boolean; nextGolden: string }>({ isGolden: false, nextGolden: '' });
+  const bottomSheetRef = useRef<BottomSheet>(null) as React.RefObject<BottomSheet>;
 
-  // 🆕 Smart Fishing Intelligence
+  // Data hook
+  const {
+    waterBodies,
+    top3,
+    userLocation,
+    loading,
+    sunTimes,
+    goldenHourInfo,
+    reload,
+    isOfflineData,
+    cacheAge,
+  } = useMapData();
+
+  // Network status (Opas Rat #4: Offline-Modus)
+  const { isOffline, onReconnect } = useNetworkStatus();
+
+  // Auto-reload when coming back online
+  React.useEffect(() => {
+    const cleanup = onReconnect(() => {
+      console.log('🌐 Reconnected — reloading map data');
+      reload();
+    });
+    return cleanup;
+  }, [onReconnect, reload]);
+
+  // Smart Fishing hook
   const {
     headline: smartHeadline,
     subheadline: smartSubheadline,
-    insights: smartInsights,
-    recommendations: smartRecommendations,
     isGoldenHour: smartIsGoldenHour,
     currentCondition,
     loading: smartLoading,
   } = useSmartFishing(waterBodies, userLocation);
 
-  // Bottom sheet snap points - Increased for Action Buttons
-  const snapPoints = [90, 450, '90%'];
+  // Favorites
+  const { isFavorite, toggleFavorite, favoriteIds } = useFavorites();
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Ratings
+  const { submitRating, getSummaryForSpot, getRatingForSpot } = useRatings();
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      
-      // Get location with high accuracy (BestForNavigation)
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        try {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.BestForNavigation,
-          });
-          // Only update if we got valid coordinates (not USA default)
-          const { longitude, latitude } = location.coords;
-          if (longitude && latitude && 
-              // Sanity check: Coordinates should be in Germany/Europe range
-              longitude > 5 && longitude < 16 && 
-              latitude > 47 && latitude < 56) {
-            setUserLocation([longitude, latitude]);
-          } else {
-            console.log('Invalid coordinates, using Lüneburg fallback');
-            setUserLocation(BENDESTORF_COORDS);
-          }
-        } catch (e) {
-          console.log('Location error, using Lüneburg fallback');
-          setUserLocation(BENDESTORF_COORDS);
-        }
-      } else {
-        console.log('Location permission denied, using Lüneburg fallback');
-        setUserLocation(BENDESTORF_COORDS);
-      }
+  // Local state
+  const [selectedSpot, setSelectedSpot] = useState<MapWaterBody | null>(null);
+  const [isNightMode, setIsNightMode] = useState(shouldUseNightMode());
+  const [showSearch, setShowSearch] = useState(false);
+  const [showFangindexInfo, setShowFangindexInfo] = useState(false);
+  const [showBiteTimeInfo, setShowBiteTimeInfo] = useState(false);
+  const [ratingSpotId, setRatingSpotId] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [mapFilters, setMapFilters] = useState<MapFilters>(DEFAULT_FILTERS);
 
-      // Fetch water bodies
-      const { data, error } = await supabase.from('water_bodies').select('*');
-      
-      // Transform snake_case from Supabase to camelCase
-      let transformedData = data?.map(wb => ({
-        ...wb,
-        placePhoto: wb.place_photo,
-        placeRating: wb.place_rating,
-        placeId: wb.place_id,
-        placeOpenNow: wb.place_open_now,
-      })) || [];
+  const activeFilterCount = [
+    mapFilters.categories.length > 0,
+    mapFilters.fish.length > 0,
+    mapFilters.minScore > 0,
+    mapFilters.onlyFavorites,
+    mapFilters.minRating > 0,
+  ].filter(Boolean).length;
 
-      // 🆕 SMART ENRICHMENT: Auto-enrich spots without Google Places data
-      if (transformedData.length > 0) {
-        console.log('🔍 Checking for spots needing Google Places enrichment...');
-        
-        const spotsNeedingEnrichment = transformedData.filter(wb => 
-          !wb.place_id && !wb.placeId && wb.category === 'official'
-        );
-        
-        if (spotsNeedingEnrichment.length > 0) {
-          console.log(`📍 Found ${spotsNeedingEnrichment.length} official spots needing enrichment`);
-          
-          // Auto-enrich in background
-          const enrichedSpots = await Promise.all(
-            spotsNeedingEnrichment.map(async (spot) => {
-              try {
-                console.log(`🔗 Enriching: ${spot.name}`);
-                
-                // Search Google Places for this spot
-                const googleData = await enrichWithGooglePlaces({
-                  id: spot.id,
-                  name: spot.name,
-                  type: spot.type as any,
-                  latitude: parseFloat(spot.latitude),
-                  longitude: parseFloat(spot.longitude),
-                });
-                
-                if (googleData.placeId) {
-                  // Update in database
-                  const { error: updateError } = await supabase
-                    .from('water_bodies')
-                    .update({
-                      place_id: googleData.placeId,
-                      place_photo: googleData.placePhoto,
-                      place_rating: googleData.placeRating,
-                      place_open_now: googleData.placeOpenNow,
-                      // 🆕 Also update coordinates if Google has better ones
-                      latitude: googleData.geometry?.location?.lat || spot.latitude,
-                      longitude: googleData.geometry?.location?.lng || spot.longitude,
-                    })
-                    .eq('id', spot.id);
-                  
-                  if (!updateError) {
-                    console.log(`✅ Enriched: ${spot.name}`);
-                    return {
-                      ...spot,
-                      placeId: googleData.placeId,
-                      placePhoto: googleData.placePhoto,
-                      placeRating: googleData.placeRating,
-                      placeOpenNow: googleData.placeOpenNow,
-                      // 🆕 Use Google's precise coordinates
-                      latitude: googleData.geometry?.location?.lat || parseFloat(spot.latitude),
-                      longitude: googleData.geometry?.location?.lng || parseFloat(spot.longitude),
-                    };
-                  }
-                }
-                
-                console.log(`⚠️ Could not enrich: ${spot.name}`);
-                return spot; // Return unchanged if enrichment failed
-                
-              } catch (e) {
-                console.log(`❌ Error enriching ${spot.name}:`, e);
-                return spot;
-              }
-            })
-          );
-          
-          // Merge enriched spots back into data
-          transformedData = transformedData.map(spot => {
-            const enriched = enrichedSpots.find(e => e.id === spot.id);
-            return enriched || spot;
-          });
-          
-          console.log('🎉 Enrichment complete!');
-        }
-      }
-      
-      // Use real data only - no more mock fallback
-      const waterBodyData = transformedData || [];
-      
-      if (waterBodyData.length === 0) {
-        console.log('⚠️ No water bodies found in database');
-      }
-
-      // Get weather for scoring
-      const weather = await getWeather(userLocation[1], userLocation[0]);
-
-      // Calculate scores and detect categories
-      const scored = await Promise.all(
-        waterBodyData.map(async (wb: any) => {
-          const result = await calculateFangIndex(wb.name, weather, null);
-          const category = detectCategory(wb);
-          
-          // 🆕 Apply coordinate corrections
-          const coords = getCorrectedCoordinates(
-            wb.name, 
-            parseFloat(wb.latitude), 
-            parseFloat(wb.longitude),
-            wb.placeId ? parseFloat(wb.latitude) : undefined, // Use current lat if we have Google data
-            wb.placeId ? parseFloat(wb.longitude) : undefined  // Use current lng if we have Google data
-          );
-          
-          // 🆕 Log coordinate corrections for debugging
-          if (coords.source !== 'osm') {
-            console.log(`📍 ${wb.name}: ${coords.source} coordinates (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
-          }
-          
-          return {
-            ...wb,
-            latitude: coords.lat,
-            longitude: coords.lng,
-            coordinateSource: coords.source, // Track where coordinates came from
-            fangIndex: result.score,
-            category,
-            // Transform place data from snake_case
-            placePhoto: wb.place_photo || wb.placePhoto,
-            placeRating: wb.place_rating || wb.placeRating,
-            placeId: wb.place_id || wb.placeId,
-            placeOpenNow: wb.place_open_now || wb.placeOpenNow,
-            // 🆕 Additional contact data
-            placeAddress: wb.place_address || wb.placeAddress || wb.address,
-            placePhone: wb.place_phone || wb.placePhone,
-            placeWebsite: wb.place_website || wb.placeWebsite,
-          };
-        })
-      );
-
-      setWaterBodies(scored);
-      
-      // Calculate top 3
-      const sorted = [...scored].sort((a, b) => b.fangIndex - a.fangIndex);
-      setTop3(sorted.slice(0, 3));
-      
-      // Calculate Beißzeit-Radar
-      const times = calculateSunTimes(userLocation[1], userLocation[0]);
-      setSunTimes({ sunrise: times.sunrise, sunset: times.sunset });
-      setGoldenHourInfo(isGoldenHour(userLocation[1], userLocation[0]));
-      
-    } catch (e) {
-      console.error('Load error:', e);
-    } finally {
-      setLoading(false);
+  // Filtered water bodies
+  const filteredWaterBodies = useMemo(() => {
+    let filtered = waterBodies;
+    if (mapFilters.categories.length > 0) {
+      filtered = filtered.filter((wb) => mapFilters.categories.includes(wb.category));
     }
-  };
+    if (mapFilters.fish.length > 0) {
+      filtered = filtered.filter((wb) =>
+        wb.fish_species?.some((f) => mapFilters.fish.includes(f.toLowerCase()))
+      );
+    }
+    if (mapFilters.minScore > 0) {
+      filtered = filtered.filter((wb) => wb.fangIndex >= mapFilters.minScore);
+    }
+    if (mapFilters.onlyFavorites) {
+      filtered = filtered.filter((wb) => isFavorite(wb.id));
+    }
+    if (mapFilters.minRating > 0) {
+      filtered = filtered.filter((wb) => {
+        const summary = getSummaryForSpot(wb.id);
+        return summary.ratingCount > 0 && summary.avgRating >= mapFilters.minRating;
+      });
+    }
+    return filtered;
+  }, [waterBodies, mapFilters, isFavorite, getSummaryForSpot]);
 
-  const handleMarkerPress = useCallback((spot: MapWaterBody) => {
-    console.log('🎯 Marker pressed:', spot.name, 'Category:', spot.category);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedSpot(spot);
+  // GeoJSON for clustering
+  const geoJSON = useMemo(() => {
+    console.log('🗺️ Building GeoJSON with', filteredWaterBodies.length, 'water bodies');
+    if (filteredWaterBodies.length > 0) {
+      console.log('🗺️ Sample:', filteredWaterBodies[0].name, filteredWaterBodies[0].latitude, filteredWaterBodies[0].longitude, filteredWaterBodies[0].category);
+    }
+    return buildGeoJSON(filteredWaterBodies);
+  }, [filteredWaterBodies]);
+
+  // Handlers
+  const handleMarkerPress = useCallback(
+    (spot: MapWaterBody) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setSelectedSpot(spot);
+      cameraRef.current?.setCamera({
+        centerCoordinate: [spot.longitude, spot.latitude],
+        zoomLevel: CAMERA_CONFIG.zoom.detail,
+        animationDuration: CAMERA_CONFIG.animation.duration,
+      });
+      bottomSheetRef.current?.snapToIndex(1);
+    },
+    []
+  );
+
+  const handleClusterPress = useCallback(
+    async (feature: any) => {
+      const clusterId = feature.properties?.cluster_id;
+      if (!clusterId) return;
+
+      try {
+        const zoom = await (mapRef.current as any)?.getClusterExpansionZoom(
+          'waterBodiesSource',
+          clusterId
+        );
+        cameraRef.current?.setCamera({
+          centerCoordinate: feature.geometry.coordinates,
+          zoomLevel: zoom || CAMERA_CONFIG.zoom.detail,
+          animationDuration: CAMERA_CONFIG.animation.duration,
+        });
+      } catch {
+        cameraRef.current?.setCamera({
+          centerCoordinate: feature.geometry.coordinates,
+          zoomLevel: CAMERA_CONFIG.zoom.detail,
+          animationDuration: CAMERA_CONFIG.animation.duration,
+        });
+      }
+    },
+    []
+  );
+
+  const handleShapePress = useCallback(
+    (e: any) => {
+      const feature = e.features?.[0];
+      if (!feature) return;
+
+      // Cluster tap
+      if (feature.properties?.cluster) {
+        handleClusterPress(feature);
+        return;
+      }
+
+      // Individual marker tap
+      const spotId = feature.properties?.id;
+      const spot = waterBodies.find((wb) => wb.id === spotId);
+      if (spot) {
+        handleMarkerPress(spot);
+      }
+    },
+    [waterBodies, handleMarkerPress, handleClusterPress]
+  );
+
+  const handleMyLocation = useCallback(() => {
     cameraRef.current?.setCamera({
-      centerCoordinate: [spot.longitude, spot.latitude],
-      zoomLevel: 14,
-      animationDuration: 500,
+      centerCoordinate: userLocation,
+      zoomLevel: CAMERA_CONFIG.zoom.userLocation,
+      animationDuration: CAMERA_CONFIG.animation.duration,
+    });
+  }, [userLocation]);
+
+  const handleZoomIn = useCallback(async () => {
+    const currentZoom = (await mapRef.current?.getZoom()) || CAMERA_CONFIG.initial.zoom;
+    cameraRef.current?.setCamera({
+      zoomLevel: Math.min(currentZoom + 2, CAMERA_CONFIG.zoom.max),
+      animationDuration: 300,
     });
   }, []);
 
-  const handleNightToggle = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsNightMode((prev: boolean) => !prev);
-  };
+  const handleZoomOut = useCallback(async () => {
+    const currentZoom = (await mapRef.current?.getZoom()) || CAMERA_CONFIG.initial.zoom;
+    cameraRef.current?.setCamera({
+      zoomLevel: Math.max(currentZoom - 2, CAMERA_CONFIG.zoom.min),
+      animationDuration: 300,
+    });
+  }, []);
 
-  // Get current style URL from config
-  const currentStyleURL = useMemo(() => {
-    return getStyleURL(isNightMode);
-  }, [isNightMode]);
+  const handleToggleFish = useCallback((fishId: string) => {
+    setMapFilters((prev) => ({
+      ...prev,
+      fish: prev.fish.includes(fishId)
+        ? prev.fish.filter((f) => f !== fishId)
+        : [...prev.fish, fishId],
+    }));
+  }, []);
 
-  const getDistance = (lon: number, lat: number): string => {
-    const R = 6371;
-    const dLat = ((lat - userLocation[1]) * Math.PI) / 180;
-    const dLon = ((lon - userLocation[0]) * Math.PI) / 180;
-    const a = Math.sin(dLat / 2) ** 2 + 
-              Math.cos((userLocation[1] * Math.PI) / 180) * 
-              Math.cos((lat * Math.PI) / 180) * 
-              Math.sin(dLon / 2) ** 2;
-    const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return d < 1 ? `${Math.round(d * 1000)}m` : `${d.toFixed(1)}km`;
-  };
-
+  // Loading
   if (loading) {
     return (
       <View style={[styles.loading, isDark && styles.loadingDark]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, isDark && styles.textLight]}>Lade Karte...</Text>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={styles.loadingLogo}
+          resizeMode="contain"
+        />
+        <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 20 }} />
+        <Text style={styles.loadingText}>Gewässer werden geladen...</Text>
       </View>
     );
   }
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      {/* Full-screen Native Mapbox Map */}
+      {/* Map */}
       <MapboxGL.MapView
         ref={mapRef}
         style={styles.map}
-        styleURL={currentStyleURL}
+        styleURL={getStyleURL(isNightMode)}
+        rotateEnabled={CAMERA_CONFIG.gestures.rotateEnabled}
+        pitchEnabled={CAMERA_CONFIG.gestures.pitchEnabled}
         logoEnabled={false}
         attributionEnabled={false}
         compassEnabled={false}
-        scaleBarEnabled={false}
-        rotateEnabled={false}
-        pitchEnabled={false}
-        scrollEnabled={true}
-        zoomEnabled={true}
       >
         <MapboxGL.Camera
           ref={cameraRef}
-          zoomLevel={CAMERA_CONFIG.initial.zoom}
-          centerCoordinate={userLocation}
-          minZoomLevel={CAMERA_CONFIG.zoom.min}
-          maxZoomLevel={CAMERA_CONFIG.zoom.max}
-          animationMode="flyTo"
-          animationDuration={CAMERA_CONFIG.animation.duration}
+          defaultSettings={{
+            centerCoordinate: [
+              CAMERA_CONFIG.initial.center.longitude,
+              CAMERA_CONFIG.initial.center.latitude,
+            ],
+            zoomLevel: CAMERA_CONFIG.initial.zoom,
+          }}
         />
-        
+
         {/* User Location */}
         <MapboxGL.UserLocation visible animated />
 
-        {/* Water Body Markers - Filtered by Category */}
-        {waterBodies
-          .filter(wb => activeCategories.includes(wb.category))
-          .map((wb) => {
-            const markerSize = wb.fangIndex >= 80 ? 48 : wb.fangIndex >= 60 ? 40 : 32;
-            const fontSize = wb.fangIndex >= 80 ? 16 : wb.fangIndex >= 60 ? 14 : 12;
-            const isHotSpot = wb.fangIndex >= 80;
-            const isSelected = selectedSpot?.id === wb.id;
-            const categoryConfig = SPOT_CATEGORIES[wb.category];
-            
-            // Use category color for official/hidden/mystery, score color for fangindex
-            const markerColor = wb.category === 'fangindex' 
-              ? getScoreColor(wb.fangIndex)
-              : categoryConfig.color;
-            
-            return (
-              <MapboxGL.MarkerView
-                key={wb.id}
-                coordinate={[wb.longitude, wb.latitude]}
-                anchor={{ x: 0.5, y: 0.5 }}
-              >
-                <TouchableOpacity
-                  onPress={() => handleMarkerPress(wb)}
-                  style={styles.markerContainer}
-                  activeOpacity={0.8}
-                >
-                  {/* Pulse ring for hot spots */}
-                  {isHotSpot && wb.category === 'fangindex' && (
-                    <View style={[styles.pulseRing, { width: markerSize + 20, height: markerSize + 20 }]} />
-                  )}
-                  {/* Selection ring */}
-                  {isSelected && (
-                    <View style={[styles.selectionRing, { width: markerSize + 12, height: markerSize + 12 }]} />
-                  )}
-                  {/* Main marker */}
-                  <View style={[
-                    styles.marker, 
-                    { 
-                      backgroundColor: markerColor,
-                      width: markerSize,
-                      height: markerSize,
-                      borderRadius: markerSize / 2,
-                    },
-                    isHotSpot && wb.category === 'fangindex' && styles.markerGlow,
-                  ]}>
-                    {/* Show score for fangindex, icon for others */}
-                    {wb.category === 'fangindex' ? (
-                      <Text style={[styles.markerText, { fontSize }]}>{wb.fangIndex}</Text>
-                    ) : (
-                      <Text style={[styles.markerText, { fontSize: fontSize + 2 }]}>{categoryConfig.icon}</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </MapboxGL.MarkerView>
-            );
-          })}
+        {/* Clustered Markers */}
+        <MapboxGL.ShapeSource
+          id="waterBodiesSource"
+          shape={geoJSON}
+          cluster
+          clusterRadius={MARKER_CONFIG.clusterRadius}
+          clusterMaxZoomLevel={14}
+          onPress={handleShapePress}
+        >
+          {/* Cluster circles - shadow */}
+          <MapboxGL.CircleLayer
+            id="clusterShadow"
+            filter={['has', 'point_count']}
+            style={{
+              circleColor: 'rgba(0,0,0,0.15)',
+              circleRadius: [
+                'step',
+                ['get', 'point_count'],
+                26, 10, 30, 25, 34, 50, 38,
+              ],
+              circleTranslate: [0, 2],
+              circleBlur: 0.4,
+            }}
+          />
+          {/* Cluster circles */}
+          <MapboxGL.CircleLayer
+            id="clusterCircles"
+            filter={['has', 'point_count']}
+            style={{
+              circleColor: COLORS.primary,
+              circleRadius: [
+                'step',
+                ['get', 'point_count'],
+                24,   // default
+                10, 28, // 10+
+                25, 32, // 25+
+                50, 36, // 50+
+              ],
+              circleOpacity: 0.92,
+              circleStrokeWidth: 3,
+              circleStrokeColor: COLORS.white,
+            }}
+          />
+
+          {/* Cluster count text */}
+          <MapboxGL.SymbolLayer
+            id="clusterCount"
+            filter={['has', 'point_count']}
+            style={{
+              textField: ['get', 'point_count_abbreviated'],
+              textSize: 15,
+              textColor: COLORS.white,
+              textFont: ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+              textAllowOverlap: true,
+            }}
+          />
+
+          {/* Individual markers - Score-color circle with shadow */}
+          <MapboxGL.CircleLayer
+            id="unclusteredMarkersShadow"
+            filter={['!', ['has', 'point_count']]}
+            style={{
+              circleColor: 'rgba(0,0,0,0.18)',
+              circleRadius: [
+                'interpolate', ['linear'], ['zoom'],
+                7, 14,
+                10, 18,
+                13, 24,
+                16, 28,
+              ],
+              circleTranslate: [0, 2],
+              circleBlur: 0.4,
+            }}
+          />
+          <MapboxGL.CircleLayer
+            id="unclusteredMarkers"
+            filter={['!', ['has', 'point_count']]}
+            style={{
+              circleColor: ['get', 'color'],
+              circleRadius: [
+                'interpolate', ['linear'], ['zoom'],
+                7, 12,
+                10, 16,
+                13, 22,
+                16, 26,
+              ],
+              circleStrokeWidth: [
+                'interpolate', ['linear'], ['zoom'],
+                7, 2,
+                13, 3.5,
+              ],
+              circleStrokeColor: COLORS.white,
+              circleOpacity: 1,
+            }}
+          />
+
+          {/* Marker score labels - always visible */}
+          <MapboxGL.SymbolLayer
+            id="markerLabels"
+            filter={['!', ['has', 'point_count']]}
+            style={{
+              textField: ['to-string', ['get', 'fangIndex']],
+              textSize: [
+                'interpolate', ['linear'], ['zoom'],
+                7, 10,
+                10, 13,
+                13, 16,
+              ],
+              textColor: COLORS.white,
+              textFont: ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+              textAllowOverlap: true,
+              textIgnorePlacement: true,
+              textHaloColor: 'rgba(0,0,0,0.3)',
+              textHaloWidth: 1,
+            }}
+          />
+        </MapboxGL.ShapeSource>
       </MapboxGL.MapView>
 
+      {/* Offline Banner (Opas Rat #4) */}
+      <OfflineBanner isOffline={isOffline} cacheAge={cacheAge} isOfflineData={isOfflineData} />
+
       {/* Top Bar */}
-      <View style={[styles.topBar, isDark && styles.topBarDark]}>
-        {/* Left Group: Location + Search */}
-        <View style={styles.topBarLeftGroup}>
-          {/* My Location Button */}
-          <TouchableOpacity 
-            style={[styles.iconBtn, isDark && styles.iconBtnDark]} 
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              cameraRef.current?.setCamera({
-                centerCoordinate: userLocation,
-                zoomLevel: 13,
-                animationDuration: 800,
-              });
-            }}
-          >
-            <Navigation size={20} color={colors.primary} strokeWidth={2} />
-          </TouchableOpacity>
-          
-          {/* Search Button - Moved here from floating FAB */}
-          <TouchableOpacity 
-            style={[styles.iconBtn, isDark && styles.iconBtnDark]} 
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              setShowSearch(true);
-            }}
-          >
-            <Search size={20} color={colors.primary} strokeWidth={2} />
-          </TouchableOpacity>
-        </View>
+      <MapTopBar
+        goldenHourInfo={goldenHourInfo}
+        isNightMode={isNightMode}
+        onToggleNight={() => setIsNightMode((prev) => !prev)}
+        onMyLocation={handleMyLocation}
+        onSearch={() => setShowSearch(true)}
+        onBiteTimePress={() => setShowBiteTimeInfo(true)}
+      />
 
-        {/* Beißzeit-Radar Badge */}
-        <View style={[
-          styles.goldenHourBadge,
-          goldenHourInfo.isGolden && styles.goldenHourBadgeActive,
-        ]}>
-          <Text style={styles.goldenHourIcon}>🌅</Text>
-          <View>
-            <Text style={[styles.goldenHourLabel, goldenHourInfo.isGolden && styles.goldenHourLabelActive]}>
-              {goldenHourInfo.isGolden ? 'BEISSZEIT!' : 'Nächste Beißzeit'}
-            </Text>
-            <Text style={[styles.goldenHourTime, goldenHourInfo.isGolden && styles.goldenHourTimeActive]}>
-              {goldenHourInfo.nextGolden}
-            </Text>
-          </View>
-        </View>
+      {/* Filter FAB */}
+      <FilterFAB activeCount={activeFilterCount} onPress={() => setShowFilters(true)} />
 
-        {/* Day/Night Toggle */}
-        <TouchableOpacity
-          style={[
-            styles.themeToggle,
-            isNightMode && styles.themeToggleNight,
-          ]}
-          onPress={handleNightToggle}
-        >
-          {isNightMode ? (
-            <Moon size={20} color={colors.white} strokeWidth={2} />
-          ) : (
-            <Sun size={20} color={colors.gray900} strokeWidth={2} />
-          )}
-          <Text style={[
-            styles.themeToggleText,
-            isNightMode && styles.themeToggleTextNight,
-          ]}>
-            {isNightMode ? 'Night' : 'Day'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Filter Sheet */}
+      <MapFilterSheet
+        visible={showFilters}
+        filters={mapFilters}
+        onApply={setMapFilters}
+        onClose={() => setShowFilters(false)}
+        totalCount={waterBodies.length}
+        filteredCount={filteredWaterBodies.length}
+      />
 
-      {/* 🆕 Quick Action Menu - 4 Buttons */}
-      <View style={styles.quickMenuWrapper}>
-        <View style={[styles.quickMenuBar, isDark && styles.quickMenuBarDark]}>
-          {/* ⭐ Top 3 */}
-          <TouchableOpacity
-            style={[styles.quickMenuBtn, activeMenu === 'top3' && styles.quickMenuBtnActive]}
-            onPress={() => {
-              console.log('⭐ Top3 button pressed!');
-              Haptics.selectionAsync();
-              setActiveMenu(activeMenu === 'top3' ? null : 'top3');
-            }}
-          >
-            <Star size={18} color={activeMenu === 'top3' ? '#F59E0B' : isDark ? colors.gray400 : colors.gray600} 
-              fill={activeMenu === 'top3' ? '#F59E0B' : 'transparent'} />
-          </TouchableOpacity>
-
-          {/* 🏷️ Categories */}
-          <TouchableOpacity
-            style={[styles.quickMenuBtn, activeMenu === 'categories' && styles.quickMenuBtnActive]}
-            onPress={() => {
-              console.log('🏷️ Categories button pressed!');
-              Haptics.selectionAsync();
-              setActiveMenu(activeMenu === 'categories' ? null : 'categories');
-            }}
-          >
-            <Navigation size={18} color={activeMenu === 'categories' ? colors.primary : isDark ? colors.gray400 : colors.gray600} />
-          </TouchableOpacity>
-
-          {/* 🐟 Fish Filter */}
-          <TouchableOpacity
-            style={[styles.quickMenuBtn, activeMenu === 'fish' && styles.quickMenuBtnActive]}
-            onPress={() => {
-              console.log('🐟 Fish button pressed!');
-              Haptics.selectionAsync();
-              setActiveMenu(activeMenu === 'fish' ? null : 'fish');
-            }}
-          >
-            <Fish size={18} color={activeMenu === 'fish' ? '#10B981' : isDark ? colors.gray400 : colors.gray600} />
-          </TouchableOpacity>
-
-          {/* ℹ️ Info */}
-          <TouchableOpacity
-            style={[styles.quickMenuBtn, activeMenu === 'info' && styles.quickMenuBtnActive]}
-            onPress={() => {
-              console.log('ℹ️ Info button pressed!');
-              Haptics.selectionAsync();
-              setActiveMenu(activeMenu === 'info' ? null : 'info');
-            }}
-          >
-            <Info size={18} color={activeMenu === 'info' ? '#6366F1' : isDark ? colors.gray400 : colors.gray600} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Expandable Panels */}
-        {activeMenu && (
-          <View style={[styles.menuPanel, isDark && styles.menuPanelDark]}>
-            
-            {/* ⭐ Top 3 Panel */}
-            {activeMenu === 'top3' && (
-              <View style={styles.panelContent}>
-                <Text style={[styles.panelTitle, isDark && styles.textLight]}>⭐ Top 3 in deiner Nähe</Text>
-                {top3.length > 0 ? (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.top3Scroll}>
-                    {top3.map((spot, i) => (
-                      <TouchableOpacity
-                        key={spot.id}
-                        style={[styles.top3MiniCard, isDark && styles.top3MiniCardDark]}
-                        onPress={() => {
-                          handleMarkerPress(spot);
-                          setActiveMenu(null);
-                        }}
-                      >
-                        <View style={[styles.top3MiniRank, { backgroundColor: getScoreColor(spot.fangIndex) }]}>
-                          <Text style={styles.top3MiniRankText}>#{i + 1}</Text>
-                        </View>
-                        <Text style={[styles.top3MiniName, isDark && styles.textLight]} numberOfLines={1}>{spot.name}</Text>
-                        <Text style={styles.top3MiniDist}>{getDistance(spot.longitude, spot.latitude)}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                ) : (
-                  <Text style={styles.panelEmpty}>Keine Spots gefunden</Text>
-                )}
-              </View>
-            )}
-
-            {/* 🏷️ Categories Panel */}
-            {activeMenu === 'categories' && (
-              <View style={styles.panelContent}>
-                <Text style={[styles.panelTitle, isDark && styles.textLight]}>🏷️ Kategorien filtern</Text>
-                <View style={styles.categoryGrid}>
-                  {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => {
-                    const isActive = activeCategories.includes(cat.id as SpotCategory);
-                    const count = waterBodies.filter(wb => wb.category === cat.id).length;
-                    return (
-                      <TouchableOpacity
-                        key={cat.id}
-                        style={[
-                          styles.categoryChip,
-                          isActive && { backgroundColor: cat.color, borderColor: cat.color },
-                        ]}
-                        onPress={() => {
-                          Haptics.selectionAsync();
-                          setActiveCategories(prev => 
-                            prev.includes(cat.id as SpotCategory)
-                              ? prev.filter(c => c !== cat.id)
-                              : [...prev, cat.id as SpotCategory]
-                          );
-                        }}
-                      >
-                        <Text style={styles.categoryChipIcon}>{cat.icon}</Text>
-                        <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>{cat.name}</Text>
-                        <Text style={[styles.categoryChipCount, isActive && styles.categoryChipCountActive]}>{count}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
-
-            {/* 🐟 Fish Filter Panel */}
-            {activeMenu === 'fish' && (
-              <View style={styles.panelContent}>
-                <Text style={[styles.panelTitle, isDark && styles.textLight]}>🐟 Nach Fischart filtern</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={styles.fishGrid}>
-                    {FISH_FILTERS.map((fish) => {
-                      const isActive = selectedFish.includes(fish.id);
-                      return (
-                        <TouchableOpacity
-                          key={fish.id}
-                          style={[styles.fishChip, isActive && styles.fishChipActive]}
-                          onPress={() => {
-                            Haptics.selectionAsync();
-                            setSelectedFish(prev =>
-                              prev.includes(fish.id)
-                                ? prev.filter(f => f !== fish.id)
-                                : [...prev, fish.id]
-                            );
-                          }}
-                        >
-                          <Text style={[styles.fishChipText, isActive && styles.fishChipTextActive]}>{fish.name}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </ScrollView>
-              </View>
-            )}
-
-            {/* ℹ️ Info Panel */}
-            {activeMenu === 'info' && (
-              <View style={styles.panelContent}>
-                <Text style={[styles.panelTitle, isDark && styles.textLight]}>ℹ️ Legende & Tipps</Text>
-                <View style={styles.infoGrid}>
-                  {(Object.values(SPOT_CATEGORIES) as typeof SPOT_CATEGORIES[SpotCategory][]).map((cat) => (
-                    <View key={cat.id} style={styles.infoRow}>
-                      <View style={[styles.infoIcon, { backgroundColor: cat.color }]}>
-                        <Text style={styles.infoIconText}>{cat.icon}</Text>
-                      </View>
-                      <View style={styles.infoTextBox}>
-                        <Text style={[styles.infoLabel, isDark && styles.textLight]}>{cat.name}</Text>
-                        <Text style={styles.infoDesc}>{cat.description}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-      </View>
-
-      {/* Zoom Controls - Increment/Decrement by 2 */}
-      <View style={styles.zoomControls}>
-        <TouchableOpacity
-          style={[styles.zoomBtn, isDark && styles.zoomBtnDark]}
-          onPress={async () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            const currentZoom = await mapRef.current?.getZoom() || CAMERA_CONFIG.initial.zoom;
-            const newZoom = Math.min(currentZoom + 2, CAMERA_CONFIG.zoom.max);
-            cameraRef.current?.setCamera({
-              zoomLevel: newZoom,
-              animationDuration: 300,
-            });
-          }}
-        >
-          <Text style={[styles.zoomBtnText, isDark && styles.textLight]}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.zoomBtn, isDark && styles.zoomBtnDark]}
-          onPress={async () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            const currentZoom = await mapRef.current?.getZoom() || CAMERA_CONFIG.initial.zoom;
-            const newZoom = Math.max(currentZoom - 2, CAMERA_CONFIG.zoom.min);
-            cameraRef.current?.setCamera({
-              zoomLevel: newZoom,
-              animationDuration: 300,
-            });
-          }}
-        >
-          <Text style={[styles.zoomBtnText, isDark && styles.textLight]}>−</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Zoom Controls */}
+      <MapZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
 
       {/* Search Modal */}
-      <Modal
-        visible={showSearch}
-        animationType="slide"
-        presentationStyle="fullScreen"
-      >
-        <SearchScreen 
+      <Modal visible={showSearch} animationType="slide" presentationStyle="fullScreen">
+        <SearchScreen
           onClose={() => setShowSearch(false)}
           waterBodies={waterBodies}
-          onSelectSpot={(spotId) => {
+          onSelectSpot={(spotId: string) => {
             setShowSearch(false);
-            const spot = waterBodies.find(w => w.id === spotId);
-            if (spot) {
-              handleMarkerPress(spot);
-            }
+            const spot = waterBodies.find((w) => w.id === spotId);
+            if (spot) handleMarkerPress(spot);
           }}
         />
       </Modal>
 
-      {/* 🆕 Fangindex Info Modal - Professionelle Erklärung */}
+      {/* Fangindex Info Modal */}
       <Modal
         visible={showFangindexInfo}
         animationType="fade"
-        transparent={true}
+        transparent
         onRequestClose={() => setShowFangindexInfo(false)}
       >
-        <View style={styles.fangindexModalOverlay}>
-          <View style={styles.fangindexModalContent}>
-            {/* Header */}
-            <View style={styles.fangindexModalHeader}>
-              <View style={styles.fangindexModalIcon}>
-                <Text style={styles.fangindexModalIconText}>🎯</Text>
-              </View>
-              <Text style={styles.fangindexModalTitle}>Der BISS Fangindex</Text>
-              <TouchableOpacity 
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.modalLogo}
+                resizeMode="contain"
+              />
+              <Text style={styles.modalTitle}>Der BISS Fangindex</Text>
+              <TouchableOpacity
                 onPress={() => setShowFangindexInfo(false)}
-                style={styles.fangindexModalClose}
+                style={styles.modalClose}
               >
-                <Text style={styles.fangindexModalCloseText}>✕</Text>
+                <Text style={styles.modalCloseText}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Description */}
-            <Text style={styles.fangindexModalDesc}>
-              Unser KI-gestützter Algorithmus berechnet die Fangwahrscheinlichkeit 
-              basierend auf wissenschaftlich belegten Faktoren.
+            <Text style={styles.modalDesc}>
+              Unser Algorithmus berechnet die Fangwahrscheinlichkeit basierend auf
+              wissenschaftlich belegten Faktoren.
             </Text>
 
-            {/* Factors */}
-            <View style={styles.fangindexFactors}>
-              <View style={styles.fangindexFactor}>
-                <Text style={styles.factorIcon}>🌤️</Text>
-                <View style={styles.factorContent}>
-                  <Text style={styles.factorTitle}>Wetter (35%)</Text>
-                  <Text style={styles.factorDesc}>Luftdruck, Temperatur, Wind & Bewölkung</Text>
+            <View style={styles.factors}>
+              {[
+                { icon: '🌤️', title: 'Wetter (30%)', desc: 'Luftdruck, Temperatur, Wind & Bewölkung' },
+                { icon: '🕐', title: 'Tageszeit (25%)', desc: 'Beißzeiten: Morgen- & Abenddämmerung' },
+                { icon: '🌙', title: 'Mondphase (20%)', desc: 'Neu- und Vollmond steigern Aktivität' },
+                { icon: '🎯', title: 'Solunar (15%)', desc: 'Major & Minor Perioden nach Mondtransit' },
+                { icon: '💧', title: 'Wasserstand (10%)', desc: 'Steigende Pegel oft vorteilhaft' },
+              ].map((f, i) => (
+                <View key={i} style={styles.factorRow}>
+                  <Text style={styles.factorIcon}>{f.icon}</Text>
+                  <View style={styles.factorContent}>
+                    <Text style={styles.factorTitle}>{f.title}</Text>
+                    <Text style={styles.factorDesc}>{f.desc}</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.fangindexFactor}>
-                <Text style={styles.factorIcon}>🕐</Text>
-                <View style={styles.factorContent}>
-                  <Text style={styles.factorTitle}>Tageszeit (30%)</Text>
-                  <Text style={styles.factorDesc}>Beißzeiten: Morgen- & Abenddämmerung</Text>
-                </View>
-              </View>
-              <View style={styles.fangindexFactor}>
-                <Text style={styles.factorIcon}>🌙</Text>
-                <View style={styles.factorContent}>
-                  <Text style={styles.factorTitle}>Mondphase (20%)</Text>
-                  <Text style={styles.factorDesc}>Neu- und Vollmond steigern Aktivität</Text>
-                </View>
-              </View>
-              <View style={styles.fangindexFactor}>
-                <Text style={styles.factorIcon}>💧</Text>
-                <View style={styles.factorContent}>
-                  <Text style={styles.factorTitle}>Wasserstand (15%)</Text>
-                  <Text style={styles.factorDesc}>Steigende Pegel oft vorteilhaft</Text>
-                </View>
-              </View>
+              ))}
             </View>
 
-            {/* Legend */}
-            <View style={styles.fangindexLegend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.green }]} />
-                <Text style={styles.legendText}>70+ Sehr gut</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.yellow }]} />
-                <Text style={styles.legendText}>50-69 Gut</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.red }]} />
-                <Text style={styles.legendText}>&lt;50 Mäßig</Text>
-              </View>
+            <View style={styles.legend}>
+              {[
+                { color: COLORS.green, label: '70+ Sehr gut' },
+                { color: COLORS.yellow, label: '50-69 Gut' },
+                { color: COLORS.red, label: '<50 Mäßig' },
+              ].map((item, i) => (
+                <View key={i} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+                  <Text style={styles.legendText}>{item.label}</Text>
+                </View>
+              ))}
             </View>
 
-            {/* Footer */}
-            <TouchableOpacity 
-              style={styles.fangindexModalButton}
+            <TouchableOpacity
+              style={styles.modalButton}
               onPress={() => setShowFangindexInfo(false)}
             >
-              <Text style={styles.fangindexModalButtonText}>Verstanden</Text>
+              <Text style={styles.modalButtonText}>Verstanden</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* Smart Recommendations REMOVED from floating - now in Bottom Sheet only */}
-      {/* This prevents the overlap issue */}
+      {/* Bite Time Modal */}
+      <BiteTimeModal
+        visible={showBiteTimeInfo}
+        onClose={() => setShowBiteTimeInfo(false)}
+        userLocation={userLocation}
+      />
+
+      {/* Rating Modal */}
+      <RatingModal
+        visible={!!ratingSpotId}
+        spotName={waterBodies.find((w) => w.id === ratingSpotId)?.name ?? ''}
+        existingRating={ratingSpotId ? getRatingForSpot(ratingSpotId) : undefined}
+        onClose={() => setRatingSpotId(null)}
+        onSubmit={(stars, comment) => {
+          if (ratingSpotId) submitRating(ratingSpotId, stars, comment);
+        }}
+      />
 
       {/* Bottom Sheet */}
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={selectedSpot ? 1 : 0}
-        snapPoints={snapPoints}
-        backgroundStyle={[styles.sheetBg, isDark && styles.sheetBgDark]}
-        handleIndicatorStyle={[styles.sheetHandle, isDark && styles.sheetHandleDark]}
-      >
-        <View style={styles.sheetHeader}>
-          <Text style={[styles.sheetTitle, isDark && styles.textLight]}>
-            {selectedSpot ? selectedSpot.name : 'Erkunden'}
-          </Text>
-          {selectedSpot && (
-            <TouchableOpacity onPress={() => setSelectedSpot(null)}>
-              <Text style={styles.sheetClose}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <BottomSheetScrollView contentContainerStyle={styles.sheetContent}>
-          {selectedSpot ? (
-            // Spot Detail View
-            <View>
-              {/* Google Photo - if available */}
-              {selectedSpot.placePhoto && (
-                <View style={styles.photoContainer}>
-                  <Image 
-                    source={{ uri: selectedSpot.placePhoto }}
-                    style={styles.spotPhoto}
-                    resizeMode="cover"
-                  />
-                  {selectedSpot.placeRating && (
-                    <View style={styles.ratingBadge}>
-                      <Text style={styles.ratingText}>⭐ {selectedSpot.placeRating.toFixed(1)}</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-              
-              <View style={styles.spotHeader}>
-                {/* 🆕 Klickbarer Score mit Info */}
-                <TouchableOpacity 
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setShowFangindexInfo(true);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.spotScoreCircle, { backgroundColor: getScoreColor(selectedSpot.fangIndex) }]}>
-                    <Text style={styles.spotScoreText}>{selectedSpot.fangIndex}</Text>
-                    <View style={styles.scoreInfoBadge}>
-                      <Info size={10} color="#FFFFFF" />
-                    </View>
-                  </View>
-                </TouchableOpacity>
-                <View style={styles.spotInfo}>
-                  <View style={styles.spotTypeRow}>
-                    {/* Schönerer Typ-Name */}
-                    <Text style={styles.spotType}>
-                      {getWaterTypeName(selectedSpot.type)}
-                    </Text>
-                    {/* Category Badge */}
-                    <View style={[styles.categoryBadge, { backgroundColor: SPOT_CATEGORIES[selectedSpot.category].color }]}>
-                      <Text style={styles.categoryBadgeIcon}>{SPOT_CATEGORIES[selectedSpot.category].icon}</Text>
-                      <Text style={styles.categoryBadgeText}>{SPOT_CATEGORIES[selectedSpot.category].name}</Text>
-                    </View>
-                  </View>
-                  {/* Adresse oder Entfernung */}
-                  <Text style={[styles.spotDistance, isDark && styles.textLight]}>
-                    {selectedSpot.placeAddress 
-                      ? selectedSpot.placeAddress.split(',')[0] + ' • '
-                      : ''}
-                    {getDistance(selectedSpot.longitude, selectedSpot.latitude)} entfernt
-                  </Text>
-                </View>
-              </View>
-
-              {/* 🏢 Official Location Extra Info */}
-              {selectedSpot.category === 'official' && (
-                <View style={styles.officialInfoSection}>
-                  <View style={styles.officialBanner}>
-                    <Text style={styles.officialBannerIcon}>✓</Text>
-                    <View style={styles.officialBannerContent}>
-                      <Text style={styles.officialBannerTitle}>Offizieller Angelteich</Text>
-                      <Text style={styles.officialBannerDesc}>Tageskarten vor Ort erhältlich</Text>
-                    </View>
-                  </View>
-                  
-                  {/* Google Rating Stars */}
-                  {selectedSpot.placeRating && (
-                    <View style={styles.ratingRow}>
-                      <Text style={styles.ratingStars}>
-                        {'⭐'.repeat(Math.round(selectedSpot.placeRating))}
-                      </Text>
-                      <Text style={styles.ratingValue}>{selectedSpot.placeRating.toFixed(1)}</Text>
-                      <Text style={styles.ratingLabel}>Google Bewertung</Text>
-                    </View>
-                  )}
-                  
-                  {/* Opening Status */}
-                  {selectedSpot.placeOpenNow !== undefined && (
-                    <View style={[
-                      styles.openStatus,
-                      selectedSpot.placeOpenNow ? styles.openStatusOpen : styles.openStatusClosed
-                    ]}>
-                      <Text style={styles.openStatusText}>
-                        {selectedSpot.placeOpenNow ? '🟢 Jetzt geöffnet' : '🔴 Geschlossen'}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
-
-              {/* 🎯 Fangindex Location Insight - Enhanced */}
-              {selectedSpot.category === 'fangindex' && (
-                <View style={styles.fangindexSection}>
-                  <View style={styles.fangindexInsight}>
-                    <Text style={styles.fangindexInsightIcon}>🎯</Text>
-                    <View style={styles.fangindexInsightContent}>
-                      <Text style={styles.fangindexInsightTitle}>Fangindex: {selectedSpot.fangIndex}/100</Text>
-                      <Text style={styles.fangindexInsightDesc}>
-                        KI-berechnet aus aktuellen Bedingungen
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  {/* Fangindex Breakdown */}
-                  <View style={styles.fangindexBreakdown}>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>🌤️ Wetter</Text>
-                      <View style={styles.breakdownBar}>
-                        <View style={[styles.breakdownFill, { width: '75%', backgroundColor: '#10B981' }]} />
-                      </View>
-                      <Text style={styles.breakdownValue}>Gut</Text>
-                    </View>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>🌙 Mondphase</Text>
-                      <View style={styles.breakdownBar}>
-                        <View style={[styles.breakdownFill, { width: '60%', backgroundColor: '#F59E0B' }]} />
-                      </View>
-                      <Text style={styles.breakdownValue}>OK</Text>
-                    </View>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>🕐 Tageszeit</Text>
-                      <View style={styles.breakdownBar}>
-                        <View style={[styles.breakdownFill, { width: goldenHourInfo?.isGolden ? '100%' : '50%', backgroundColor: goldenHourInfo?.isGolden ? '#10B981' : '#6B7280' }]} />
-                      </View>
-                      <Text style={styles.breakdownValue}>{goldenHourInfo?.isGolden ? 'Golden!' : 'Normal'}</Text>
-                    </View>
-                  </View>
-                </View>
-              )}
-
-              {/* 💎 Hidden Gem Info */}
-              {selectedSpot.category === 'hidden' && (
-                <View style={styles.hiddenGemBanner}>
-                  <Text style={styles.hiddenGemIcon}>💎</Text>
-                  <View style={styles.hiddenGemContent}>
-                    <Text style={styles.hiddenGemTitle}>Versteckter Schatz</Text>
-                    <Text style={styles.hiddenGemDesc}>
-                      Weniger bekannt, oft weniger Angler
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {selectedSpot.fish_species?.length > 0 && (
-                <View style={styles.fishSection}>
-                  <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Fischarten (Saison-Status)</Text>
-                  <View style={styles.fishGrid}>
-                    {selectedSpot.fish_species.map((fish, i) => {
-                      // 🆕 Übergebe Spot-Info für Besatzteich-Erkennung
-                      const status = getFishSeasonStatus(fish, { 
-                        spotName: selectedSpot.name, 
-                        spotType: selectedSpot.type 
-                      });
-                      const fishData = FISH_SEASONS[fish.toLowerCase()];
-                      return (
-                        <View 
-                          key={i} 
-                          style={[
-                            styles.fishTagEnhanced, 
-                            isDark && styles.fishTagDark,
-                            status === 'closed' && styles.fishTagClosed,
-                            status === 'best' && styles.fishTagBest,
-                          ]}
-                        >
-                          <Text style={styles.fishIcon}>{fishData?.icon || '🐟'}</Text>
-                          <Text style={[
-                            styles.fishTagText, 
-                            isDark && styles.textLight,
-                            status === 'closed' && styles.fishTagTextClosed,
-                          ]}>
-                            {fish}
-                          </Text>
-                          <View style={[
-                            styles.seasonBadge,
-                            status === 'open' && styles.seasonOpen,
-                            status === 'closed' && styles.seasonClosed,
-                            status === 'best' && styles.seasonBest,
-                          ]}>
-                            <Text style={styles.seasonBadgeText}>
-                              {status === 'closed' ? '🚫' : status === 'best' ? '🔥' : '✓'}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                  {/* 🆕 Schonzeit-Warnung nur wenn wirklich Schonzeit */}
-                  {selectedSpot.fish_species.some(f => 
-                    getFishSeasonStatus(f, { spotName: selectedSpot.name, spotType: selectedSpot.type }) === 'closed'
-                  ) && (
-                    <Text style={styles.schonzeitWarning}>
-                      ⚠️ Einige Fischarten haben aktuell Schonzeit
-                    </Text>
-                  )}
-                </View>
-              )}
-
-              {selectedSpot.permit_price && (
-                <View style={styles.priceSection}>
-                  <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Tageskarte</Text>
-                  <View style={styles.priceRow}>
-                    <Text style={styles.priceValue}>€{selectedSpot.permit_price}</Text>
-                    <TouchableOpacity style={styles.buyBtn}>
-                      <Text style={styles.buyBtnText}>Kaufen</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-
-              {/* 🆕 Action Buttons - v2 */}
-              <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 16, marginBottom: 8 }}>
-                Aktionen
-              </Text>
-              <View style={styles.actionSection}>
-                {/* Route Button */}
-                <TouchableOpacity 
-                  style={styles.actionBtnPrimary}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    const url = Platform.select({
-                      ios: `maps:?q=${selectedSpot.name}&ll=${selectedSpot.latitude},${selectedSpot.longitude}`,
-                      android: `geo:${selectedSpot.latitude},${selectedSpot.longitude}?q=${selectedSpot.name}`,
-                    });
-                    if (url) Linking.openURL(url);
-                  }}
-                >
-                  <Navigation size={18} color="#FFFFFF" strokeWidth={2.5} />
-                  <Text style={styles.actionBtnPrimaryText}>Route</Text>
-                </TouchableOpacity>
-
-                {/* Google Maps Button */}
-                <TouchableOpacity 
-                  style={styles.actionBtn}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    const url = selectedSpot.placeId 
-                      ? `https://www.google.com/maps/place/?q=place_id:${selectedSpot.placeId}`
-                      : `https://www.google.com/maps/search/?api=1&query=${selectedSpot.latitude},${selectedSpot.longitude}`;
-                    Linking.openURL(url);
-                  }}
-                >
-                  <MapPin size={18} color="#4285F4" strokeWidth={2} />
-                  <Text style={styles.actionBtnText}>Maps</Text>
-                </TouchableOpacity>
-
-                {/* Phone Button - if available */}
-                {selectedSpot.placePhone && (
-                  <TouchableOpacity 
-                    style={styles.actionBtn}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      Linking.openURL(`tel:${selectedSpot.placePhone?.replace(/\s/g, '')}`);
-                    }}
-                  >
-                    <Phone size={18} color="#10B981" strokeWidth={2} />
-                    <Text style={styles.actionBtnText}>Anrufen</Text>
-                  </TouchableOpacity>
-                )}
-
-                {/* Website Button - if available */}
-                {selectedSpot.placeWebsite && (
-                  <TouchableOpacity 
-                    style={styles.actionBtn}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      Linking.openURL(selectedSpot.placeWebsite!);
-                    }}
-                  >
-                    <ExternalLink size={18} color="#6B7280" strokeWidth={2} />
-                    <Text style={styles.actionBtnText}>Web</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* 🆕 Address Display */}
-              {selectedSpot.placeAddress && (
-                <View style={styles.addressSection}>
-                  <MapPin size={14} color="#6B7280" />
-                  <Text style={styles.addressText}>{selectedSpot.placeAddress}</Text>
-                </View>
-              )}
-            </View>
-          ) : (
-            // Explore View with Top 3 and Filters
-            <View>
-              {/* 🏆 Top 3 Horizontal Scroll - Now in Bottom Sheet! */}
-              {top3.length > 0 && (
-                <View style={styles.top3Section}>
-                  <Text style={[styles.sectionLabel, isDark && styles.textLight]}>🏆 Top 3 in deiner Nähe</Text>
-                  <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.top3ScrollContent}
-                  >
-                    {top3.map((spot, index) => (
-                      <TouchableOpacity
-                        key={spot.id}
-                        style={[styles.top3CardNew, isDark && styles.top3CardNewDark]}
-                        onPress={() => handleMarkerPress(spot)}
-                        activeOpacity={0.9}
-                      >
-                        <View style={[styles.top3Rank, { backgroundColor: SPOT_CATEGORIES[spot.category].color }]}>
-                          <Text style={styles.top3RankText}>#{index + 1}</Text>
-                        </View>
-                        <Text style={[styles.top3NameNew, isDark && styles.textLight]} numberOfLines={2}>
-                          {spot.name}
-                        </Text>
-                        <View style={styles.top3Meta}>
-                          <Text style={styles.top3CategoryIcon}>{SPOT_CATEGORIES[spot.category].icon}</Text>
-                          <Text style={styles.top3DistanceNew}>{getDistance(spot.longitude, spot.latitude)}</Text>
-                        </View>
-                        <View style={[styles.top3Score, { backgroundColor: getScoreColor(spot.fangIndex) }]}>
-                          <Text style={styles.top3ScoreText}>{spot.fangIndex}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-
-              <Text style={[styles.filterLabel, isDark && styles.textLight]}>Fisch-Filter</Text>
-              <View style={styles.filterGrid}>
-                {FISH_FILTERS.map((fish) => (
-                  <TouchableOpacity
-                    key={fish.id}
-                    style={[
-                      styles.filterChip,
-                      isDark && styles.filterChipDark,
-                      selectedFish.includes(fish.id) && styles.filterChipActive,
-                    ]}
-                    onPress={() => {
-                      Haptics.selectionAsync();
-                      setSelectedFish((prev) =>
-                        prev.includes(fish.id)
-                          ? prev.filter((f) => f !== fish.id)
-                          : [...prev, fish.id]
-                      );
-                    }}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      selectedFish.includes(fish.id) && styles.filterChipTextActive,
-                    ]}>
-                      {fish.name}
-                    </Text>
-                    <View style={[
-                      styles.confidenceBadge,
-                      fish.confidence === 'high' && styles.confidenceHigh,
-                      fish.confidence === 'medium' && styles.confidenceMedium,
-                    ]} />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-        </BottomSheetScrollView>
-      </BottomSheet>
+      <MapBottomSheet
+        bottomSheetRef={bottomSheetRef}
+        selectedSpot={selectedSpot}
+        top3={top3}
+        userLocation={userLocation}
+        goldenHourInfo={goldenHourInfo}
+        selectedFish={mapFilters.fish}
+        onSelectSpot={setSelectedSpot}
+        onMarkerPress={handleMarkerPress}
+        onShowFangindexInfo={() => setShowFangindexInfo(true)}
+        onToggleFish={handleToggleFish}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
+        favoriteIds={favoriteIds}
+        allSpots={waterBodies}
+        getRatingSummary={getSummaryForSpot}
+        onRateSpot={(spotId) => setRatingSpotId(spotId)}
+      />
     </GestureHandlerRootView>
   );
 };
 
+// ─── Styles ───
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white },
-  loadingDark: { backgroundColor: colors.dark.bg },
-  loadingText: { marginTop: 12, color: colors.gray600, fontSize: 14 },
-  textLight: { color: colors.white },
+  container: { flex: 1, backgroundColor: COLORS.white },
   map: { flex: 1 },
-
-  // Markers
-  markerContainer: { alignItems: 'center' },
-  marker: { 
-    width: 36, 
-    height: 36, 
-    borderRadius: 18, 
-    justifyContent: 'center', 
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  markerText: { color: colors.white, fontSize: 13, fontWeight: '600' },
-  markerArrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    marginTop: -1,
-  },
-  pulseRing: {
-    position: 'absolute',
-    borderRadius: 100,
-    backgroundColor: 'rgba(74, 222, 128, 0.3)',
-    borderWidth: 2,
-    borderColor: 'rgba(74, 222, 128, 0.5)',
-  },
-  selectionRing: {
-    position: 'absolute',
-    borderRadius: 100,
-    borderWidth: 3,
-    borderColor: colors.primary,
-    backgroundColor: 'transparent',
-  },
-  markerGlow: {
-    shadowColor: '#4ADE80',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-
-  // 🆕 Quick Action Menu - 4 Buttons
-  quickMenuWrapper: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 105 : 85,
-    left: 16,
-    right: 16,
-    zIndex: 100,
-  },
-  quickMenuBar: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    gap: 8,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  quickMenuBarDark: {
-    backgroundColor: 'rgba(19,35,55,0.95)',
-  },
-  quickMenuBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  quickMenuBtnActive: {
-    backgroundColor: 'rgba(0,0,0,0.08)',
-  },
-  
-  // Menu Panels
-  menuPanel: {
-    marginTop: 8,
-    backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  menuPanelDark: {
-    backgroundColor: 'rgba(19,35,55,0.98)',
-  },
-  panelContent: {
-    gap: 12,
-  },
-  panelTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.gray900,
-    marginBottom: 4,
-  },
-  panelEmpty: {
-    fontSize: 13,
-    color: colors.gray400,
-    textAlign: 'center',
-    paddingVertical: 12,
-  },
-  
-  // Top 3 Mini Cards
-  top3Scroll: {
-    marginHorizontal: -4,
-  },
-  top3MiniCard: {
-    width: 120,
-    backgroundColor: colors.gray100,
-    borderRadius: 12,
-    padding: 10,
-    marginHorizontal: 4,
-  },
-  top3MiniCardDark: {
-    backgroundColor: colors.dark.surface,
-  },
-  top3MiniRank: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  top3MiniRankText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.white,
-  },
-  top3MiniName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.gray900,
-    marginBottom: 4,
-  },
-  top3MiniDist: {
-    fontSize: 11,
-    color: colors.gray400,
-  },
-  
-  // Category Grid
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: colors.gray200,
-    backgroundColor: colors.white,
-    gap: 6,
-  },
-  categoryChipIcon: {
-    fontSize: 14,
-  },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray600,
-  },
-  categoryChipTextActive: {
-    color: colors.white,
-  },
-  categoryChipCount: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.gray400,
-  },
-  categoryChipCountActive: {
-    color: 'rgba(255,255,255,0.8)',
-  },
-  
-  // Fish Grid
-  fishGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  fishChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.gray200,
-    backgroundColor: colors.white,
-  },
-  fishChipActive: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
-  },
-  fishChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray600,
-  },
-  fishChipTextActive: {
-    color: colors.white,
-  },
-  
-  // Info Grid
-  infoGrid: {
-    gap: 10,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  infoIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoIconText: {
-    fontSize: 18,
-  },
-  infoTextBox: {
+  loading: {
     flex: 1,
-  },
-  infoLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.gray900,
-  },
-  infoDesc: {
-    fontSize: 11,
-    color: colors.gray400,
-    marginTop: 2,
-  },
-
-  // Legacy Category Filter (now in Menu Panel)
-  categoryFilterContainer: {},
-  categoryFilterContent: { paddingHorizontal: 16, gap: 8 },
-  categoryPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, gap: 6 },
-  categoryPillDark: { backgroundColor: 'rgba(19,35,55,0.95)' },
-  categoryPillIcon: { fontSize: 14 },
-  categoryPillText: { fontSize: 13, fontWeight: '600', color: colors.gray600 },
-  categoryPillTextActive: { color: colors.white },
-  categoryPillBadge: { backgroundColor: 'rgba(255,255,255,0.3)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, marginLeft: 4 },
-  categoryPillBadgeText: { fontSize: 11, fontWeight: '700', color: colors.white },
-  categoryPillBadgeInactive: { backgroundColor: 'rgba(0,0,0,0.1)' },
-  categoryPillBadgeTextInactive: { color: colors.gray600 },
-  categoryFilterWrapper: { position: 'absolute', top: Platform.OS === 'ios' ? 105 : 85, left: 0, right: 0, zIndex: 100 },
-  categoryInfoTooltip: { position: 'absolute', top: 50, left: 16, right: 16, zIndex: 200 },
-  categoryInfoCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  categoryInfoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  categoryInfoIcon: {
-    fontSize: 24,
-  },
-  categoryInfoTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.gray900,
-  },
-  categoryInfoDesc: {
-    fontSize: 14,
-    color: colors.gray600,
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  categoryInfoHint: {
-    fontSize: 12,
-    color: colors.gray400,
-    fontStyle: 'italic',
-  },
-
-  // Top Bar
-  topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: Platform.OS === 'ios' ? 100 : 80,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-  },
-  topBarDark: { backgroundColor: 'rgba(10,26,47,0.95)' },
-  topBarLeftGroup: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.gray100, justifyContent: 'center', alignItems: 'center' },
-  iconBtnDark: { backgroundColor: colors.dark.surface },
-
-  // Zoom Controls
-  zoomControls: {
-    position: 'absolute',
-    right: 16,
-    bottom: 200,
-    gap: 12,
-  },
-  zoomBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: COLORS.white,
   },
-  zoomBtnDark: {
-    backgroundColor: 'rgba(19, 35, 55, 0.95)',
-  },
-  zoomBtnText: {
-    fontSize: 24,
-    fontWeight: '300',
-    color: colors.gray900,
-  },
+  loadingDark: { backgroundColor: COLORS.dark.bg },
+  loadingLogo: { width: 120, height: 120, borderRadius: 24, marginBottom: 4 },
+  loadingText: { marginTop: 12, color: COLORS.gray600, fontSize: 14 },
 
-  // Theme Toggle (Day/Night)
-  themeToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.gray100,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  themeToggleNight: {
-    backgroundColor: colors.dark.surface,
-  },
-  themeToggleText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray900,
-  },
-  themeToggleTextNight: {
-    color: colors.white,
-  },
-
-  // Golden Hour / Beißzeit Badge
-  goldenHourBadge: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(255,255,255,0.95)', 
-    paddingHorizontal: 12, 
-    paddingVertical: 8, 
-    borderRadius: 20,
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  goldenHourBadgeActive: { 
-    backgroundColor: '#FEF3C7', // Warm golden background
-    borderWidth: 2,
-    borderColor: '#F59E0B',
-  },
-  goldenHourIcon: { fontSize: 20 },
-  goldenHourLabel: { fontSize: 10, color: colors.gray400, fontWeight: '500' },
-  goldenHourLabelActive: { color: '#B45309', fontWeight: '700' },
-  goldenHourTime: { fontSize: 14, color: colors.gray900, fontWeight: '600' },
-  goldenHourTimeActive: { color: '#B45309', fontWeight: '800' },
-
-  // Top 3 Cards (Legacy - Fallback)
-  top3Container: { position: 'absolute', right: 16, top: Platform.OS === 'ios' ? 116 : 96, gap: 8 },
-  top3Card: { 
-    width: 150, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(255,255,255,0.95)', 
-    borderRadius: 16, 
-    padding: 12, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 8, 
-    elevation: 4 
-  },
-  top3CardDark: { backgroundColor: 'rgba(19,35,55,0.95)' },
-  top3Content: { flex: 1, marginRight: 8 },
-  top3Name: { fontSize: 12, fontWeight: '600', color: colors.gray900 },
-  top3Distance: { fontSize: 11, color: colors.gray400, marginTop: 2 },
-  scoreCircle: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  scoreText: { color: colors.white, fontSize: 11, fontWeight: '700' },
-
-  // 🆕 Top 3 Cards - New Design (Inside Bottom Sheet)
-  top3Section: {
-    marginBottom: 20,
-  },
-  top3ScrollContent: {
-    paddingTop: 8,
-    gap: 12,
-  },
-  top3CardNew: {
-    width: 140,
-    backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: 16,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
-    position: 'relative',
-  },
-  top3CardNewDark: {
-    backgroundColor: 'rgba(19,35,55,0.98)',
-  },
-  top3Rank: {
-    position: 'absolute',
-    top: -6,
-    left: -6,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  top3RankText: {
-    color: colors.white,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  top3NameNew: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray900,
-    marginTop: 4,
-    marginBottom: 8,
-    lineHeight: 18,
-  },
-  top3Meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-  },
-  top3CategoryIcon: {
-    fontSize: 12,
-  },
-  top3DistanceNew: {
-    fontSize: 11,
-    color: colors.gray400,
-  },
-  top3Score: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  top3ScoreText: {
-    color: colors.white,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-
-  // 🏢 Official Location Info Styles
-  officialInfoSection: {
-    marginBottom: 16,
-  },
-  officialBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    padding: 12,
-    borderRadius: 12,
-    gap: 12,
-    marginBottom: 12,
-  },
-  officialBannerIcon: {
-    fontSize: 24,
-    color: '#10B981',
-  },
-  officialBannerContent: {
-    flex: 1,
-  },
-  officialBannerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#059669',
-    marginBottom: 2,
-  },
-  officialBannerDesc: {
-    fontSize: 12,
-    color: '#10B981',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  ratingStars: {
-    fontSize: 14,
-  },
-  ratingValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.gray900,
-  },
-  ratingLabel: {
-    fontSize: 12,
-    color: colors.gray400,
-  },
-  openStatus: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  openStatusOpen: {
-    backgroundColor: '#ECFDF5',
-  },
-  openStatusClosed: {
-    backgroundColor: '#FEF2F2',
-  },
-  openStatusText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  // 🎯 Fangindex Insight Styles
-  fangindexInsight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    padding: 12,
-    borderRadius: 12,
-    gap: 12,
-    marginBottom: 16,
-  },
-  fangindexInsightIcon: {
-    fontSize: 24,
-  },
-  fangindexInsightContent: {
-    flex: 1,
-  },
-  fangindexInsightTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#B45309',
-    marginBottom: 2,
-  },
-  fangindexInsightDesc: {
-    fontSize: 12,
-    color: '#D97706',
-    lineHeight: 16,
-  },
-  
-  // Fangindex Section & Breakdown
-  fangindexSection: {
-    marginBottom: 16,
-  },
-  fangindexBreakdown: {
-    backgroundColor: '#FFFBEB',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 8,
-    gap: 8,
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  breakdownLabel: {
-    fontSize: 12,
-    color: '#92400E',
-    width: 90,
-  },
-  breakdownBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  breakdownFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  breakdownValue: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#92400E',
-    width: 50,
-    textAlign: 'right',
-  },
-
-  // 💎 Hidden Gem Styles
-  hiddenGemBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F3FF',
-    padding: 12,
-    borderRadius: 12,
-    gap: 12,
-    marginBottom: 16,
-  },
-  hiddenGemIcon: {
-    fontSize: 24,
-  },
-  hiddenGemContent: {
-    flex: 1,
-  },
-  hiddenGemTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#7C3AED',
-    marginBottom: 2,
-  },
-  hiddenGemDesc: {
-    fontSize: 12,
-    color: '#8B5CF6',
-    lineHeight: 16,
-  },
-
-  // 🆕 Smart Fishing Intelligence Containers
-  smartRecommendationsContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 108 : 88,
-    left: 0,
-    right: 0,
-  },
-  smartInsightContainer: {
-    position: 'absolute',
-    bottom: 100,
-    left: 0,
-    right: 0,
-  },
-
-  // Bottom Sheet
-  sheetBg: { backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  sheetBgDark: { backgroundColor: colors.dark.surface },
-  sheetHandle: { backgroundColor: colors.gray200, width: 40 },
-  sheetHandleDark: { backgroundColor: colors.gray600 },
-  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
-  sheetTitle: { fontSize: 18, fontWeight: '600', color: colors.gray900 },
-  sheetClose: { fontSize: 18, color: colors.gray400, padding: 4 },
-  sheetContent: { paddingHorizontal: 20, paddingBottom: 40 },
-
-  // Spot Detail
-  spotHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  spotScoreCircle: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  spotScoreText: { color: colors.white, fontSize: 22, fontWeight: '700' },
-  spotInfo: { flex: 1 },
-  spotTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  spotType: { fontSize: 12, color: colors.primary, fontWeight: '600' },
-  spotDistance: { fontSize: 14, color: colors.gray600 },
-  
-  // Category Badge in Bottom Sheet
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  categoryBadgeIcon: {
-    fontSize: 10,
-  },
-  categoryBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.white,
-  },
-
-  // Google Photo in Bottom Sheet
-  photoContainer: { 
-    marginBottom: 16, 
-    borderRadius: 16, 
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  spotPhoto: { 
-    width: '100%', 
-    height: 180, 
-    borderRadius: 16,
-  },
-  ratingBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  ratingText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-  },
-
-  // Fish Section
-  fishSection: { marginBottom: 20 },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: colors.gray600, marginBottom: 12 },
-  // fishGrid moved to Quick Menu section
-  fishTag: { backgroundColor: colors.gray100, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
-  fishTagDark: { backgroundColor: colors.dark.bg },
-  fishTagText: { fontSize: 13, color: colors.gray600 },
-  
-  // Enhanced Fish Tags with Season Status
-  fishTagEnhanced: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: colors.gray100, 
-    paddingHorizontal: 12, 
-    paddingVertical: 10, 
-    borderRadius: 16,
-    gap: 6,
-  },
-  fishTagClosed: { backgroundColor: '#FEE2E2', opacity: 0.7 },
-  fishTagBest: { backgroundColor: '#D1FAE5', borderWidth: 2, borderColor: colors.green },
-  fishTagTextClosed: { textDecorationLine: 'line-through', color: colors.red },
-  fishIcon: { fontSize: 16 },
-  seasonBadge: { 
-    width: 20, 
-    height: 20, 
-    borderRadius: 10, 
-    justifyContent: 'center', 
-    alignItems: 'center',
-    backgroundColor: colors.gray200,
-  },
-  seasonOpen: { backgroundColor: '#D1FAE5' },
-  seasonClosed: { backgroundColor: '#FEE2E2' },
-  seasonBest: { backgroundColor: colors.green },
-  seasonBadgeText: { fontSize: 10 },
-  schonzeitWarning: { 
-    fontSize: 12, 
-    color: '#B91C1C', 
-    marginTop: 12, 
-    fontStyle: 'italic',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#FEF2F2',
-    borderRadius: 8,
-  },
-
-  // Price Section
-  priceSection: { marginBottom: 20 },
-  priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  priceValue: { fontSize: 28, fontWeight: '700', color: colors.gray900 },
-  buyBtn: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  buyBtnText: { color: colors.white, fontSize: 14, fontWeight: '600' },
-
-  // Filters
-  filterLabel: { fontSize: 13, fontWeight: '600', color: colors.gray600, marginBottom: 12, marginTop: 8 },
-  filterGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  filterChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.gray100, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, gap: 6 },
-  filterChipDark: { backgroundColor: colors.dark.bg },
-  filterChipActive: { backgroundColor: colors.primary },
-  filterChipText: { fontSize: 14, color: colors.gray600 },
-  filterChipTextActive: { color: colors.white },
-  confidenceBadge: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.gray400 },
-  confidenceHigh: { backgroundColor: colors.green },
-  confidenceMedium: { backgroundColor: colors.yellow },
-
-  // 🆕 Action Buttons
-  actionSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    marginBottom: 16,
-    gap: 10,
-  },
-  actionBtnPrimary: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 14,
-    borderRadius: 14,
-    gap: 8,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  actionBtnPrimaryText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingVertical: 14,
-    borderRadius: 14,
-    gap: 6,
-  },
-  actionBtnText: {
-    color: '#374151',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  // 🆕 Address Section
-  addressSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#F9FAFB',
-    padding: 12,
-    borderRadius: 12,
-    gap: 8,
-    marginBottom: 16,
-  },
-  addressText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
-  },
-
-  // 🆕 Score Info Badge (kleines i auf dem Score)
-  scoreInfoBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // 🆕 Fangindex Modal Styles
-  fangindexModalOverlay: {
+  // Modal
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  fangindexModalContent: {
+  modalContent: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 24,
@@ -2485,30 +610,14 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  fangindexModalHeader: {
+  modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  fangindexModalIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  fangindexModalIconText: {
-    fontSize: 22,
-  },
-  fangindexModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-    flex: 1,
-  },
-  fangindexModalClose: {
+  modalLogo: { width: 44, height: 44, borderRadius: 12, marginRight: 12 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111827', flex: 1 },
+  modalClose: {
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -2516,45 +625,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  fangindexModalCloseText: {
-    fontSize: 16,
-    color: '#6B7280',
-  },
-  fangindexModalDesc: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  fangindexFactors: {
-    gap: 12,
-    marginBottom: 20,
-  },
-  fangindexFactor: {
+  modalCloseText: { fontSize: 16, color: '#6B7280' },
+  modalDesc: { fontSize: 14, color: '#6B7280', lineHeight: 20, marginBottom: 20 },
+  factors: { gap: 12, marginBottom: 20 },
+  factorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F9FAFB',
     padding: 12,
     borderRadius: 12,
   },
-  factorIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  factorContent: {
-    flex: 1,
-  },
-  factorTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  factorDesc: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  fangindexLegend: {
+  factorIcon: { fontSize: 20, marginRight: 12 },
+  factorContent: { flex: 1 },
+  factorTitle: { fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 2 },
+  factorDesc: { fontSize: 12, color: '#6B7280' },
+  legend: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 16,
@@ -2562,32 +647,17 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E7EB',
     marginBottom: 16,
   },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendText: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  fangindexModalButton: {
-    backgroundColor: '#0066FF',
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 12, height: 12, borderRadius: 6 },
+  legendText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
+  modalButton: {
+    backgroundColor: COLORS.primary,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
   },
-  fangindexModalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  modalButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+
 });
 
 export default MapScreen;

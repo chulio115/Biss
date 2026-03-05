@@ -6,6 +6,7 @@
 export type RootTabParamList = {
   ScheinStack: undefined;
   MapStack: undefined;
+  CatchBookStack: undefined;
   BuyStack: undefined;
   ProfileStack: undefined;
 };

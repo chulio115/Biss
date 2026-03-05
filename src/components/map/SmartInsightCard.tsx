@@ -34,7 +34,7 @@ interface SmartInsightCardProps {
   onDismiss?: () => void;
 }
 
-const COLORS = {
+const INSIGHT_COLORS = {
   opportunity: {
     bg: '#ECFDF5',
     bgDark: '#064E3B',
@@ -79,7 +79,7 @@ export const SmartInsightCard: React.FC<SmartInsightCardProps> = ({
   const opacityAnim = useRef(new Animated.Value(0)).current;
   
   // Get colors based on insight type
-  const typeColors = COLORS[insight.type] || COLORS.tip;
+  const typeColors = INSIGHT_COLORS[insight.type] || INSIGHT_COLORS.tip;
   
   // Animate in on mount
   useEffect(() => {
@@ -214,7 +214,7 @@ export const SmartInsightBanner: React.FC<SmartInsightBannerProps> = ({
   
   if (!topInsight) return null;
   
-  const typeColors = COLORS[topInsight.type] || COLORS.tip;
+  const typeColors = INSIGHT_COLORS[topInsight.type] || INSIGHT_COLORS.tip;
   
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -241,7 +241,7 @@ export const SmartInsightBanner: React.FC<SmartInsightBannerProps> = ({
         
         {/* All insights */}
         {insights.map((insight, index) => {
-          const colors = COLORS[insight.type] || COLORS.tip;
+          const colors = INSIGHT_COLORS[insight.type] || INSIGHT_COLORS.tip;
           return (
             <TouchableOpacity
               key={index}

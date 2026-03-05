@@ -7,7 +7,7 @@
  * - Einstellungen (Settings-Button oben rechts)
  * - Abmelden
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -31,33 +31,17 @@ import {
   Star,
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useAchievements } from '../hooks/useAchievements';
+import { useFavorites } from '../hooks/useFavorites';
+import { useRatings } from '../hooks/useRatings';
+import { useFishingLicense } from '../hooks/useFishingLicense';
+import { useCatchCount } from '../hooks/useCatchCount';
+import { useLeaderboard } from '../hooks/useLeaderboard';
+import { AchievementModal } from '../components/profile/AchievementModal';
+import { LeaderboardModal } from '../components/profile/LeaderboardModal';
+import { COLORS } from '../constants/colors';
+import { TIER_COLORS, CATEGORY_LABELS, AchievementDef } from '../constants/achievements';
 
-// Design Tokens
-const COLORS = {
-  primary: '#00A3FF',
-  accent: '#0066FF',
-  green: '#4ADE80',
-  yellow: '#FACC15',
-  red: '#EF4444',
-  white: '#FFFFFF',
-  gray100: '#F5F5F5',
-  gray200: '#E0E0E0',
-  gray400: '#9CA3AF',
-  gray600: '#4B5563',
-  gray900: '#111827',
-  dark: {
-    bg: '#0A1A2F',
-    surface: '#132337',
-    card: '#1A2D44',
-  },
-};
-
-// Mock stats
-const STATS = [
-  { label: 'Fänge', value: '24', icon: Fish, color: COLORS.primary },
-  { label: 'Spots', value: '8', icon: MapPin, color: COLORS.green },
-  { label: 'Trophäen', value: '3', icon: Trophy, color: COLORS.yellow },
-];
 
 // Menu items
 const MENU_ITEMS = [
@@ -72,6 +56,26 @@ export const ProfileScreen: React.FC = () => {
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
+  const { achievements, streak, unlockedCount, totalCount, incrementProgress } = useAchievements();
+  const { favoritesCount } = useFavorites();
+  const { ratings } = useRatings();
+  const { hasLicense } = useFishingLicense();
+  const catchesCount = useCatchCount();
+  const { leaderboard, currentUserEntry, scoreBreakdown } = useLeaderboard(
+    achievements, streak, catchesCount, favoritesCount, ratings.length
+  );
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+
+  // Sync external data into achievement progress
+  useEffect(() => {
+    if (favoritesCount > 0) incrementProgress('spots_favorited', favoritesCount, true);
+    if (ratings.length > 0) incrementProgress('spots_rated', ratings.length, true);
+    if (hasLicense) incrementProgress('license_added', 1, true);
+  }, [favoritesCount, ratings.length, hasLicense]);
+
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const unlockedAchievements = achievements.filter((a) => a.unlocked);
+  const lockedAchievements = achievements.filter((a) => !a.unlocked);
 
   const handleSignOut = async () => {
     try {
@@ -126,13 +130,17 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Stats */}
         <View style={styles.statsContainer}>
-          {STATS.map((stat, index) => (
+          {[
+            { label: 'Badges', value: `${unlockedCount}/${totalCount}`, icon: Trophy, color: COLORS.yellow },
+            { label: 'Streak', value: `${streak.currentStreak}d`, icon: Fish, color: COLORS.primary },
+            { label: 'Favoriten', value: `${favoritesCount}`, icon: Star, color: COLORS.green },
+          ].map((stat, index, arr) => (
             <View 
               key={stat.label} 
               style={[
                 styles.statCard, 
                 isDark && styles.statCardDark,
-                index < STATS.length - 1 && styles.statCardBorder,
+                index < arr.length - 1 && styles.statCardBorder,
               ]}
             >
               <stat.icon size={24} color={stat.color} strokeWidth={1.5} />
@@ -145,6 +153,89 @@ export const ProfileScreen: React.FC = () => {
             </View>
           ))}
         </View>
+
+        {/* Free-Tier-Banner (Opas Rat #1: "Wir vertrauen euch") */}
+        <View style={[styles.freeTierBanner, isDark && styles.freeTierBannerDark]}>
+          <Text style={styles.freeTierEmoji}>🎁</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.freeTierTitle, isDark && styles.textLight]}>
+              Immer kostenlos bei BISS
+            </Text>
+            <Text style={[styles.freeTierDesc, isDark && styles.subtitleDark]}>
+              Fangindex, Beißzeiten, Karten, Fangbuch, Schonzeiten — keine Paywall, kein Abo
+            </Text>
+          </View>
+        </View>
+
+        {/* Streak Banner */}
+        {streak.currentStreak >= 2 && (
+          <View style={[styles.streakBanner, isDark && styles.streakBannerDark]}>
+            <Text style={styles.streakEmoji}>🔥</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.streakTitle, isDark && styles.textLight]}>
+                {streak.currentStreak} Tage Streak!
+              </Text>
+              <Text style={[styles.streakDesc, isDark && styles.subtitleDark]}>
+                Rekord: {streak.longestStreak} Tage
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Achievements */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, isDark && styles.textLight]}>Achievements</Text>
+          <Text style={styles.sectionBadge}>{unlockedCount}/{totalCount}</Text>
+        </View>
+
+        {/* Unlocked Badges Grid */}
+        {unlockedAchievements.length > 0 ? (
+          <View style={styles.badgeGrid}>
+            {unlockedAchievements.map((a) => (
+              <View key={a.id} style={[styles.badgeCard, isDark && styles.badgeCardDark]}>
+                <View style={[styles.badgeIcon, { backgroundColor: TIER_COLORS[a.tier] + '20' }]}>
+                  <Text style={styles.badgeEmoji}>{a.icon}</Text>
+                </View>
+                <Text style={[styles.badgeTitle, isDark && styles.textLight]} numberOfLines={1}>{a.title}</Text>
+                <View style={[styles.tierDot, { backgroundColor: TIER_COLORS[a.tier] }]} />
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={[styles.emptyState, isDark && styles.emptyStateDark]}>
+            <Text style={styles.emptyStateEmoji}>🎯</Text>
+            <Text style={[styles.emptyStateText, isDark && styles.textLight]}>Noch keine Achievements freigeschaltet</Text>
+          </View>
+        )}
+
+        {/* Show All Button */}
+        <TouchableOpacity
+          style={[styles.showAllBtn, isDark && styles.showAllBtnDark]}
+          onPress={() => setShowAchievementModal(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.showAllBtnText, isDark && styles.showAllBtnTextDark]}>
+            Alle {totalCount} Achievements anzeigen
+          </Text>
+        </TouchableOpacity>
+
+        {/* Leaderboard */}
+        <TouchableOpacity
+          style={[styles.leaderboardBtn, isDark && styles.leaderboardBtnDark]}
+          onPress={() => setShowLeaderboardModal(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.leaderboardLeft}>
+            <Trophy size={22} color={COLORS.yellow} strokeWidth={2} />
+            <View>
+              <Text style={[styles.leaderboardTitle, isDark && styles.textLight]}>Leaderboard</Text>
+              <Text style={styles.leaderboardSubtitle}>
+                {currentUserEntry ? `Platz ${currentUserEntry.rank} · ${scoreBreakdown.total} Punkte` : 'Score berechnen...'}
+              </Text>
+            </View>
+          </View>
+          <ChevronRight size={20} color={COLORS.gray400} strokeWidth={2} />
+        </TouchableOpacity>
 
         {/* Menu */}
         <View style={[styles.menuCard, isDark && styles.menuCardDark]}>
@@ -179,6 +270,22 @@ export const ProfileScreen: React.FC = () => {
         {/* Version */}
         <Text style={styles.version}>BISS v1.0.0</Text>
       </ScrollView>
+
+      {/* Achievement Modal */}
+      <AchievementModal
+        visible={showAchievementModal}
+        onClose={() => setShowAchievementModal(false)}
+        achievements={achievements}
+      />
+
+      {/* Leaderboard Modal */}
+      <LeaderboardModal
+        visible={showLeaderboardModal}
+        onClose={() => setShowLeaderboardModal(false)}
+        leaderboard={leaderboard}
+        currentUserEntry={currentUserEntry}
+        scoreBreakdown={scoreBreakdown}
+      />
     </View>
   );
 };
@@ -332,6 +439,180 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.gray400,
   },
+
+  // ─── Free-Tier-Banner (Opas Rat #1) ───
+  freeTierBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#10B981' + '20',
+  },
+  freeTierBannerDark: { backgroundColor: '#10B981' + '15', borderColor: '#10B981' + '30' },
+  freeTierEmoji: { fontSize: 32 },
+  freeTierTitle: { fontSize: 16, fontWeight: '700', color: COLORS.gray900 },
+  freeTierDesc: { fontSize: 12, color: COLORS.gray600, lineHeight: 17 },
+
+  // ─── Streak ───
+  streakBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 20,
+  },
+  streakBannerDark: { backgroundColor: '#78350F' + '30' },
+  streakEmoji: { fontSize: 32 },
+  streakTitle: { fontSize: 16, fontWeight: '700', color: COLORS.gray900 },
+  streakDesc: { fontSize: 12, color: COLORS.gray500 },
+
+  // ─── Achievements ───
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.gray900 },
+  sectionBadge: { fontSize: 13, fontWeight: '700', color: COLORS.primary, backgroundColor: COLORS.primary + '15', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, overflow: 'hidden' },
+  subSectionTitle: { fontSize: 14, fontWeight: '600', color: COLORS.gray500, marginBottom: 10, marginTop: 4 },
+  badgeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 20,
+  },
+  badgeCard: {
+    width: '30%' as any,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  badgeCardDark: { backgroundColor: COLORS.dark.card },
+  badgeCardLocked: { opacity: 0.55 },
+  badgeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  badgeEmoji: { fontSize: 24 },
+  badgeTitle: { fontSize: 11, fontWeight: '600', color: COLORS.gray900, textAlign: 'center' },
+  tierDot: { width: 6, height: 6, borderRadius: 3, marginTop: 4 },
+
+  // ─── Locked Achievements ───
+  lockedList: { gap: 10, marginBottom: 20 },
+  lockedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 14,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  lockedRowDark: { backgroundColor: COLORS.dark.card },
+  lockedIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.gray100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.5,
+  },
+  lockedEmoji: { fontSize: 20 },
+  lockedTitle: { fontSize: 14, fontWeight: '600', color: COLORS.gray900 },
+  lockedDesc: { fontSize: 11, color: COLORS.gray500, marginBottom: 6 },
+  progressBar: {
+    height: 4,
+    backgroundColor: COLORS.gray200,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  progressText: { fontSize: 12, fontWeight: '700', color: COLORS.gray400, minWidth: 32, textAlign: 'right' },
+  showAllBtn: { 
+    alignItems: 'center', 
+    paddingVertical: 14, 
+    marginBottom: 20,
+    backgroundColor: COLORS.primary + '10',
+    borderRadius: 12,
+  },
+  showAllBtnDark: {
+    backgroundColor: COLORS.primary + '20',
+  },
+  showAllBtnText: { fontSize: 14, fontWeight: '600', color: COLORS.primary },
+  showAllBtnTextDark: { color: '#4DA3FF' },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  emptyStateDark: {
+    backgroundColor: COLORS.dark.card,
+  },
+  emptyStateEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: COLORS.gray500,
+    textAlign: 'center',
+  },
+
+  leaderboardBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  leaderboardBtnDark: {
+    backgroundColor: COLORS.dark.card,
+  },
+  leaderboardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  leaderboardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.gray900,
+  },
+  leaderboardSubtitle: {
+    fontSize: 12,
+    color: COLORS.gray400,
+    marginTop: 2,
+  },
+
   menuCard: {
     backgroundColor: COLORS.white,
     borderRadius: 20,

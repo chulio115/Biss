@@ -28,29 +28,25 @@ npx expo start --dev-client
 ## 📊 Projekt-Status
 
 ```
-██████████████░░░░░░░░░░░░░░░░ 40% MVP Complete
+████████████████████████████░░ 85% MVP Complete
 ```
 
 | Bereich | Status | Details |
-|---------|--------|---------|
-| Foundation | ✅ 100% | Auth, APIs, Services |
+|---------|--------|--------|
+| Foundation | ✅ 100% | Auth, Services, APIs |
 | Navigation | ✅ 100% | 5 Tabs, Screens |
-| Map Core | ✅ 70% | Mapbox, 3 Styles, Markers (Basis-Map) |
-| USP Features | ✅ 50% | Beißzeit, Schonzeit (technisch fertig, aber nicht beeindruckend) |
-| Smart Intelligence | ✅ 30% | Basis-Kontext, aber keine echten Insights |
+| Map Core | ✅ 85% | Mapbox, Clustering, Score-Marker, Zoom-basiert |
+| USP Features | ✅ 75% | Beißzeit-Modal, Schonzeit, Solunar, Favoriten |
 | Daten | ✅ 80% | 200+ OSM-Gewässer + Google Places |
-| Categories | ✅ 100% | 4 Spot-Kategorien + Filter |
-| UI/UX | ✅ 60% | Ordentlich, aber nicht Above and Beyond |
-| Bottom Sheet | ✅ 100% | Details + Auto-Open |
-| Location Fixes | 🟡 80% | Bekannte Spots korrigiert |
-| **Echte Angel-Features** | 🔴 10% | Fang-Tagebuch, Bewertungen, Community |
-| **Gamification** | 🔴 0% | Achievements, Streaks, Leaderboards |
-| **Social Features** | 🔴 0% | Spot-Sharing, Freunde, Gruppen |
-| **AR Features** | 🔴 0% | AR-Angeln, Spot-Preview |
+| UI/UX | ✅ 90% | Design System, ScoreRing, Fangindex-Breakdown, Logo |
+| Fang-Tagebuch | ✅ 95% | DB + Screen + Foto-Upload + **Offline-Queue** |
+| Gamification | ✅ 85% | 18 Achievements, Streaks, Leaderboard |
+| **Offline-Modus** | ✅ 90% | Cache-Service, Offline-Fänge+Sync, Mapbox Packs |
+| Fischereischein | ✅ 80% | Wallet UI, Image Picker, Metadaten |
+| Social Features | 🔴 0% | Spot-Sharing, Freunde, Gruppen |
 | Monetarisierung | 🔴 0% | Stripe vorbereitet |
-| Fischereischein | 🔴 0% | UI vorbereitet |
 
-👉 **Vollständige Roadmap:** [docs/ROADMAP.md](docs/ROADMAP.md)
+👉 **Vollständige Roadmap:** [docs/ROADMAP.md](docs/ROADMAP.md)  |  **Feature-Übersicht:** [docs/FEATURES.md](docs/FEATURES.md)
 
 ---
 
@@ -106,20 +102,22 @@ npx expo start --dev-client
 | **App** | React Native + Expo + TypeScript |
 | **Maps** | Mapbox GL Native |
 | **Backend** | Supabase (Auth, DB) |
-| **KI** | xAI/Grok |
+| **KI** | Lokal (Fangindex-Algorithmus) |
 | **APIs** | OpenWeather, PEGELONLINE |
 
 👉 **Architektur-Details:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
-## 📚 Dokumentation
+##  Dokumentation
 
 | Dokument | Beschreibung |
 |----------|--------------|
 | [**SETUP.md**](docs/SETUP.md) | Installation & Einrichtung |
 | [**COMMANDS.md**](docs/COMMANDS.md) | Alle Befehle |
 | [**ROADMAP.md**](docs/ROADMAP.md) | Status & Milestones |
+| [**FEATURES.md**](docs/FEATURES.md) | Alle implementierten Features + Architektur |
+| [**OPAS_RAT.md**](docs/OPAS_RAT.md) | Marktanalyse & strategische Leitlinien ("Opas Rat") |
 | [**IDEAS.md**](docs/IDEAS.md) | Feature-Ideen |
 | [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) | Tech-Übersicht |
 
@@ -137,11 +135,14 @@ npx expo start --dev-client
 ```
 biss-app/
 ├── src/
-│   ├── screens/          # MapScreen, SearchScreen, ...
-│   ├── components/map/   # ActivityRing, PulseMarker, ...
-│   ├── services/         # supabase, xai, weather
+│   ├── screens/          # MapScreen, CatchBookScreen, ProfileScreen, ...
+│   ├── components/       # map/, ui/, profile/
+│   ├── hooks/            # useMapData, useNetworkStatus, useOfflineMaps, ...
+│   ├── services/         # supabase, weather, offlineStorage
+│   ├── utils/            # fangindex, fishing
+│   ├── constants/        # colors, fishing, achievements
+│   ├── types/            # map.ts, index.ts
 │   └── navigation/       # TabNavigator
-├── assets/mapstyles/     # 4 Custom Mapbox Styles
 ├── docs/                 # 📚 Dokumentation
 └── supabase/             # DB Schema
 ```
