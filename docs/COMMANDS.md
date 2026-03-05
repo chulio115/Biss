@@ -40,7 +40,9 @@ npx expo start --dev-client --ios
 
 ---
 
-## 📱 iOS Build (Native Mapbox)
+## 📱 iOS Build (Native Modules)
+
+> **⚠️ WICHTIG:** Nach Installation von Native Modules (z.B. `@react-native-community/netinfo`, `@rnmapbox/maps`) MUSS ein Rebuild durchgeführt werden! Sonst: `NativeModule.XXX is null` Crash.
 
 ### 1. Prebuild (nach Package-Änderungen)
 ```bash

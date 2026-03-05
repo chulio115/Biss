@@ -121,12 +121,9 @@ npx expo start --dev-client
 | [**IDEAS.md**](docs/IDEAS.md) | Feature-Ideen |
 | [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) | Tech-Übersicht |
 
-### Feature-Specs
-| Dokument | Beschreibung |
-|----------|--------------|
-| [FEATURE_MAP_SPEC.md](docs/FEATURE_MAP_SPEC.md) | Map Implementation |
-| [FEATURE_TOP3_TEICHE.md](docs/FEATURE_TOP3_TEICHE.md) | Top 3 Feature |
-| [mapstyles/README.md](assets/mapstyles/README.md) | Mapbox Styles |
+### Archiv (historische Planungsdokumente)
+
+Ältere Specs und Planungsdokumente sind in [`docs/archive/`](docs/archive/) verfügbar.
 
 ---
 

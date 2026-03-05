@@ -2,9 +2,20 @@
  * useNetworkStatus Hook
  * Erkennt Netzwerkstatus und triggert Sync bei Reconnect.
  * Nutzt @react-native-community/netinfo für zuverlässige Erkennung.
+ * 
+ * FALLBACK: Wenn NetInfo Native Module nicht verfügbar ist (kein iOS Rebuild),
+ * wird "online" angenommen und Netzwerk-Monitoring übersprungen.
+ * → Fix: `npx expo prebuild --platform ios --clean && npx expo run:ios`
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+
+// Graceful import: NetInfo ist ein Native Module und crasht ohne iOS Rebuild
+let NetInfo: any = null;
+try {
+  NetInfo = require('@react-native-community/netinfo').default;
+} catch (e) {
+  console.warn('⚠️ NetInfo native module not available — assuming online. Run: npx expo prebuild --platform ios --clean');
+}
 
 export interface NetworkStatus {
   isConnected: boolean;
@@ -22,7 +33,10 @@ export const useNetworkStatus = () => {
   const onReconnectCallbacks = useRef<(() => void)[]>([]);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
+    // Skip if NetInfo native module isn't linked
+    if (!NetInfo) return;
+
+    const unsubscribe = NetInfo.addEventListener((state: any) => {
       const isConnected = state.isConnected ?? false;
       const isInternetReachable = state.isInternetReachable;
 
