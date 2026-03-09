@@ -18,22 +18,25 @@ export const MapZoomControls: React.FC<MapZoomControlsProps> = ({ onZoomIn, onZo
   const isDark = useColorScheme() === 'dark';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDark && styles.containerDark]}>
       <TouchableOpacity
-        style={[styles.btn, isDark && styles.btnDark]}
+        style={styles.btn}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onZoomIn();
         }}
+        activeOpacity={0.7}
       >
         <Text style={[styles.btnText, isDark && styles.btnTextDark]}>+</Text>
       </TouchableOpacity>
+      <View style={[styles.divider, isDark && styles.dividerDark]} />
       <TouchableOpacity
-        style={[styles.btn, isDark && styles.btnDark]}
+        style={styles.btn}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onZoomOut();
         }}
+        activeOpacity={0.7}
       >
         <Text style={[styles.btnText, isDark && styles.btnTextDark]}>−</Text>
       </TouchableOpacity>
@@ -44,27 +47,38 @@ export const MapZoomControls: React.FC<MapZoomControlsProps> = ({ onZoomIn, onZo
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    right: 16,
+    right: 14,
     bottom: 110,
-    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  containerDark: {
+    backgroundColor: 'rgba(10,26,47,0.92)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowOpacity: 0.4,
   },
   btn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: BTN_LIGHT,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  btnDark: {
-    backgroundColor: BTN_DARK,
-    shadowOpacity: 0.3,
+  divider: {
+    height: 1,
+    marginHorizontal: 10,
+    backgroundColor: 'rgba(0,0,0,0.08)',
   },
-  btnText: { fontSize: 24, fontWeight: '300', color: BTN_DARK },
+  dividerDark: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  btnText: { fontSize: 22, fontWeight: '400', color: BTN_DARK },
   btnTextDark: { color: COLORS.white },
 });

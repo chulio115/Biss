@@ -57,6 +57,9 @@ const buildGeoJSON = (waterBodies: MapWaterBody[]): GeoJSON.FeatureCollection =>
       fangIndex: wb.fangIndex,
       category: wb.category,
       color: getScoreColor(wb.fangIndex),
+      isHot: wb.fangIndex >= 75 ? 1 : 0,
+      isTop: wb.fangIndex >= 85 ? 1 : 0,
+      glowColor: wb.fangIndex >= 75 ? getScoreColor(wb.fangIndex) + '40' : 'transparent',
       categoryColor: SPOT_CATEGORIES[wb.category]?.color || '#F59E0B',
       categoryIcon: SPOT_CATEGORIES[wb.category]?.icon || '🎯',
     },
@@ -360,6 +363,43 @@ export const MapScreen: React.FC = () => {
             }}
           />
 
+          {/* 🔥 Hot Spot Outer Glow — pulsing halo for fangIndex >= 75 */}
+          <MapboxGL.CircleLayer
+            id="hotSpotGlow"
+            filter={['all', ['!', ['has', 'point_count']], ['==', ['get', 'isHot'], 1]]}
+            style={{
+              circleColor: ['get', 'color'],
+              circleRadius: [
+                'interpolate', ['linear'], ['zoom'],
+                7, 22,
+                10, 28,
+                13, 36,
+                16, 42,
+              ],
+              circleOpacity: 0.15,
+              circleBlur: 0.6,
+            }}
+          />
+
+          {/* 🔥 Hot Spot Inner Ring — secondary glow ring */}
+          <MapboxGL.CircleLayer
+            id="hotSpotRing"
+            filter={['all', ['!', ['has', 'point_count']], ['==', ['get', 'isHot'], 1]]}
+            style={{
+              circleColor: 'transparent',
+              circleRadius: [
+                'interpolate', ['linear'], ['zoom'],
+                7, 17,
+                10, 22,
+                13, 29,
+                16, 34,
+              ],
+              circleStrokeWidth: 1.5,
+              circleStrokeColor: ['get', 'color'],
+              circleStrokeOpacity: 0.35,
+            }}
+          />
+
           {/* Individual markers - Score-color circle with shadow */}
           <MapboxGL.CircleLayer
             id="unclusteredMarkersShadow"
@@ -391,11 +431,29 @@ export const MapScreen: React.FC = () => {
               ],
               circleStrokeWidth: [
                 'interpolate', ['linear'], ['zoom'],
-                7, 2,
-                13, 3.5,
+                7, 2.5,
+                13, 4,
               ],
-              circleStrokeColor: COLORS.white,
+              circleStrokeColor: 'rgba(255,255,255,0.95)',
               circleOpacity: 1,
+            }}
+          />
+
+          {/* 🔥 Flame icon for top spots (fangIndex >= 85) */}
+          <MapboxGL.SymbolLayer
+            id="hotSpotFlame"
+            filter={['all', ['!', ['has', 'point_count']], ['==', ['get', 'isTop'], 1]]}
+            style={{
+              textField: '🔥',
+              textSize: [
+                'interpolate', ['linear'], ['zoom'],
+                7, 10,
+                10, 14,
+                13, 18,
+              ],
+              textOffset: [0.8, -0.8],
+              textAllowOverlap: true,
+              textIgnorePlacement: true,
             }}
           />
 
@@ -415,8 +473,8 @@ export const MapScreen: React.FC = () => {
               textFont: ['DIN Pro Bold', 'Arial Unicode MS Bold'],
               textAllowOverlap: true,
               textIgnorePlacement: true,
-              textHaloColor: 'rgba(0,0,0,0.3)',
-              textHaloWidth: 1,
+              textHaloColor: 'rgba(0,0,0,0.35)',
+              textHaloWidth: 1.2,
             }}
           />
         </MapboxGL.ShapeSource>

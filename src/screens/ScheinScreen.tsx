@@ -35,7 +35,11 @@ import * as Haptics from 'expo-haptics';
 import { COLORS } from '../constants/colors';
 import { useFishingLicense, StoredLicense } from '../hooks/useFishingLicense';
 
-export const ScheinScreen: React.FC = () => {
+interface ScheinScreenProps {
+  onClose?: () => void;
+}
+
+export const ScheinScreen: React.FC<ScheinScreenProps> = ({ onClose }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
@@ -142,7 +146,14 @@ export const ScheinScreen: React.FC = () => {
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
       <View style={[styles.header, isDark && styles.headerDark, { paddingTop: insets.top + 16 }]}>
-        <Text style={[styles.title, isDark && styles.textLight]}>Mein Schein</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={[styles.title, isDark && styles.textLight]}>Mein Schein</Text>
+          {onClose && (
+            <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
+              <X size={24} color={isDark ? COLORS.white : COLORS.gray600} />
+            </TouchableOpacity>
+          )}
+        </View>
         <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>
           {hasLicense ? 'Dein digitaler Angelschein' : 'Schein jetzt hinterlegen'}
         </Text>

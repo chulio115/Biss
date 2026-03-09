@@ -198,18 +198,178 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 
 ## 🪪 Fischereischein Wallet
 
-### Status: ✅ 80%
+### Status: ✅ 85% (10.03.26)
 
 - **Foto-Upload:** Kamera + Galerie
 - **Wallet-Card:** Bild + Gültigkeitsbadge + Metadaten
 - **Dateien:** `useFishingLicense.ts`, `ScheinScreen.tsx`
+- **Änderung 10.03.26:** ScheinScreen akzeptiert optionale `onClose` Prop, wird jetzt als Modal aus dem Profil-Menü geöffnet (statt eigener Tab)
 
 ---
 
-## 📱 Navigation
+## 🐟 Community Feed + Privacy-First Sharing (Opas Rat #2)
 
-5 Tabs: **Schein** → **Fänge** → **Karte** (Mitte) → **Kaufen** → **Profil**
+> "Teilen ohne Brennen" — Angler teilen Fänge, ohne Spots zu verraten.
+
+### Status: ✅ 90% (10.03.26)
+
+### Architektur
+
+```
+┌─────────────────────────────────────────────────┐
+│  Fang eintragen (CatchBookScreen)               │
+│  ↓ Toggle: "Mit Community teilen"               │
+│  ↓ Wer sieht das? [Community] [Öffentlich]      │
+│  ↓ Standort? [~Bereich ±2km] [Verborgen] [Exakt]│
+│  ↓ shareCatch() → catch_shares Tabelle           │
+└─────────────────────────────────────────────────┘
+            │ Supabase: catch_shares
+┌─────────────────────────────────────────────────┐
+│  Community Feed (CommunityScreen)               │
+│  ├── Stats: Geteilte Fänge, Trending, Region    │
+│  ├── Filter-Button (oben rechts)                │
+│  ├── Active Filter Chips (inline)              │
+│  ├── Privacy-Info Banner                        │
+│  ├── Catch Cards mit Privacy-Badges             │
+│  └── Petri Heil! Reactions (4 Typen)            │
+└─────────────────────────────────────────────────┘
+```
+
+### Privacy-Kontrollen
+
+| Option | Beschreibung |
+|--------|-------------|
+| **Visibility: Community** | Nur BISS-Nutzer sehen den Fang |
+| **Visibility: Öffentlich** | Alle sehen den Fang |
+| **Location: ~Bereich** | Spot wird um ±2km versetzt (Fuzzy) |
+| **Location: Verborgen** | Kein Spot, kein Name, keine Koordinaten |
+| **Location: Exakt** | Genauer Spot (nur wenn gewollt) |
+
+### Dateien
+
+| Datei | Typ | Beschreibung |
+|-------|-----|--------------|
+| `supabase/community_schema.sql` | Schema | catch_shares + community_likes + RLS + Trigger |
+| `src/types/index.ts` | Types | CatchVisibility, LocationSharing, CatchShare, CommunityLike, SharedCatchCard |
+| `src/hooks/useCommunityFeed.ts` | Hook | Feed laden, Like/Unlike, shareCatch(), AsyncStorage-Fallback |
+| `src/screens/CommunityScreen.tsx` | Screen | Feed UI, CatchCards, Reactions, Stats Header, Privacy Banner |
+
+### Community-Filter (10.03.26)
+
+| Filter | Beschreibung | Status |
+|--------|-------------|--------|
+| **Fischarten** | Chip-Grid aller Fischarten, toggle Auswahl | ✅ Client-side |
+| **Umkreis** | 5/10/25/50/100 km Radius-Chips, Haversine-Distanz | ✅ Client-side (expo-location) |
+| **Verein** | Club-Liste mit Checkmark, Mock-Daten für MVP | ✅ UI ready, ⬜ Backend |
+
+### Geänderte Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `src/screens/CatchBookScreen.tsx` | Privacy-Controls im AddCatchModal: Share-Toggle, Visibility, Location Sharing. **Bug Fix 10.03.26:** `shareCatch()` wird jetzt korrekt aufgerufen wenn `shareToFeed=true` |
+| `src/navigation/TabNavigator.tsx` | BuyStack → CommunityStack (Users Icon). **10.03.26:** ScheinStack entfernt (4 Tabs) |
+| `src/navigation/types.ts` | CommunityStackParamList ersetzt BuyStackParamList. **10.03.26:** ScheinStack aus RootTabParamList entfernt |
+
+### Reactions
+
+| Reaction | Emoji | Label |
+|----------|-------|-------|
+| petri_heil | 🐟 | Petri Heil! |
+| trophy | 🏆 | Rekord! |
+| fire | 🔥 | Feuer! |
+| wow | 😮 | Wow! |
+
+### Was noch fehlt (→ 100%)
+
+- ⬜ Freunde / Follower System
+- ⬜ Kommentar-Funktion
+- ⬜ Share-Button auf bestehenden CatchCards
+- ⬜ Benachrichtigungen bei Reactions
+- ⬜ Vereins-Backend (Clubs-Tabelle, Mitgliedschaften, Filter mit echten Daten)
 
 ---
 
-*Zuletzt aktualisiert: 05.03.2026*
+## 🔔 Personalisierte Push-Benachrichtigungen (Opas Rat: "Emotionaler Hook")
+
+> Nie wieder die beste Beißzeit verpassen — lokale Alerts, kein Server nötig.
+
+### Status: ✅ 80% (09.03.26)
+
+### Architektur
+
+```
+┌─────────────────────────────────────────────────┐
+│  Profil → Benachrichtigungen                    │
+│  ├── Master-Toggle: Beißzeit-Alerts an/aus      │
+│  ├── Golden Hour (🌅 Sonnenauf-/untergang)      │
+│  ├── Solunar Major (� Mond-Transit ~2h)        │
+│  ├── Solunar Minor (⭐ Mondauf-/untergang ~1h)   │
+│  ├── Tages-Zusammenfassung (⏰ Uhrzeit wählbar)  │
+│  └── Refresh: Alerts jetzt aktualisieren        │
+└─────────────────────────────────────────────────┘
+        │ expo-notifications (lokal)
+        │ Solunar + Sun Times aus fangindex.ts/fishing.ts
+        ↓
+  15 Min. vor Period → Push-Notification
+```
+
+### Alert-Typen
+
+| Typ | Emoji | Beschreibung | Timing |
+|-----|-------|-------------|--------|
+| **Golden Hour** | 🌅 | Sonnenauf-/untergang | 15 Min. vorher |
+| **Solunar Major** | 🔥 | Mond-Transit, höchste Aktivität | 15 Min. vorher |
+| **Solunar Minor** | ⭐ | Mondauf-/untergang, erhöhte Aktivität | 15 Min. vorher |
+| **Tages-Zusammenfassung** | 🐟 | Alle Beißzeiten für heute | Täglich (wählbar 05–08 Uhr) |
+
+### Dateien
+
+| Datei | Typ | Beschreibung |
+|-------|-----|--------------|
+| `src/services/notificationService.ts` | Service | Permission, Schedule, Cancel, Batch-Alerts |
+| `src/hooks/useNotificationPreferences.ts` | Hook | AsyncStorage-Prefs, Toggle-Funktionen, refreshAlerts |
+| `src/components/profile/NotificationSettingsModal.tsx` | Modal | Fullscreen UI mit Toggle-Rows, Hour-Picker |
+
+### Geänderte Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `src/screens/ProfileScreen.tsx` | NotificationSettingsModal + Menüpunkt "Benachrichtigungen" verbunden, "Tageskarten kaufen" hinzugefügt |
+
+### Was noch fehlt (→ 100%)
+
+- ⬜ Favoriten-Spots als Koordinaten übergeben (benötigt Spot-Daten in Favoriten)
+- ⬜ Push-Token für Remote Notifications (Server-Side, Post-Launch)
+- ⬜ Notification-History Ansicht
+
+---
+
+## � Navigation
+
+4 Tabs: **Karte** (Mitte) → **Fänge** → **Community** → **Profil**
+
+Profil-Menü: Fischereischein → Tageskarten kaufen → Benachrichtigungen → Favoriten → Hilfe → Datenschutz
+
+> Änderung 10.03.26: Schein-Tab entfernt, unter Profil als Modal verschoben. Freier Tab-Slot für spätere Features.
+
+---
+
+## 🏢 Vereinsangeln (Community-Integration)
+
+> Vereine als Filter/Sektion innerhalb des Community-Feeds — kein eigener Tab.
+
+### Status: 🟡 30% (10.03.26)
+
+### Aktueller Stand
+
+- ✅ **Filter-UI im Community-Screen:** Vereins-Filter als Sektion im Filter-Modal
+- ✅ **Mock-Clubs:** 5 Beispielvereine (ASV Elbe Hamburg, Angelverein Lüneburg, SAV Harburg, etc.)
+- ✅ **Club-Row UI:** Name, Region, Mitgliederzahl, Checkmark für aktiven Filter
+- ⬜ **Supabase Datenmodell:** Clubs-Tabelle, Mitgliedschaften, Vereinsgewässer
+- ⬜ **Beitreten/Erstellen:** Club-Verwaltung
+- ⬜ **Vereinsgewässer auf der Karte:** Spezielle Marker für Club-Gewässer
+- ⬜ **Mitgliedsnummer im Wallet:** Zusammen mit Fischereischein
+
+---
+
+*Zuletzt aktualisiert: 10.03.2026*

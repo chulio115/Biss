@@ -22,11 +22,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import { Plus, Camera, Fish, MapPin, Scale, Ruler, X, ChevronDown, Calendar } from 'lucide-react-native';
+import { Plus, Camera, Fish, MapPin, Scale, Ruler, X, ChevronDown, Calendar, Share2, Eye, EyeOff, Users, Globe } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { Catch } from '../types';
+import { Catch, CatchVisibility, LocationSharing } from '../types';
 import { COLORS } from '../constants/colors';
 import { FISH_SEASONS } from '../constants/fishing';
 import {
@@ -37,6 +37,7 @@ import {
   removeFromOfflineQueue,
   OfflineCatch,
 } from '../services/offlineStorage';
+import { useCommunityFeed } from '../hooks/useCommunityFeed';
 
 const FISH_OPTIONS = Object.entries(FISH_SEASONS).map(([key, val]) => ({
   id: key,
@@ -54,11 +55,48 @@ export const CatchBookScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { isOffline, onReconnect } = useNetworkStatus();
+  const { shareCatch } = useCommunityFeed();
 
   const [catches, setCatches] = useState<Catch[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [pendingSync, setPendingSync] = useState(0);
+
+  // Load catches (with offline cache fallback)
+  const loadCatches = useCallback(async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('catches')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('caught_at', { ascending: false });
+
+      if (error) {
+        console.warn('Load catches error (fallback to cache):', error.message);
+        const cached = await getCachedCatches();
+        if (cached.data) {
+          setCatches(cached.data as Catch[]);
+        }
+      } else if (data) {
+        setCatches(data);
+        cacheCatches(data);
+      }
+    } catch (e) {
+      console.warn('⚠️ Loading cached catches (exception)...');
+      const cached = await getCachedCatches();
+      if (cached.data) {
+        setCatches(cached.data as Catch[]);
+      }
+    } finally {
+      setLoading(false);
+    }
+
+    // Check offline queue
+    const queue = await getOfflineQueue();
+    setPendingSync(queue.length);
+  }, [user]);
 
   // Sync offline catches when back online
   const syncOfflineCatches = useCallback(async () => {
@@ -92,45 +130,14 @@ export const CatchBookScreen: React.FC = () => {
       // Reload from server to get proper IDs
       loadCatches();
     }
-  }, [user]);
-
-  // Load catches (with offline cache fallback)
-  const loadCatches = useCallback(async () => {
-    if (!user) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('catches')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('caught_at', { ascending: false });
-
-      if (data) {
-        setCatches(data);
-        cacheCatches(data);
-      }
-      if (error) {
-        console.error('Load catches error:', error);
-        throw error;
-      }
-    } catch (e) {
-      console.warn('⚠️ Loading cached catches...');
-      const cached = await getCachedCatches();
-      if (cached.data) {
-        setCatches(cached.data as Catch[]);
-      }
-    } finally {
-      setLoading(false);
-    }
-
-    // Check offline queue
-    const queue = await getOfflineQueue();
-    setPendingSync(queue.length);
-  }, [user]);
+  }, [user, loadCatches]);
 
   useEffect(() => {
-    loadCatches();
-  }, [loadCatches]);
+    loadCatches().then(() => {
+      // Also sync any pending offline catches on mount (in case we're already online)
+      syncOfflineCatches();
+    });
+  }, [loadCatches, syncOfflineCatches]);
 
   // Auto-sync when coming back online
   useEffect(() => {
@@ -257,6 +264,7 @@ export const CatchBookScreen: React.FC = () => {
           setCatches((prev) => [newCatch, ...prev]);
           setShowAddModal(false);
         }}
+        onShareCatch={shareCatch}
       />
     </View>
   );
@@ -342,7 +350,8 @@ const AddCatchModal: React.FC<{
   userId: string;
   onClose: () => void;
   onSaved: (c: Catch) => void;
-}> = ({ visible, isDark, userId, onClose, onSaved }) => {
+  onShareCatch: (catchData: Catch, visibility: CatchVisibility, locationSharing: LocationSharing, displayName?: string) => Promise<boolean>;
+}> = ({ visible, isDark, userId, onClose, onSaved, onShareCatch }) => {
   const insets = useSafeAreaInsets();
   const [species, setSpecies] = useState('');
   const [location, setLocation] = useState('');
@@ -354,6 +363,9 @@ const AddCatchModal: React.FC<{
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showFishPicker, setShowFishPicker] = useState(false);
+  const [shareToFeed, setShareToFeed] = useState(false);
+  const [visibility, setVisibility] = useState<CatchVisibility>('community');
+  const [locationSharing, setLocationSharing] = useState<LocationSharing>('fuzzy');
 
   const resetForm = () => {
     setSpecies('');
@@ -364,6 +376,9 @@ const AddCatchModal: React.FC<{
     setBait('');
     setNotes('');
     setPhotoUri(null);
+    setShareToFeed(false);
+    setVisibility('community');
+    setLocationSharing('fuzzy');
   };
 
   const pickImage = async () => {
@@ -430,7 +445,13 @@ const AddCatchModal: React.FC<{
       if (error) throw error;
       if (data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        onSaved(data as Catch);
+        const savedCatch = data as Catch;
+        onSaved(savedCatch);
+
+        // Share to community feed if toggle is on
+        if (shareToFeed) {
+          await onShareCatch(savedCatch, visibility, locationSharing, 'Angler');
+        }
         resetForm();
       }
     } catch (e: any) {
@@ -645,6 +666,107 @@ const AddCatchModal: React.FC<{
             value={notes}
             onChangeText={setNotes}
           />
+
+          {/* ─── Privacy-First Sharing (Opas Rat #2) ─── */}
+          <View style={[styles.sharingSection, isDark && styles.sharingSectionDark]}>
+            <TouchableOpacity
+              style={styles.shareToggle}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setShareToFeed(!shareToFeed);
+              }}
+              activeOpacity={0.7}
+            >
+              <Share2 size={18} color={shareToFeed ? COLORS.primary : (isDark ? '#6B7280' : COLORS.gray400)} />
+              <View style={styles.shareToggleInfo}>
+                <Text style={[styles.shareToggleTitle, isDark && styles.textLight]}>
+                  Mit Community teilen
+                </Text>
+                <Text style={[styles.shareToggleDesc, isDark && { color: '#6B7280' }]}>
+                  Zeige deinen Fang im Community-Feed
+                </Text>
+              </View>
+              <View style={[styles.toggleTrack, shareToFeed && styles.toggleTrackActive]}>
+                <View style={[styles.toggleThumb, shareToFeed && styles.toggleThumbActive]} />
+              </View>
+            </TouchableOpacity>
+
+            {shareToFeed && (
+              <View style={styles.privacyOptions}>
+                {/* Visibility */}
+                <Text style={[styles.privacyLabel, isDark && { color: '#9CA3AF' }]}>
+                  Wer sieht das?
+                </Text>
+                <View style={styles.privacyChips}>
+                  {([
+                    { key: 'community' as CatchVisibility, label: 'Community', icon: Users, desc: 'Nur BISS-Nutzer' },
+                    { key: 'public' as CatchVisibility, label: 'Öffentlich', icon: Globe, desc: 'Alle' },
+                  ]).map((opt) => (
+                    <TouchableOpacity
+                      key={opt.key}
+                      style={[
+                        styles.privacyChip,
+                        isDark && styles.privacyChipDark,
+                        visibility === opt.key && styles.privacyChipActive,
+                      ]}
+                      onPress={() => { Haptics.selectionAsync(); setVisibility(opt.key); }}
+                    >
+                      <opt.icon size={14} color={visibility === opt.key ? '#FFFFFF' : (isDark ? '#9CA3AF' : COLORS.gray600)} />
+                      <Text style={[
+                        styles.privacyChipText,
+                        visibility === opt.key && styles.privacyChipTextActive,
+                        isDark && visibility !== opt.key && { color: '#9CA3AF' },
+                      ]}>
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Location Sharing */}
+                <Text style={[styles.privacyLabel, isDark && { color: '#9CA3AF' }]}>
+                  Standort-Genauigkeit
+                </Text>
+                <View style={styles.privacyChips}>
+                  {([
+                    { key: 'fuzzy' as LocationSharing, label: '~Bereich', icon: Eye, desc: '±2 km' },
+                    { key: 'none' as LocationSharing, label: 'Verborgen', icon: EyeOff, desc: 'Kein Spot' },
+                    { key: 'exact' as LocationSharing, label: 'Exakt', icon: MapPin, desc: 'Genau' },
+                  ]).map((opt) => (
+                    <TouchableOpacity
+                      key={opt.key}
+                      style={[
+                        styles.privacyChip,
+                        isDark && styles.privacyChipDark,
+                        locationSharing === opt.key && styles.privacyChipActive,
+                      ]}
+                      onPress={() => { Haptics.selectionAsync(); setLocationSharing(opt.key); }}
+                    >
+                      <opt.icon size={14} color={locationSharing === opt.key ? '#FFFFFF' : (isDark ? '#9CA3AF' : COLORS.gray600)} />
+                      <Text style={[
+                        styles.privacyChipText,
+                        locationSharing === opt.key && styles.privacyChipTextActive,
+                        isDark && locationSharing !== opt.key && { color: '#9CA3AF' },
+                      ]}>
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={[styles.privacyHint, isDark && styles.privacyHintDark]}>
+                  <EyeOff size={12} color={isDark ? '#60A5FA' : COLORS.primary} />
+                  <Text style={[styles.privacyHintText, isDark && { color: '#93C5FD' }]}>
+                    {locationSharing === 'fuzzy'
+                      ? 'Dein Spot wird um ~2 km versetzt angezeigt.'
+                      : locationSharing === 'none'
+                      ? 'Dein Spot wird komplett verborgen. Nur der Fang wird geteilt.'
+                      : 'Dein exakter Spot wird angezeigt. Nur wenn du dem Spot vertraust!'}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
 
           <View style={{ height: 40 }} />
         </ScrollView>
@@ -907,6 +1029,125 @@ const styles = StyleSheet.create({
   methodChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   methodChipText: { fontSize: 13, fontWeight: '600', color: COLORS.gray600 },
   methodChipTextActive: { color: '#FFFFFF' },
+
+  // Privacy-First Sharing
+  sharingSection: {
+    marginTop: 24,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  sharingSectionDark: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  shareToggle: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  shareToggleInfo: {
+    flex: 1,
+  },
+  shareToggleTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#111827',
+  },
+  shareToggleDesc: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 1,
+  },
+  toggleTrack: {
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#D1D5DB',
+    padding: 2,
+    justifyContent: 'center' as const,
+  },
+  toggleTrackActive: {
+    backgroundColor: COLORS.primary,
+  },
+  toggleThumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    alignSelf: 'flex-end' as const,
+  },
+  privacyOptions: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E5E7EB',
+  },
+  privacyLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#6B7280',
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  privacyChips: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    marginBottom: 12,
+  },
+  privacyChip: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    gap: 6,
+  },
+  privacyChipDark: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  privacyChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  privacyChipText: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    color: '#6B7280',
+  },
+  privacyChipTextActive: {
+    color: '#FFFFFF',
+  },
+  privacyHint: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 10,
+    padding: 10,
+    gap: 8,
+  },
+  privacyHintDark: {
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+  },
+  privacyHintText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#1E40AF',
+    lineHeight: 15,
+  },
 });
 
 export default CatchBookScreen;

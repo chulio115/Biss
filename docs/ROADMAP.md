@@ -7,13 +7,13 @@
 ## 📊 Status Overview
 
 ```
-████████████████████████████░░ 85% MVP Complete
+██████████████████████████████ 92% MVP Complete
 ```
 
 | Phase | Status | Beschreibung |
 |-------|--------|--------------|
 | Foundation | ✅ 100% | Auth, Services, APIs |
-| Navigation | ✅ 100% | 5 Tabs, Screens |
+| Navigation | ✅ 100% | 4 Tabs (Karte, Fänge, Community, Profil) — Schein unter Profil |
 | Map Core | ✅ 85% | Mapbox, Clustering, Score-Marker, Zoom-basiert |
 | USP Features | ✅ 75% | Beißzeit-Modal, Schonzeit, Solunar, Favoriten |
 | Smart Intelligence | ✅ 40% | Kontext-Detection, Insight Generation |
@@ -23,14 +23,14 @@
 | Bottom Sheet | ✅ 100% | Details + Breakdown + Auto-Open |
 | Location Fixes | 🟡 80% | Bekannte Spots korrigiert |
 | **Fang-Tagebuch** | ✅ 95% | DB + Screen + Add Modal + Foto-Upload (Kamera + Galerie) |
-| **Angel-App Features** | 🟡 60% | Fang-Tagebuch, Favoriten, Bewertungen, Schein, Leaderboard; Community fehlt |
+| **Angel-App Features** | 🟡 75% | Fang-Tagebuch, Favoriten, Bewertungen, Schein, Leaderboard, Community Feed |
 | **Gamification** | ✅ 85% | Achievements, Streaks, Badge-Grid, Achievement Modal, Leaderboard |
-| **Social Features** | 🔴 0% | Spot-Sharing, Freunde, Gruppen |
+| **Social Features** | 🟡 85% | Community Feed + Filter (Fischarten, Umkreis, Verein), Petri Heil Reactions, Privacy-Controls; Freunde/Gruppen offen |
 | **Free-Tier-Kommunikation** | ✅ 100% | Banner im ProfileScreen (Opas Rat #1) |
-| **Privacy-First Sharing** | 🔴 0% | Spot-Burn-Schutz, ungenaue Locations, Community-Only (Opas Rat #2) |
+| **Privacy-First Sharing** | ✅ 80% | Fuzzy Locations (±2km), Spot verbergen, Community-Only Visibility (Opas Rat #2) |
 | **Offline-Modus** | ✅ 90% | Cache-Service, Offline-Fänge+Sync, Offline-Fangindex, Mapbox Packs (Opas Rat #4) |
-| **Personalisierte Push** | 🔴 0% | Beißzeit-Alerts für Lieblingsspots (Opas Rat: Emotionaler Hook) |
-| **Vereinsangeln** | 🔴 0% | Vereinsgewässer, Regeln, Mitgliedsnr. im Wallet (Opas Rat #5) |
+| **Personalisierte Push** | ✅ 80% | Lokale Beißzeit-Alerts, Golden Hour, Solunar Major/Minor, Tages-Zusammenfassung (Opas Rat: Emotionaler Hook) |
+| **Vereinsangeln** | � 30% | Filter-UI + Mock-Clubs im Community-Feed (Opas Rat #5); Backend + Gewässer offen |
 | **EU Fangmeldung** | 🔴 0% | RecFishing 1-Klick-Integration (Opas Rat #6, rechtlich ab Sommer 2026) |
 | Fischereischein | ✅ 80% | Wallet UI, Image Picker, Metadaten, Gültigkeit (OCR optional) |
 | Monetarisierung | 🔴 0% | Stripe vorbereitet |
@@ -314,8 +314,8 @@
 | Task | Aufwand | Beschreibung | Opas Rat |
 |------|---------|--------------|----------|
 | ~~**Offline-Modus**~~ | ~~2-3 Tage~~ | ✅ offlineStorage.ts, useNetworkStatus, useOfflineMaps, OfflineBanner, Cache-Fallback in useMapData+CatchBook | Pain Point #4: "Conversion Feature" |
-| **Privacy-First Sharing** | 2 Tage | Ungenaue Location-Option, Fang ohne Spot, Community-Only | Pain Point #2: "Kulturversprechen" |
-| **Personalisierte Push** | 2-3 Tage | Beißzeit-Alerts für Lieblingsspots, Golden Hour + Solunar | "App die Leute lieben" |
+| ~~**Privacy-First Sharing**~~ | ~~2 Tage~~ | ✅ Fuzzy Locations (±2km), Spot verbergen, Community-Only Visibility, Privacy-Controls im AddCatchModal | Pain Point #2: "Kulturversprechen" |
+| ~~**Personalisierte Push**~~ | ~~2-3 Tage~~ | ✅ Lokale Push: Golden Hour, Solunar Major/Minor, Tages-Zusammenfassung, NotificationSettingsModal | "App die Leute lieben" |
 | ~~**Datenfrische-Anzeige**~~ | ~~4h~~ | ✅ "Zuletzt gefangen" + Fangzähler pro Spot im BottomSheet, formatTimeAgo | Pain Point #3 + Opas Rat Schicht 3 |
 | ~~**Free-Tier-Kommunikation**~~ | ~~2h~~ | ✅ Banner im ProfileScreen: "Immer kostenlos bei BISS" mit Feature-Liste | Pain Point #1: "Wir vertrauen euch" |
 | TestFlight Build | 4h | Erster Beta-Build für Tester |
@@ -327,7 +327,7 @@
 |------|---------|--------------|----------|
 | **Vereinsangeln** | 1 Woche | Vereinsgewässer, Regeln anzeigen, Mitgliedsnr. im Wallet | Pain Point #5: "Niemand sonst" |
 | Schonzeit-Erweiterung | 3 Tage | Mehr Fischarten, Mindestmaße pro Bundesland |
-| Social Features | 1 Woche | Spot-Sharing (mit Privacy!), Freunde |
+| ~~Social Features~~ | ~~1 Woche~~ | ✅ Community Feed, Petri Heil Reactions, CommunityScreen Tab; Freunde/Gruppen offen |
 
 ### Prio 2.5: Post-Launch Akquisition 🟡 SOMMER 2026
 > Timing: Wenn deutsche Rechtsgrundlage kommt
@@ -427,10 +427,11 @@
 - [x] Spot-Bewertungen + Favoriten
 - [x] Fischereischein Wallet
 - [x] Filter-System (5 Filter)
-- [ ] **Offline-Modus** (Opas Rat: Conversion Feature)
-- [ ] **Privacy-First Sharing** (Opas Rat: Kulturversprechen)
-- [ ] **Personalisierte Push** (Opas Rat: Emotionaler Hook)
-- [ ] **Datenfrische sichtbar** (Timestamps, "Zuletzt bestätigt")
+- [x] **Offline-Modus** (Opas Rat: Conversion Feature)
+- [x] **Privacy-First Sharing** (Opas Rat: Kulturversprechen)
+- [x] **Personalisierte Push** (Opas Rat: Emotionaler Hook)
+- [x] **Datenfrische sichtbar** (Timestamps, "Zuletzt bestätigt")
+- [x] **Community Filter** (Fischarten, Umkreis, Verein)
 - [ ] Feedback-Formular
 - [ ] TestFlight Build
 - [ ] **EU RecFishing vorbereitet** (API-Integration fertig, UI ready, wartet auf Rechtsgrundlage)
@@ -534,3 +535,7 @@
 | 04.03.26 | Datenfrische-Anzeige implementiert | "Zuletzt gefangen" + Fangzähler im BottomSheet, Catch-Freshness in useMapData (Opas Rat Schicht 3) |
 | 04.03.26 | Free-Tier-Kommunikation implementiert | Banner im ProfileScreen statt separater Settings-Screen (schneller, direkter sichtbar) |
 | 05.03.26 | Offline-Modus implementiert | offlineStorage.ts (zentraler Cache), useNetworkStatus (NetInfo), useOfflineMaps (Mapbox Packs), OfflineBanner, Cache-Fallback in useMapData + CatchBookScreen, Offline-Catch-Queue mit Auto-Sync |
+| 10.03.26 | **Bug Fix: Community Share** | `handleSave` in AddCatchModal rief `shareCatch()` nie auf — jetzt korrekt verbunden wenn `shareToFeed=true` |
+| 10.03.26 | **Navigation: 5→4 Tabs** | ScheinStack entfernt, Schein als Modal unter Profil-Menü. ScheinScreen akzeptiert optionale `onClose` Prop |
+| 10.03.26 | **Community Filter** | Fischarten (Chip-Grid), Umkreis (5-100km, Haversine), Verein (Mock-Clubs). Filter-Button oben rechts, Active Chips inline, CommunityFilterModal |
+| 10.03.26 | **Vereinsangeln gestartet** | Als Filter/Sektion im Community-Feed integriert (nicht eigener Tab). 5 Mock-Clubs, UI fertig, Backend offen |

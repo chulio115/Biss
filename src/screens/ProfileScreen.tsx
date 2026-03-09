@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
@@ -29,6 +30,8 @@ import {
   HelpCircle,
   Shield,
   Star,
+  Ticket,
+  FileText,
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useAchievements } from '../hooks/useAchievements';
@@ -39,12 +42,16 @@ import { useCatchCount } from '../hooks/useCatchCount';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { AchievementModal } from '../components/profile/AchievementModal';
 import { LeaderboardModal } from '../components/profile/LeaderboardModal';
+import { NotificationSettingsModal } from '../components/profile/NotificationSettingsModal';
+import { ScheinScreen } from './ScheinScreen';
 import { COLORS } from '../constants/colors';
 import { TIER_COLORS, CATEGORY_LABELS, AchievementDef } from '../constants/achievements';
 
 
 // Menu items
 const MENU_ITEMS = [
+  { id: 'schein', label: 'Fischereischein', icon: FileText },
+  { id: 'tageskarten', label: 'Tageskarten kaufen', icon: Ticket },
   { id: 'notifications', label: 'Benachrichtigungen', icon: Bell },
   { id: 'favorites', label: 'Favoriten', icon: Star },
   { id: 'help', label: 'Hilfe & Support', icon: HelpCircle },
@@ -65,6 +72,8 @@ export const ProfileScreen: React.FC = () => {
     achievements, streak, catchesCount, favoritesCount, ratings.length
   );
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showSchein, setShowSchein] = useState(false);
 
   // Sync external data into achievement progress
   useEffect(() => {
@@ -247,6 +256,10 @@ export const ProfileScreen: React.FC = () => {
                 index < MENU_ITEMS.length - 1 && styles.menuItemBorder,
               ]}
               activeOpacity={0.7}
+              onPress={() => {
+                if (item.id === 'notifications') setShowNotificationSettings(true);
+                if (item.id === 'schein') setShowSchein(true);
+              }}
             >
               <item.icon size={22} color={COLORS.primary} strokeWidth={1.5} />
               <Text style={[styles.menuLabel, isDark && styles.textLight]}>
@@ -286,6 +299,18 @@ export const ProfileScreen: React.FC = () => {
         currentUserEntry={currentUserEntry}
         scoreBreakdown={scoreBreakdown}
       />
+
+      {/* Notification Settings Modal */}
+      <NotificationSettingsModal
+        visible={showNotificationSettings}
+        onClose={() => setShowNotificationSettings(false)}
+        favoriteSpots={[]}
+      />
+
+      {/* Schein Modal */}
+      <Modal visible={showSchein} animationType="slide" presentationStyle="pageSheet">
+        <ScheinScreen onClose={() => setShowSchein(false)} />
+      </Modal>
     </View>
   );
 };

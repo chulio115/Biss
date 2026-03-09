@@ -10,14 +10,13 @@
 import React from 'react';
 import { Platform, StyleSheet, View, useColorScheme } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { FileText, Map, Ticket, User, BookOpen } from 'lucide-react-native';
+import { Map, Users, User, BookOpen } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootTabParamList } from './types';
-import { ScheinScreen } from '../screens/ScheinScreen';
 import { MapScreen } from '../screens/MapScreen';
 import { CatchBookScreen } from '../screens/CatchBookScreen';
-import { BuyScreen } from '../screens/BuyScreen';
+import { CommunityScreen } from '../screens/CommunityScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { COLORS } from '../constants/colors';
 
@@ -65,23 +64,6 @@ export const TabNavigator: React.FC = () => {
       }}
     >
       <Tab.Screen
-        name="ScheinStack"
-        component={ScheinScreen}
-        options={{
-          tabBarLabel: 'Schein',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused && styles.iconActive}>
-              <FileText
-                size={ICON_SIZE}
-                strokeWidth={ICON_STROKE}
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
-      
-      <Tab.Screen
         name="MapStack"
         component={MapScreen}
         options={{
@@ -116,13 +98,13 @@ export const TabNavigator: React.FC = () => {
       />
       
       <Tab.Screen
-        name="BuyStack"
-        component={BuyScreen}
+        name="CommunityStack"
+        component={CommunityScreen}
         options={{
-          tabBarLabel: 'Kaufen',
+          tabBarLabel: 'Community',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused && styles.iconActive}>
-              <Ticket
+              <Users
                 size={ICON_SIZE}
                 strokeWidth={ICON_STROKE}
                 color={color}

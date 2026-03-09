@@ -300,20 +300,32 @@ export const FilterFAB: React.FC<{
   onPress: () => void;
 }> = ({ activeCount, onPress }) => {
   const isDark = useColorScheme() === 'dark';
+  const hasActive = activeCount > 0;
 
   return (
     <TouchableOpacity
-      style={[fab.container, isDark && fab.containerDark]}
+      style={[
+        fab.container,
+        isDark && fab.containerDark,
+        hasActive && fab.containerActive,
+      ]}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress();
       }}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
     >
-      <SlidersHorizontal size={20} color={isDark ? COLORS.white : FAB_DARK} strokeWidth={2} />
-      {activeCount > 0 && (
+      <SlidersHorizontal
+        size={18}
+        color={hasActive ? COLORS.primary : (isDark ? COLORS.white : FAB_DARK)}
+        strokeWidth={2.2}
+      />
+      {hasActive && (
+        <Text style={fab.activeLabel}>Filter ({activeCount})</Text>
+      )}
+      {hasActive && (
         <View style={fab.badge}>
-          <Text style={fab.badgeText}>{activeCount}</Text>
+          <View style={fab.badgeDot} />
         </View>
       )}
     </TouchableOpacity>
@@ -430,36 +442,52 @@ const fab = StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 110,
-    left: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: FAB_LIGHT,
-    justifyContent: 'center',
+    left: 14,
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 6,
     zIndex: 15,
   },
   containerDark: {
-    backgroundColor: FAB_DARK,
-    shadowOpacity: 0.3,
+    backgroundColor: 'rgba(10,26,47,0.92)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowOpacity: 0.4,
+  },
+  containerActive: {
+    borderColor: COLORS.primary + '30',
+  },
+  activeLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.primary,
+    letterSpacing: 0.2,
   },
   badge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: COLORS.primary,
+    top: -3,
+    right: -3,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.white,
   },
-  badgeText: { fontSize: 10, fontWeight: '800', color: COLORS.white },
+  badgeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: COLORS.primary,
+  },
 });

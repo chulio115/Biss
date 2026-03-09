@@ -104,3 +104,47 @@ export interface Catch {
   created_at: string;
   updated_at: string;
 }
+
+// ─── Privacy-First Sharing (Opas Rat #2: "Kulturversprechen") ───
+
+export type CatchVisibility = 'private' | 'community' | 'public';
+export type LocationSharing = 'exact' | 'fuzzy' | 'none';
+export type CommunityReaction = 'petri_heil' | 'trophy' | 'fire' | 'wow';
+
+export interface CatchShare {
+  id: string;
+  user_id: string;
+  catch_id: string;
+  visibility: CatchVisibility;
+  location_sharing: LocationSharing;
+  fish_species: string;
+  weight_kg?: number;
+  length_cm?: number;
+  method?: string;
+  bait?: string;
+  notes?: string;
+  photo_url?: string;
+  caught_at: string;
+  water_body_name?: string;
+  latitude?: number;
+  longitude?: number;
+  display_name: string;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommunityLike {
+  id: string;
+  user_id: string;
+  share_id: string;
+  reaction: CommunityReaction;
+  created_at: string;
+}
+
+export interface SharedCatchCard extends CatchShare {
+  user_has_liked: boolean;
+  user_reaction?: CommunityReaction;
+  time_ago: string;
+}

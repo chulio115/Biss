@@ -4,16 +4,10 @@
  */
 
 export type RootTabParamList = {
-  ScheinStack: undefined;
   MapStack: undefined;
   CatchBookStack: undefined;
-  BuyStack: undefined;
+  CommunityStack: undefined;
   ProfileStack: undefined;
-};
-
-export type ScheinStackParamList = {
-  Schein: undefined;
-  ScheinDetail: { scheinId: string };
 };
 
 export type MapStackParamList = {
@@ -22,10 +16,9 @@ export type MapStackParamList = {
   SpotDetail: { spotId: string };
 };
 
-export type BuyStackParamList = {
-  Buy: undefined;
-  Checkout: { productId: string };
-  Payment: { orderId: string };
+export type CommunityStackParamList = {
+  Community: undefined;
+  SharedCatchDetail: { shareId: string };
 };
 
 export type ProfileStackParamList = {
