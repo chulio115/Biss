@@ -14,11 +14,11 @@
 export const MAPBOX_STYLES = {
   // Day Mode - BISS Standard Style (heller Angelkarten-Style)
   standard: process.env.EXPO_PUBLIC_MAPBOX_STYLE_STANDARD 
-    || 'mapbox://styles/chulio115/cmikk7vsv003301qvgta39zfb', // Fallback: BISS Angel-Day (custom Style)
+    || 'mapbox://styles/chulio115/cmmkducr7000301r0aigcgiyj', // Fallback: BISS Angel-Day (custom Style)
   
   // Night Mode - BISS Angel-Night Style (dunkler Style mit leuchtenden Gewässern)
   night: process.env.EXPO_PUBLIC_MAPBOX_STYLE_NIGHT 
-    || 'mapbox://styles/mapbox/dark-v11', // Fallback: Dark
+    || 'mapbox://styles/chulio115/cmmkdv432005601qwbjbs5maz', // Fallback: BISS Angel-Night (custom Style)
     
 } as const;
 

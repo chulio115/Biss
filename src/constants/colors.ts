@@ -67,6 +67,13 @@ export const COLORS = {
     water: '#00A3FF',
   },
   
+  // App-wide Background & Text Colors
+  background: '#FFFFFF',
+  backgroundDark: '#0A1A2F',
+  text: '#111827',
+  border: '#E5E7EB',
+  borderDark: '#1E3A5F',
+  
   // Gradients (for reference)
   gradients: {
     primary: ['#0066FF', '#00A3FF'],

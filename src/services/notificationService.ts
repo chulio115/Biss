@@ -3,7 +3,37 @@
  * Lokale Push-Notifications für Beißzeit-Alerts, Golden Hour, Solunar Periods.
  * Kein Server nötig — alles lokal berechnet.
  */
-import * as Notifications from 'expo-notifications';
+// Mock for expo-notifications (uninstalled for iOS build)
+const Notifications = {
+  setNotificationHandler: (handler: any) => {},
+  scheduleNotificationAsync: async (id: string, content: any) => 'mock-id',
+  cancelNotificationAsync: async (id: string) => {},
+  cancelAllScheduledNotificationsAsync: async () => {},
+  getBadgeCountAsync: async () => 0,
+  setBadgeCountAsync: async (count: number) => {},
+  requestPermissionsAsync: async () => ({ granted: false, status: 'denied' }),
+  getPermissionsAsync: async () => ({ granted: false, status: 'denied' }),
+  addNotificationResponseReceivedListener: () => ({ remove: () => {} }),
+  addNotificationReceivedListener: () => ({ remove: () => {} }),
+  setNotificationChannelAsync: async (id: string, config: any) => {},
+  cancelScheduledNotificationAsync: async (id: string) => {},
+  getAllScheduledNotificationsAsync: async () => [],
+  AndroidImportance: {
+    DEFAULT: 0,
+    HIGH: 1,
+    MAX: 2,
+    LOW: 3,
+    MIN: 4,
+    UNSPECIFIED: 5,
+  },
+  SchedulableTriggerInputTypes: {
+    DAILY: 'daily',
+    HOURLY: 'hourly',
+    TIME_INTERVAL: 'timeInterval',
+    DATE: 'date',
+    NOW: 'now',
+  },
+};
 import { Platform } from 'react-native';
 import { getSolunarData, SolunarPeriod } from '../utils/fangindex';
 import { calculateSunTimes } from '../utils/fishing';
@@ -110,7 +140,7 @@ export const scheduleGoldenHourAlert = async (
     const sunriseStr = `${String(sunrise.getHours()).padStart(2, '0')}:${String(sunrise.getMinutes()).padStart(2, '0')}`;
     const sunsetStr = `${String(sunset.getHours()).padStart(2, '0')}:${String(sunset.getMinutes()).padStart(2, '0')}`;
 
-    const id = await Notifications.scheduleNotificationAsync({
+    const id = await Notifications.scheduleNotificationAsync('golden-hour', {
       content: {
         title: `🌅 Golden Hour in ${LEAD_TIME_MINUTES} Min!`,
         body: spotName
@@ -154,7 +184,7 @@ export const scheduleSolunarAlerts = async (
       const endStr = `${String(period.end.getHours()).padStart(2, '0')}:${String(period.end.getMinutes()).padStart(2, '0')}`;
       const isMajor = period.type === 'major';
 
-      const id = await Notifications.scheduleNotificationAsync({
+      const id = await Notifications.scheduleNotificationAsync(`solunar-${period.type}`, {
         content: {
           title: isMajor
             ? `🔥 MAJOR Beißzeit in ${LEAD_TIME_MINUTES} Min!`
@@ -185,7 +215,7 @@ export const scheduleDailySummary = async (
 ): Promise<string | null> => {
   try {
     // Tägliche Zusammenfassung um gewählte Uhrzeit
-    const id = await Notifications.scheduleNotificationAsync({
+    const id = await Notifications.scheduleNotificationAsync('daily-summary', {
       content: {
         title: '🐟 Dein Angel-Tagesplan',
         body: 'Schau dir die heutigen Beißzeiten und Golden Hours an!',

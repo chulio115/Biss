@@ -18,12 +18,12 @@ import {
   Modal,
   Platform,
   ScrollView,
-  useColorScheme,
 } from 'react-native';
 import { SlidersHorizontal, X, RotateCcw, Heart, Star, Target } from 'lucide-react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 
-const FAB_LIGHT = '#FFFFFF';
-const FAB_DARK = '#0A1A2F';
+const FAB_LIGHT = COLORS.background;
+const FAB_DARK = COLORS.backgroundDark;
 import * as Haptics from 'expo-haptics';
 import { COLORS } from '../../constants/colors';
 import { SPOT_CATEGORIES, FISH_FILTERS, SpotCategory } from '../../constants/fishing';
@@ -64,7 +64,7 @@ export const MapFilterSheet: React.FC<MapFilterSheetProps> = ({
   totalCount,
   filteredCount,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useTheme();
   const [draft, setDraft] = useState<MapFilters>(filters);
 
   useEffect(() => {
@@ -299,7 +299,7 @@ export const FilterFAB: React.FC<{
   activeCount: number;
   onPress: () => void;
 }> = ({ activeCount, onPress }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useTheme();
   const hasActive = activeCount > 0;
 
   return (
@@ -341,13 +341,13 @@ const s = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '75%',
     paddingTop: 8,
   },
-  sheetDark: { backgroundColor: COLORS.dark.bg },
+  sheetDark: { backgroundColor: COLORS.backgroundDark },
   handle: {
     width: 40,
     height: 4,
@@ -365,7 +365,7 @@ const s = StyleSheet.create({
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: COLORS.gray900 },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: COLORS.text },
   textLight: { color: COLORS.white },
   activeBadge: {
     backgroundColor: COLORS.primary,
@@ -388,7 +388,7 @@ const s = StyleSheet.create({
   },
   closeBtnDark: { backgroundColor: COLORS.dark.card },
   scroll: { paddingHorizontal: 20 },
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: COLORS.gray900, marginBottom: 10, marginTop: 8 },
+  sectionLabel: { fontSize: 14, fontWeight: '600', color: COLORS.text, marginBottom: 10, marginTop: 8 },
   chipGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

@@ -10,7 +10,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  useColorScheme,
   RefreshControl,
   ActivityIndicator,
   Image,
@@ -43,6 +42,7 @@ import { COLORS } from '../constants/colors';
 import { FISH_SEASONS } from '../constants/fishing';
 import { useCommunityFeed } from '../hooks/useCommunityFeed';
 import { SharedCatchCard, CommunityReaction } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 
 // ─── Filter Types ───
 interface CommunityFilters {
@@ -467,8 +467,7 @@ const CommunityFilterModal: React.FC<{
 
 // ─── Main Community Screen ───
 export const CommunityScreen: React.FC = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { feed, loading, refreshing, refresh, toggleLike } = useCommunityFeed();
 

@@ -17,6 +17,7 @@ import { useAuth } from './src/hooks/useAuth';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { RegisterScreen } from './src/screens/RegisterScreen';
 import { TabNavigator } from './src/navigation/TabNavigator';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 
 // Design Tokens
 const COLORS = {
@@ -31,18 +32,27 @@ const COLORS = {
 
 type AuthScreen = 'login' | 'register';
 
-export default function App() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+function AppContent() {
+  const { isDark } = useTheme();
 
   // Skip auth for development - show main app directly
+  return (
+    <>
+      <TabNavigator />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
+  );
+}
+
+export default function App() {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
         <NavigationContainer>
-          <TabNavigator />
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
         </NavigationContainer>
-        <StatusBar style={isDark ? 'light' : 'dark'} />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

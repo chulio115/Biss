@@ -17,7 +17,9 @@
       "bundleIdentifier": "com.biss.angelapp",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "BISS benötigt deinen Standort, um Gewässer in deiner Nähe zu finden.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [],
+        "UIUserNotificationType": []
       }
     },
     "android": {
@@ -39,9 +41,10 @@
       [
         "@rnmapbox/maps",
         {
-          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoiY2h1bGlvMTE1IiwiYSI6ImNtaWtlYzIyeDA0dDczZnM3cm43NjJpcm8ifQ.Q61Y78eFdfcs1PRJeNZkKA"
+          "RNMAPBOX_MAPS_DOWNLOAD_TOKEN": "sk.eyJ1IjoiY2h1bGlvMTE1IiwiYSI6ImNtaWtlYzIyeDA0dDczZnM3cm43NjJpcm8ifQ.Q61Y78eFdfcs1PRJeNZkKA"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

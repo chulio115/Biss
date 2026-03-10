@@ -12,11 +12,11 @@ import {
   ScrollView,
   Platform,
   Linking,
-  useColorScheme,
   Animated,
   Dimensions,
   Modal,
 } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Navigation, MapPin, Phone, ExternalLink, Info, Star, Clock, Droplets, Sun, Moon, Wind, ChevronRight, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -86,7 +86,7 @@ export const MapBottomSheet: React.FC<MapBottomSheetProps> = ({
   getRatingSummary,
   onRateSpot,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useTheme();
   const snapPoints = [20, 450, '90%'];
   const [showBreakdown, setShowBreakdown] = useState<MapWaterBody | null>(null);
 
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
 
   // Fish Section
   fishSection: { marginBottom: 20 },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: COLORS.gray600, marginBottom: 12 },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: COLORS.gray500, marginBottom: 12 },
   fishGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   fishTagEnhanced: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.gray100, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 16, gap: 6 },
   fishTagDark: { backgroundColor: COLORS.dark.bg },
@@ -880,14 +880,14 @@ const modalStyles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     paddingTop: 8,
   },
-  sheetDark: { backgroundColor: COLORS.dark.bg },
+  sheetDark: { backgroundColor: COLORS.backgroundDark },
   handle: {
     width: 40,
     height: 4,

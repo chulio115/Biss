@@ -16,7 +16,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  useColorScheme,
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +37,7 @@ import {
   OfflineCatch,
 } from '../services/offlineStorage';
 import { useCommunityFeed } from '../hooks/useCommunityFeed';
+import { useTheme } from '../contexts/ThemeContext';
 
 const FISH_OPTIONS = Object.entries(FISH_SEASONS).map(([key, val]) => ({
   id: key,
@@ -51,7 +51,7 @@ const METHOD_OPTIONS = [
 ];
 
 export const CatchBookScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { isOffline, onReconnect } = useNetworkStatus();

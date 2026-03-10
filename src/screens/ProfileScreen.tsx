@@ -7,7 +7,7 @@
  * - Einstellungen (Settings-Button oben rechts)
  * - Abmelden
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,7 @@ import {
   Star,
   Ticket,
   FileText,
+  Palette,
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useAchievements } from '../hooks/useAchievements';
@@ -40,9 +41,11 @@ import { useRatings } from '../hooks/useRatings';
 import { useFishingLicense } from '../hooks/useFishingLicense';
 import { useCatchCount } from '../hooks/useCatchCount';
 import { useLeaderboard } from '../hooks/useLeaderboard';
+import { useTheme } from '../contexts/ThemeContext';
 import { AchievementModal } from '../components/profile/AchievementModal';
 import { LeaderboardModal } from '../components/profile/LeaderboardModal';
 import { NotificationSettingsModal } from '../components/profile/NotificationSettingsModal';
+import { AppearanceSettingsModal } from '../components/profile/AppearanceSettingsModal';
 import { ScheinScreen } from './ScheinScreen';
 import { COLORS } from '../constants/colors';
 import { TIER_COLORS, CATEGORY_LABELS, AchievementDef } from '../constants/achievements';
@@ -50,6 +53,7 @@ import { TIER_COLORS, CATEGORY_LABELS, AchievementDef } from '../constants/achie
 
 // Menu items
 const MENU_ITEMS = [
+  { id: 'appearance', label: 'Darstellung', icon: Palette },
   { id: 'schein', label: 'Fischereischein', icon: FileText },
   { id: 'tageskarten', label: 'Tageskarten kaufen', icon: Ticket },
   { id: 'notifications', label: 'Benachrichtigungen', icon: Bell },
@@ -59,8 +63,7 @@ const MENU_ITEMS = [
 ];
 
 export const ProfileScreen: React.FC = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { theme, isDark, setTheme } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
   const { achievements, streak, unlockedCount, totalCount, incrementProgress } = useAchievements();
@@ -73,6 +76,7 @@ export const ProfileScreen: React.FC = () => {
   );
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showAppearanceSettings, setShowAppearanceSettings] = useState(false);
   const [showSchein, setShowSchein] = useState(false);
 
   // Sync external data into achievement progress
@@ -112,6 +116,19 @@ export const ProfileScreen: React.FC = () => {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Announcement Box - Neu ganz oben */}
+        <View style={[styles.freeTierBanner, isDark && styles.freeTierBannerDark]}>
+          <Text style={styles.freeTierEmoji}>🎁</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.freeTierTitle, isDark && styles.textLight]}>
+              Immer kostenlos bei BISS
+            </Text>
+            <Text style={[styles.freeTierDesc, isDark && styles.subtitleDark]}>
+              Fangindex, Beißzeiten, Karten, Fangbuch, Schonzeiten — keine Paywall, kein Abo
+            </Text>
+          </View>
+        </View>
+
         {/* Profile Card */}
         <View style={[styles.profileCard, isDark && styles.profileCardDark]}>
           <View style={styles.avatarContainer}>
@@ -161,19 +178,6 @@ export const ProfileScreen: React.FC = () => {
               </Text>
             </View>
           ))}
-        </View>
-
-        {/* Free-Tier-Banner (Opas Rat #1: "Wir vertrauen euch") */}
-        <View style={[styles.freeTierBanner, isDark && styles.freeTierBannerDark]}>
-          <Text style={styles.freeTierEmoji}>🎁</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.freeTierTitle, isDark && styles.textLight]}>
-              Immer kostenlos bei BISS
-            </Text>
-            <Text style={[styles.freeTierDesc, isDark && styles.subtitleDark]}>
-              Fangindex, Beißzeiten, Karten, Fangbuch, Schonzeiten — keine Paywall, kein Abo
-            </Text>
-          </View>
         </View>
 
         {/* Streak Banner */}
@@ -257,6 +261,7 @@ export const ProfileScreen: React.FC = () => {
               ]}
               activeOpacity={0.7}
               onPress={() => {
+                if (item.id === 'appearance') setShowAppearanceSettings(true);
                 if (item.id === 'notifications') setShowNotificationSettings(true);
                 if (item.id === 'schein') setShowSchein(true);
               }}
@@ -305,6 +310,14 @@ export const ProfileScreen: React.FC = () => {
         visible={showNotificationSettings}
         onClose={() => setShowNotificationSettings(false)}
         favoriteSpots={[]}
+      />
+
+      {/* Appearance Settings Modal */}
+      <AppearanceSettingsModal
+        visible={showAppearanceSettings}
+        onClose={() => setShowAppearanceSettings(false)}
+        currentTheme={theme}
+        onThemeChange={setTheme}
       />
 
       {/* Schein Modal */}

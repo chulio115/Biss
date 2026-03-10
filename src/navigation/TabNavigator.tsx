@@ -8,7 +8,7 @@
  * - Smooth animations
  */
 import React from 'react';
-import { Platform, StyleSheet, View, useColorScheme } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Map, Users, User, BookOpen } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ import { CatchBookScreen } from '../screens/CatchBookScreen';
 import { CommunityScreen } from '../screens/CommunityScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { COLORS } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -29,16 +30,15 @@ const ICON_STROKE = 1.8;
 
 export const TabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
 
   return (
     <Tab.Navigator
       initialRouteName="MapStack"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: isDark ? '#4DA3FF' : COLORS.tab.active,
-        tabBarInactiveTintColor: isDark ? 'rgba(255,255,255,0.5)' : COLORS.tab.inactive,
+        tabBarActiveTintColor: isDark ? COLORS.accent : COLORS.tab.active,
+        tabBarInactiveTintColor: isDark ? COLORS.gray400 : COLORS.tab.inactive,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
@@ -54,7 +54,7 @@ export const TabNavigator: React.FC = () => {
           paddingBottom: insets.bottom > 0 ? insets.bottom : 20,
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-          backgroundColor: isDark ? '#0A1A2F' : '#FFFFFF',
+          backgroundColor: isDark ? COLORS.backgroundDark : COLORS.background,
           elevation: 0,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },

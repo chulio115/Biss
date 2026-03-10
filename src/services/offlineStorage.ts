@@ -13,6 +13,9 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Temporarily disabled EXFileSystem for iOS build
+// import * as FileSystem from 'expo-file-system';
+
 // ─── Storage Keys ───
 const KEYS = {
   WATER_BODIES: '@biss_cache_water_bodies',

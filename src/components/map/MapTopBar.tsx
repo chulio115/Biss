@@ -2,15 +2,16 @@
  * MapTopBar - Location, Search, Beißzeit-Radar, Day/Night Toggle
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, useColorScheme, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Image, Animated } from 'react-native';
 import { Navigation, Search, Sun, Moon, Crosshair } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../contexts/ThemeContext';
 
-const BAR_LIGHT = '#FFFFFF';
-const BAR_DARK = '#0A1A2F';
-const ICON_LIGHT = '#0A1A2F';
-const ICON_DARK = '#FFFFFF';
+const BAR_LIGHT = COLORS.background;
+const BAR_DARK = COLORS.backgroundDark;
+const ICON_LIGHT = COLORS.text;
+const ICON_DARK = COLORS.white;
 
 interface MapTopBarProps {
   goldenHourInfo: { isGolden: boolean; nextGolden: string };
@@ -29,10 +30,10 @@ export const MapTopBar: React.FC<MapTopBarProps> = ({
   onSearch,
   onBiteTimePress,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useTheme();
 
   const iconColor = isDark ? ICON_DARK : ICON_LIGHT;
-  const labelColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(10,26,47,0.5)';
+  const labelColor = isDark ? COLORS.gray400 : COLORS.gray500;
   const timeColor = isDark ? ICON_DARK : ICON_LIGHT;
 
   return (
