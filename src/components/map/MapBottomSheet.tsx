@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Navigation, MapPin, Phone, ExternalLink, Info, Star, Clock, Droplets, Sun, Moon, Wind, ChevronRight, Heart, Cloud } from 'lucide-react-native';
+import { Navigation, MapPin, Phone, ExternalLink, Info, Star, Clock, Droplets, Sun, Moon, Wind, ChevronRight, Heart, Cloud, ShieldCheck } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { COLORS, getScoreColor } from '../../constants/colors';
 import { ScoreRing } from '../ui/ScoreRing';
@@ -303,6 +303,12 @@ const SpotDetailView: React.FC<{
                 {SPOT_CATEGORIES[spot.category].name}
               </Text>
             </View>
+            {spot.data_source === 'curated' && (
+              <View style={styles.verifiedBadge}>
+                <ShieldCheck size={12} color="#059669" strokeWidth={2.5} />
+                <Text style={styles.verifiedBadgeText}>Verifiziert</Text>
+              </View>
+            )}
           </View>
           <Text style={[styles.spotTypeName, isDark && styles.textLight]} numberOfLines={1}>
             {getWaterTypeName(spot.type)}
@@ -432,6 +438,37 @@ const SpotDetailView: React.FC<{
       </View>
     )}
 
+    {/* Datenqualität (Spot-Daten 2.0) */}
+    {spot.data_source === 'curated' && (
+      <View style={[styles.dataQualitySection, isDark && styles.freshnessSectionDark]}>
+        <Text style={[styles.dataQualityTitle, isDark && styles.textLight]}>
+          <ShieldCheck size={13} color="#059669" /> Verifizierte Daten
+        </Text>
+        <View style={styles.dataQualityGrid}>
+          {spot.fish_species_confirmed && (
+            <View style={styles.dataQualityChip}>
+              <Text style={styles.dataQualityChipText}>✅ Fischarten bestätigt</Text>
+            </View>
+          )}
+          {(spot.permit_url || spot.permit_info) && (
+            <View style={styles.dataQualityChip}>
+              <Text style={styles.dataQualityChipText}>✅ Erlaubnis-Info</Text>
+            </View>
+          )}
+          {spot.regulations && (
+            <View style={styles.dataQualityChip}>
+              <Text style={styles.dataQualityChipText}>✅ Regeln & Bestimmungen</Text>
+            </View>
+          )}
+          {spot.pegelStation && (
+            <View style={styles.dataQualityChip}>
+              <Text style={styles.dataQualityChipText}>✅ Live-Pegel</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    )}
+
     {/* Community Rating */}
     <View style={[styles.ratingSection, isDark && styles.ratingSectionDark]}>
       <View style={styles.ratingHeader}>
@@ -532,6 +569,34 @@ const SpotDetailView: React.FC<{
         {spot.fish_species.some(
           (f) => getFishSeasonStatus(f, { spotName: spot.name, spotType: spot.type }) === 'closed'
         ) && <Text style={styles.schonzeitWarning}>⚠️ Einige Fischarten haben aktuell Schonzeit</Text>}
+
+        {/* Mindestmaße pro Region */}
+        {(() => {
+          const region = spot.region || 'Niedersachsen';
+          const minSizeEntries = spot.fish_species
+            .map(fish => {
+              const fishData = FISH_SEASONS[fish.toLowerCase()];
+              const minSize = fishData?.minSizes?.[region];
+              return minSize && minSize > 0 ? { name: fish, size: minSize } : null;
+            })
+            .filter(Boolean) as { name: string; size: number }[];
+          
+          return minSizeEntries.length > 0 ? (
+            <View style={styles.minSizesSection}>
+              <Text style={[styles.minSizesTitle, isDark && styles.textLight]}>
+                📏 Mindestmaße ({region})
+              </Text>
+              <View style={styles.minSizesGrid}>
+                {minSizeEntries.map((entry) => (
+                  <View key={entry.name} style={styles.minSizeChip}>
+                    <Text style={styles.minSizeFish}>{entry.name}</Text>
+                    <Text style={styles.minSizeValue}>{entry.size} cm</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null;
+        })()}
       </View>
     )}
 
@@ -931,6 +996,13 @@ const styles = StyleSheet.create({
   categoryPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4 },
   categoryPillIcon: { fontSize: 12 },
   categoryPillText: { fontSize: 12, fontWeight: '600', color: COLORS.white },
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: '#ECFDF5', gap: 3, marginLeft: 6 },
+  verifiedBadgeText: { fontSize: 11, fontWeight: '700', color: '#059669' },
+  dataQualitySection: { backgroundColor: '#F0FDF4', borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#BBF7D0' },
+  dataQualityTitle: { fontSize: 14, fontWeight: '700', color: '#065F46', marginBottom: 8 },
+  dataQualityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  dataQualityChip: { backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#D1FAE5' },
+  dataQualityChipText: { fontSize: 12, fontWeight: '500', color: '#047857' },
   spotTypeName: { fontSize: 16, fontWeight: '600', color: COLORS.gray900, marginBottom: 4 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   metaText: { fontSize: 13, color: COLORS.gray500 },
@@ -1020,6 +1092,8 @@ const styles = StyleSheet.create({
   seasonBest: { backgroundColor: COLORS.green },
   seasonBadgeText: { fontSize: 10 },
   schonzeitWarning: { fontSize: 12, color: '#B91C1C', marginTop: 12, fontStyle: 'italic', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#FEF2F2', borderRadius: 8 },
+  minSizesSection: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: COLORS.gray100 },
+  minSizesTitle: { fontSize: 13, fontWeight: '600', color: COLORS.gray700, marginBottom: 8 },
 
   // Price
   priceSection: { marginBottom: 20, backgroundColor: '#F0F9FF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(0,102,255,0.08)' },

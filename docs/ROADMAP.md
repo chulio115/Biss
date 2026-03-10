@@ -17,8 +17,8 @@
 | Map Core | ✅ 85% | Mapbox, Clustering, Score-Marker, Zoom-basiert |
 | USP Features | ✅ 75% | Beißzeit-Modal, Schonzeit, Solunar, Favoriten |
 | Smart Intelligence | ✅ 40% | Kontext-Detection, Insight Generation |
-| Daten | ✅ 80% | 241+ OSM-Gewässer + Flüsse/Kanäle, 20 kuratierte Top-Spots, echte Fischarten, Permit-Daten |
-| **Spot-Daten 2.0** | ✅ 90% | 15/16 Features implementiert. Flüsse, DWD, PEGELONLINE, Forecast, Regulations, Seed-Daten |
+| Daten | ✅ 85% | 241+ OSM-Gewässer + 54 kuratierte Top-Spots (NDS/HH/SH/Ostsee), 16 Fischarten + Mindestmaße |
+| **Spot-Daten 2.0** | ✅ 95% | 16/17 Features. 54 kuratierte Spots, 16 Fischarten + Mindestmaße, Verifiziert-Badge, Datenqualität |
 | Categories | ✅ 100% | 4 Spot-Kategorien + Filter |
 | UI/UX Rework | ✅ 90% | Design System, ScoreRing, FangindexBreakdown, Logo, Map UI redesign (solid colors) |
 | **Dark Mode** | ✅ 100% | App-weiter Dark Mode mit ThemeContext, AppearanceSettingsModal, Persistenz |
@@ -383,11 +383,12 @@
 
 | Region | Aktuell | Ziel M2 | Ziel M4 |
 |--------|---------|---------|---------|
-| Niedersachsen (Seen/Teiche) | 241 + 6 kuratiert | 400+ | 500+ |
-| Niedersachsen (Flüsse/Kanäle) | 8 kuratiert | 100+ | 200+ |
-| Hamburg | 4 kuratiert | 80+ | 120+ |
-| Schleswig-Holstein | 6 kuratiert | 150+ | 300+ |
-| **Gesamt** | **241 + 24 kuratiert** | **730+** | **1.120+** |
+| Niedersachsen (Seen/Teiche) | 241 + 10 kuratiert | 400+ | 500+ |
+| Niedersachsen (Flüsse/Kanäle) | 16 kuratiert | 100+ | 200+ |
+| Hamburg | 8 kuratiert | 80+ | 120+ |
+| Schleswig-Holstein | 16 kuratiert + 2 Ostsee | 150+ | 300+ |
+| Sonderspot (Put&Take etc.) | 2 kuratiert | 10+ | 20+ |
+| **Gesamt** | **241 + 54 kuratiert** | **730+** | **1.120+** |
 
 ### Prio 4: Daten & Community 🟢 NACH LAUNCH
 > Wachstum durch Inhalt – basierend auf [Opas Rat: Daten-System](OPAS_RAT.md#-das-daten-system--wie-ihr-komplett-kostenlos-aktuell-bleibt)
@@ -503,7 +504,7 @@
 ### Kurzfristig (4 Wochen – bis M2 Closed Beta)
 | Metrik | Ziel | Aktuell |
 |--------|------|---------|
-| Gewässer in DB | 200+ | ✅ 265+ (241 OSM + 24 kuratiert) |
+| Gewässer in DB | 200+ | ✅ 295+ (241 OSM + 54 kuratiert) |
 | Offline-Modus fertig | 1 | ✅ 90% |
 | Privacy-Sharing fertig | 1 | ✅ 80% |
 | Push Notifications live | 1 | ✅ 80% (lokal) |
