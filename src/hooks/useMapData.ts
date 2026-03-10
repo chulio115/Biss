@@ -218,6 +218,9 @@ export const useMapData = (): UseMapDataReturn => {
             placeAddress: wb.place_address || wb.placeAddress || wb.address,
             placePhone: wb.place_phone || wb.placePhone,
             placeWebsite: wb.place_website || wb.placeWebsite,
+            // Spot-Daten 2.0: snake_case → camelCase Mapping
+            pegelStation: wb.pegel_station || wb.pegelStation,
+            riverSegment: wb.river_segment || wb.riverSegment,
           } as MapWaterBody;
         })
       );

@@ -355,26 +355,26 @@
 
 | Task | Aufwand | Beschreibung | Status |
 |------|---------|--------------|--------|
-| **Flüsse & Kanäle** | 2-3 Tage | OSM-Query erweitern: `waterway=river/canal`. Elbe, Aller, Weser, Oste, Seeve etc. Als Fluss-Abschnitte (je 2-5km). 60%+ der Angler angeln am Fluss! | 🚧 |
-| **HH/SH Expansion** | 1 Tag | Bounding Box auf Hamburg + Schleswig-Holstein erweitern. HH ist unser Heimatmarkt! | 🚧 |
-| **Angelerlaubnis-Daten** | 2-3 Tage | Wo darf ich angeln? Tageskarte-Preise, Kauforte, Regeln. Quellen: hejfish.com, Landesfischereiverband, Vereins-Websites | 🚧 |
-| **Echte Fischarten** | 2 Tage | Statt `estimateFishSpecies()` → echte Daten pro Spot (Gewässersteckbriefe, Vereine, Community-Bestätigung) | ⬜ |
+| ~~**Flüsse & Kanäle**~~ | ~~2-3 Tage~~ | ✅ OSM-Query erweitert: `waterway=river/canal`. NORDDEUTSCHLAND_BBOX, KNOWN_RIVERS (17), getFishForRiver() | ✅ |
+| ~~**HH/SH Expansion**~~ | ~~1 Tag~~ | ✅ Bounding Box auf Hamburg + Schleswig-Holstein erweitert. detectRegionFast() | ✅ |
+| ~~**Angelerlaubnis-Daten**~~ | ~~2-3 Tage~~ | ✅ 20 kuratierte Spots mit echten Preisen, Kauflinks, Regulations JSONB. Seed-SQL idempotent | ✅ |
+| ~~**Echte Fischarten**~~ | ~~2 Tage~~ | ✅ 20 Top-Spots mit bestätigten Fischarten (fish_species_confirmed=true, source='official') | ✅ |
 | **Koordinaten-Qualität** | 1 Tag | Ufer-Punkte statt Gewässermitte. Google Places Matching automatisieren. Community-Corrections. | ⬜ |
 
 #### Phase 2: Intelligence Layer (1–2 Wochen)
 
 | Task | Aufwand | Beschreibung | Status |
 |------|---------|--------------|--------|
-| **DWD Open Data** | 1 Tag | `opendata.dwd.de` statt OpenWeather: Wind, Niederschlag, Gewitterwarnungen. Kostenlos, kein API-Key, 2000+ Messstationen | 🚧 |
-| **PEGELONLINE Vorhersagen** | 4h | Wasserstandsvorhersagen-API (seit März 2026): Pegel-Trend ↗️↘️➡️ pro Fluss-Spot, 24h-Prognose | 🚧 |
+| ~~**DWD Open Data**~~ | ~~1 Tag~~ | ✅ weatherDWD.ts: Bright Sky API, kostenlos, kein API-Key. Primary mit OpenWeather Fallback | ✅ |
+| ~~**PEGELONLINE Vorhersagen**~~ | ~~4h~~ | ✅ pegelonline.ts: 25+ Stationen NDS/HH/SH, Trend-Berechnung, Batched Enrichment in useMapData | ✅ |
 | **NLWKN Niedersachsen** | 4h | Granulare Pegel-API für NDS (Binnen + Tide) | ⬜ |
-| **7-Tage Fangindex-Prognose** | 2 Tage | DWD Wettervorhersage + Solunar-Kalender → "Bester Tag diese Woche" | ⬜ |
+| ~~**48h Fangindex-Prognose**~~ | ~~2 Tage~~ | ✅ fangindexForecast.ts: DWD + Solunar + Mondphasen → stündlicher Score. ForecastCard Premium UI | ✅ |
 
 #### Phase 3: Above and Beyond (2–4 Wochen)
 
 | Task | Aufwand | Beschreibung | Status |
 |------|---------|--------------|--------|
-| **Spot-Detailseiten** | 3 Tage | Regeln, Live-Bedingungen, Anfahrt+Parken, Community-Fotos — wie ein Reiseführer | ⬜ |
+| ~~**Spot-Detailseiten**~~ | ~~3 Tage~~ | ✅ Live-Bedingungen 4-Grid, Solunar-Alert, Regulations (Methoden/Tagesfang/Mindestmaße), erweiterte Permit-Sektion | ✅ |
 | **Fang-Heatmap** | 2 Tage | Aggregierte, anonymisierte Fangdaten als Karten-Layer (Privacy-First, min. 5 Fänge/Zelle) | ⬜ |
 | **Spot-Qualitäts-Score** | 1 Tag | Datenqualität sichtbar: Fischarten bestätigt? Koordinaten verifiziert? Erlaubnis bekannt? | ⬜ |
 | **Community Spot-Corrections** | 1 Tag | User kann Pin verschieben, Fischarten bestätigen, Fotos uploaden → Spot-Scout Achievement | ⬜ |
@@ -383,11 +383,11 @@
 
 | Region | Aktuell | Ziel M2 | Ziel M4 |
 |--------|---------|---------|---------|
-| Niedersachsen (Seen/Teiche) | 241 | 400+ | 500+ |
-| Niedersachsen (Flüsse) | 0 | 100+ | 200+ |
-| Hamburg | 0 | 80+ | 120+ |
-| Schleswig-Holstein | 0 | 150+ | 300+ |
-| **Gesamt** | **241** | **730+** | **1.120+** |
+| Niedersachsen (Seen/Teiche) | 241 + 6 kuratiert | 400+ | 500+ |
+| Niedersachsen (Flüsse/Kanäle) | 8 kuratiert | 100+ | 200+ |
+| Hamburg | 4 kuratiert | 80+ | 120+ |
+| Schleswig-Holstein | 6 kuratiert | 150+ | 300+ |
+| **Gesamt** | **241 + 24 kuratiert** | **730+** | **1.120+** |
 
 ### Prio 4: Daten & Community 🟢 NACH LAUNCH
 > Wachstum durch Inhalt – basierend auf [Opas Rat: Daten-System](OPAS_RAT.md#-das-daten-system--wie-ihr-komplett-kostenlos-aktuell-bleibt)
@@ -503,10 +503,10 @@
 ### Kurzfristig (4 Wochen – bis M2 Closed Beta)
 | Metrik | Ziel | Aktuell |
 |--------|------|---------|
-| Gewässer in DB | 200+ | ✅ 241 |
-| Offline-Modus fertig | 1 | 0 |
-| Privacy-Sharing fertig | 1 | 0 |
-| Push Notifications live | 1 | 0 |
+| Gewässer in DB | 200+ | ✅ 265+ (241 OSM + 24 kuratiert) |
+| Offline-Modus fertig | 1 | ✅ 90% |
+| Privacy-Sharing fertig | 1 | ✅ 80% |
+| Push Notifications live | 1 | ✅ 80% (lokal) |
 | Beta-Tester | 10 | 0 |
 | TestFlight Build | 1 | 0 |
 

@@ -35,11 +35,16 @@ export interface MapWaterBody {
   lastCaughtAt?: string;
   catchCount?: number;
   // Angelerlaubnis-Daten (Spot-Daten 2.0)
-  permit_required?: boolean;
+  requires_permit?: boolean;
   permit_url?: string;
   permit_contact?: string;
   permit_info?: string;
+  permit_type?: 'free' | 'day_permit' | 'club_only' | 'private' | 'unknown';
   regulations?: SpotRegulations;
+  // Datenqualität
+  data_source?: string;
+  fish_species_confirmed?: boolean;
+  fish_species_source?: string;
   // Pegel-Daten für Flüsse (Spot-Daten 2.0)
   pegelStation?: string;
   pegelLevel?: number;
