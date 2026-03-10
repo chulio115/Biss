@@ -127,7 +127,8 @@ chmod +x .git/hooks/pre-commit
 ### Supabase:
 1. **Revoke:** Nicht möglich für anon key
 2. **RLS aktivieren:** Row Level Security für alle Tabellen
-3. **Service Role Key:** NIEMALS im Frontend!
+3. **Service Role Key:** NIEMALS im Frontend! Nur für Seeding-Skripte lokal via ENV
+4. **Service Role Leaked:** Sofort neu generieren → Seeding-Skripte anpassen
 
 ### Stripe:
 1. **Revoke:** Dashboard → Developers → API Keys
@@ -144,10 +145,13 @@ Allowed URLs:
 - https://biss-app.com/*
 - exp://192.168.*  (Dev only)
 
-Scopes:
+Scopes (Public Token):
 - styles:read
 - fonts:read
 - sprites:read
+
+Scopes (Download Token):
+- DOWNLOADS:READ
 ```
 
 ### Supabase RLS:
@@ -169,4 +173,4 @@ USING (auth.uid() = id);
 
 ---
 
-*Letzte Aktualisierung: 29.11.2024*
+*Letzte Aktualisierung: 10.03.2026*

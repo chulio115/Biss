@@ -18,7 +18,8 @@
 - [ ] **GitHub** Account
 - [ ] **Supabase** Account (Free) - [supabase.com](https://supabase.com)
 - [ ] **Mapbox** Account (Free) - [mapbox.com](https://www.mapbox.com/)
-- [ ] **OpenWeather** Account (Free) - [openweathermap.org](https://openweathermap.org/)
+- [ ] **OpenWeather** Account (Free) - [openweathermap.org](https://openweathermap.org/) (Fallback)
+- [ ] **DWD** (Deutscher Wetterdienst) - Kein Account nötig (Bright Sky API, kostenlos)
 
 ### Optional
 - [ ] **Stripe** Account (Test Mode)
@@ -30,7 +31,7 @@
 ## 1. Repository klonen
 
 ```bash
-git clone https://github.com/chulio115/Easy-living-frontend.git biss-app
+git clone https://github.com/chulio115/Biss.git biss-app
 cd biss-app
 ```
 
@@ -73,8 +74,11 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...dein-anon-key
 # Mapbox (https://account.mapbox.com/access-tokens/)
 EXPO_PUBLIC_MAPBOX_TOKEN=pk.eyJ...dein-public-token
 
-# OpenWeather (https://home.openweathermap.org/api_keys)
+# OpenWeather (https://home.openweathermap.org/api_keys) - Fallback
 EXPO_PUBLIC_OPENWEATHER_API_KEY=dein-api-key
+
+# DWD Bright Sky - Primary Weather (kein Key nötig)
+# Wird automatisch genutzt, keine Konfiguration erforderlich
 
 # ═══════════════════════════════════════
 # OPTIONAL - Für erweiterte Features
@@ -82,7 +86,6 @@ EXPO_PUBLIC_OPENWEATHER_API_KEY=dein-api-key
 
 # Custom Mapbox Styles (nach Upload zu Mapbox Studio)
 EXPO_PUBLIC_MAPBOX_STYLE_STANDARD=mapbox://styles/username/xxx
-EXPO_PUBLIC_MAPBOX_STYLE_FOKUS=mapbox://styles/username/xxx
 EXPO_PUBLIC_MAPBOX_STYLE_NIGHT=mapbox://styles/username/xxx
 
 # Google Places (für Fotos)
@@ -91,8 +94,8 @@ EXPO_PUBLIC_GOOGLE_PLACES_KEY=AIza...
 # Stripe (Test Mode)
 EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
-# xAI (für Fangindex KI)
-XAI_API_KEY=xai-...
+# xAI (Legacy, nicht mehr für Fangindex genutzt)
+# XAI_API_KEY=xai-...
 ```
 
 ---
@@ -108,8 +111,9 @@ XAI_API_KEY=xai-...
 
 ### 4.2 Schema ausführen
 1. Im Dashboard: **SQL Editor** → **New Query**
-2. Inhalt von `supabase/schema.sql` einfügen
+2. Inhalt von `supabase/migrations/spot_data_v2.sql` einfügen
 3. **Run** klicken
+4. Optional: `supabase/seed_top_spots.sql` + `supabase/seed_top_spots_batch2.sql` für kuratierte Spots
 
 ### 4.3 Keys kopieren
 1. **Settings** → **API**
@@ -137,6 +141,7 @@ XAI_API_KEY=xai-...
 1. [studio.mapbox.com](https://studio.mapbox.com/) → **New Style**
 2. **Upload** → JSON aus `/assets/mapstyles/` wählen
 3. Style URL kopieren → in `.env` eintragen
+4. **Wichtig:** Nur STANDARD und NIGHT werden genutzt
 
 ---
 
@@ -269,4 +274,4 @@ Bei Problemen:
 
 ---
 
-*Letzte Aktualisierung: 29.11.2024*
+*Letzte Aktualisierung: 10.03.2026*

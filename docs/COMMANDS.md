@@ -8,7 +8,7 @@
 
 ```bash
 # Repository klonen
-git clone https://github.com/chulio115/Easy-living-frontend.git
+git clone https://github.com/chulio115/Biss.git
 cd biss-app
 
 # Dependencies installieren
@@ -130,7 +130,8 @@ git add . && git commit -m "feat: ..."
 ### Schema ausführen
 ```bash
 # Im Supabase Dashboard → SQL Editor
-# → Inhalt von supabase/schema.sql einfügen
+# → Inhalt von supabase/migrations/spot_data_v2.sql einfügen
+# → Optional: seed_top_spots.sql + seed_top_spots_batch2.sql für kuratierte Spots
 ```
 
 ### Lokale Supabase (optional)
@@ -201,11 +202,12 @@ EXPO_PUBLIC_OPENWEATHER_API_KEY=
 
 # Mapbox Styles (nach Upload)
 EXPO_PUBLIC_MAPBOX_STYLE_STANDARD=
-EXPO_PUBLIC_MAPBOX_STYLE_FOKUS=
 EXPO_PUBLIC_MAPBOX_STYLE_NIGHT=
 
-# Optional
+# Optional (für erweiterte Features)
 EXPO_PUBLIC_GOOGLE_PLACES_KEY=
+
+# Optional
 EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ```
 

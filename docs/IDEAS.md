@@ -10,7 +10,14 @@
 - **Beißzeit-Radar** - Goldene Stunde für Angler
 - **Schonzeit-System** - Keine Bußgelder mehr
 - **3 Map Styles** - Einzigartige Kartenansicht
-- **Fangindex** - KI-gestützte Vorhersage
+- **Fangindex** - DWD + Solunar + Mondphase (nicht mehr KI)
+- **Dark Mode** - App-weiter mit ThemeContext
+- **Offline-Modus** - AsyncStorage Cache + Mapbox Packs
+- **Fang-Tagebuch** - DB + Foto-Upload + Offline-Queue
+- **Gamification** - 18 Achievements + Streak + Leaderboard
+- **Community Feed** - Filter + Reactions + Privacy-Controls
+- **PEGELONLINE Integration** - 40+ Stationen, 0 Errors
+- **56 kuratierte Spots** - NDS/HH/SH/Ostsee mit echten Permit-Daten
 
 ### Noch umzusetzen 💭
 
@@ -88,11 +95,11 @@ Lösung: Verifizierte Community-Reviews
 
 | Idee | Beschreibung | Aufwand |
 |------|--------------|---------|
-| In-App Tageskarten | Direkter Kauf | High |
-| Affiliate Links | Provision pro Lead | Low |
-| Premium Abo | €3.99/Monat | Medium |
+| Partner-Tageskarten | Direkter Kauf (Provision) | Medium |
+| Affiliate Links | Angelshops/Angelvereine | Low |
 | Vereins-Dashboard | B2B Angebot | High |
 | Sponsored Spots | Teiche bezahlen für Visibility | Low |
+| **Premium Features vermeiden** | Laut Opas Rat: Kein Feature-Kastrieren | — |
 
 ---
 
@@ -157,7 +164,8 @@ Lösung: Verifizierte Community-Reviews
 
 | Dienst | Zweck | Kosten |
 |--------|-------|--------|
-| OpenWeather | Wetter | Free Tier |
+| DWD Bright Sky | Wetter (Primary) | Kostenlos |
+| OpenWeather | Wetter (Fallback) | Free Tier |
 | PEGELONLINE | Pegel | Kostenlos |
 | Sunrise-Sunset | Zeiten | Kostenlos |
 | Moon Phase | Mondphase | Kostenlos |
@@ -211,8 +219,9 @@ Lösung: Verifizierte Community-Reviews
 ## 📝 Notizen & Learnings
 
 ### Was Konkurrenz macht
-- Fishbrain: Social-First, global, Premium $10/Monat
-- Anglermap: Daten-fokussiert, keine App
+- Fishbrain: Social-First, global, Premium $10/Monat, 66% negative Erfahrungen
+- Alle Angeln: DE #1, veraltet, keine Offline-Funktion
+- Anglr: GPS-Logger, keine Emotion
 - Hejfish: Österreich-Fokus, Buchung
 - AngelApp.de: Veraltet, keine Innovation
 
@@ -230,4 +239,4 @@ Lösung: Verifizierte Community-Reviews
 
 ---
 
-*Letzte Aktualisierung: 29.11.2024*
+*Letzte Aktualisierung: 10.03.2026*
