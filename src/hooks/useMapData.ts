@@ -24,6 +24,7 @@ import {
   getCachedWeather,
   formatCacheAge,
 } from '../services/offlineStorage';
+import { getPegelForSpot } from '../services/pegelonline';
 
 const BENDESTORF_COORDS: [number, number] = [9.9732, 53.3355];
 
@@ -255,6 +256,39 @@ export const useMapData = (): UseMapDataReturn => {
         }
       } catch (e) {
         console.log('Catch freshness query failed (non-critical):', e);
+      }
+
+      // Enrich river spots with PEGELONLINE data (non-blocking, non-critical)
+      try {
+        const riverSpots = deduped.filter(
+          s => s.type === 'river' || s.type === 'canal'
+        );
+        if (riverSpots.length > 0) {
+          console.log(`🌊 Enriching ${riverSpots.length} river spots with pegel data...`);
+          // Batch: max 5 parallel requests to be nice to the API
+          const BATCH_SIZE = 5;
+          for (let i = 0; i < riverSpots.length; i += BATCH_SIZE) {
+            const batch = riverSpots.slice(i, i + BATCH_SIZE);
+            await Promise.allSettled(
+              batch.map(async (spot) => {
+                const pegel = await getPegelForSpot(
+                  spot.name,
+                  spot.latitude,
+                  spot.longitude
+                );
+                if (pegel) {
+                  spot.pegelStation = pegel.stationName;
+                  spot.pegelLevel = pegel.currentLevel;
+                  spot.pegelTrend = pegel.trend;
+                }
+              })
+            );
+          }
+          const enriched = riverSpots.filter(s => s.pegelStation).length;
+          console.log(`📈 Pegel data: ${enriched}/${riverSpots.length} river spots enriched`);
+        }
+      } catch (e) {
+        console.log('Pegel enrichment failed (non-critical):', e);
       }
 
       setWaterBodies(deduped);

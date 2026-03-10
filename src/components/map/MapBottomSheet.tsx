@@ -349,6 +349,78 @@ const SpotDetailView: React.FC<{
       </View>
     )}
 
+    {/* Pegel-Daten für Flüsse (Spot-Daten 2.0) */}
+    {spot.pegelStation && (
+      <View style={[styles.freshnessSection, isDark && styles.freshnessSectionDark]}>
+        <View style={styles.freshnessRow}>
+          <View style={styles.freshnessItem}>
+            <Droplets size={14} color={COLORS.primary} strokeWidth={2} />
+            <Text style={[styles.freshnessLabel, isDark && styles.textLight]}>Pegel ({spot.pegelStation})</Text>
+          </View>
+          <Text style={[styles.freshnessValue, isDark && styles.textLight]}>
+            {spot.pegelLevel ? `${spot.pegelLevel} cm` : '–'}
+          </Text>
+        </View>
+        {spot.pegelTrend && (
+          <View style={styles.freshnessRow}>
+            <View style={styles.freshnessItem}>
+              <Text style={styles.freshnessEmoji}>
+                {spot.pegelTrend === 'rising' ? '↗️' : spot.pegelTrend === 'falling' ? '↘️' : '➡️'}
+              </Text>
+              <Text style={[styles.freshnessLabel, isDark && styles.textLight]}>Trend</Text>
+            </View>
+            <Text style={[styles.pegelTrendText, isDark && styles.textLight, 
+              spot.pegelTrend === 'rising' && styles.pegelRising,
+              spot.pegelTrend === 'falling' && styles.pegelFalling,
+            ]}>
+              {spot.pegelTrend === 'rising' ? 'Steigend' : spot.pegelTrend === 'falling' ? 'Fallend' : 'Stabil'}
+            </Text>
+          </View>
+        )}
+      </View>
+    )}
+
+    {/* Angelerlaubnis (Spot-Daten 2.0) */}
+    {(spot.permit_info || spot.permit_url || spot.permit_price !== null) && (
+      <View style={[styles.freshnessSection, isDark && styles.freshnessSectionDark]}>
+        <View style={styles.freshnessRow}>
+          <View style={styles.freshnessItem}>
+            <Info size={14} color={COLORS.green} strokeWidth={2} />
+            <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Angelerlaubnis</Text>
+          </View>
+        </View>
+        {spot.permit_price !== null && spot.permit_price !== undefined && (
+          <View style={styles.freshnessRow}>
+            <Text style={[styles.freshnessLabel, isDark && styles.textLight]}>Tageskarte</Text>
+            <Text style={[styles.freshnessValue, { color: COLORS.green }, isDark && { color: COLORS.green }]}>
+              {spot.permit_price === 0 ? 'Kostenlos' : `€${spot.permit_price}`}
+            </Text>
+          </View>
+        )}
+        {spot.permit_info && (
+          <Text style={[styles.permitInfoText, isDark && styles.textLight]}>{spot.permit_info}</Text>
+        )}
+        {spot.permit_url && (
+          <TouchableOpacity
+            style={styles.permitLink}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              Linking.openURL(spot.permit_url!);
+            }}
+            activeOpacity={0.7}
+          >
+            <ExternalLink size={14} color={COLORS.primary} />
+            <Text style={styles.permitLinkText}>Tageskarte kaufen</Text>
+          </TouchableOpacity>
+        )}
+        {spot.regulations?.specialRules && (
+          <Text style={[styles.regulationsText, isDark && styles.textLight]}>
+            📋 {spot.regulations.specialRules}
+          </Text>
+        )}
+      </View>
+    )}
+
     {/* Community Rating */}
     <View style={[styles.ratingSection, isDark && styles.ratingSectionDark]}>
       <View style={styles.ratingHeader}>
@@ -871,6 +943,17 @@ const styles = StyleSheet.create({
   freshnessValue: { fontSize: 13, fontWeight: '700', color: COLORS.gray900 },
   freshnessEmoji: { fontSize: 14 },
   freshnessEmpty: { fontSize: 13, color: COLORS.gray400, fontStyle: 'italic' },
+
+  // Pegel (Spot-Daten 2.0)
+  pegelTrendText: { fontSize: 13, fontWeight: '700', color: COLORS.gray900 },
+  pegelRising: { color: COLORS.red },
+  pegelFalling: { color: COLORS.green },
+
+  // Angelerlaubnis (Spot-Daten 2.0)
+  permitInfoText: { fontSize: 13, color: COLORS.gray600, marginTop: 4, lineHeight: 18 },
+  permitLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: COLORS.primary + '15', borderRadius: 10 },
+  permitLinkText: { fontSize: 13, fontWeight: '600', color: COLORS.primary },
+  regulationsText: { fontSize: 12, color: COLORS.gray500, marginTop: 6, lineHeight: 17 },
 });
 
 const modalStyles = StyleSheet.create({
