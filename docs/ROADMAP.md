@@ -17,9 +17,11 @@
 | Map Core | ✅ 85% | Mapbox, Clustering, Score-Marker, Zoom-basiert |
 | USP Features | ✅ 75% | Beißzeit-Modal, Schonzeit, Solunar, Favoriten |
 | Smart Intelligence | ✅ 40% | Kontext-Detection, Insight Generation |
-| Daten | ✅ 80% | 200+ OSM-Gewässer + Google Places |
+| Daten | 🟡 50% | 241 OSM-Gewässer (nur Seen/Teiche), keine Flüsse, geschätzte Fischarten, keine Permit-Daten |
+| **Spot-Daten 2.0** | 🚧 IN PROGRESS | Flüsse+Kanäle, HH/SH Expansion, Angelerlaubnis-Daten, echte Fischarten, DWD Wetter |
 | Categories | ✅ 100% | 4 Spot-Kategorien + Filter |
 | UI/UX Rework | ✅ 90% | Design System, ScoreRing, FangindexBreakdown, Logo, Map UI redesign (solid colors) |
+| **Dark Mode** | ✅ 100% | App-weiter Dark Mode mit ThemeContext, AppearanceSettingsModal, Persistenz |
 | Bottom Sheet | ✅ 100% | Details + Breakdown + Auto-Open |
 | Location Fixes | 🟡 80% | Bekannte Spots korrigiert |
 | **Fang-Tagebuch** | ✅ 95% | DB + Screen + Add Modal + Foto-Upload (Kamera + Galerie) |
@@ -30,7 +32,7 @@
 | **Privacy-First Sharing** | ✅ 80% | Fuzzy Locations (±2km), Spot verbergen, Community-Only Visibility (Opas Rat #2) |
 | **Offline-Modus** | ✅ 90% | Cache-Service, Offline-Fänge+Sync, Offline-Fangindex, Mapbox Packs (Opas Rat #4) |
 | **Personalisierte Push** | ✅ 80% | Lokale Beißzeit-Alerts, Golden Hour, Solunar Major/Minor, Tages-Zusammenfassung (Opas Rat: Emotionaler Hook) |
-| **Vereinsangeln** | � 30% | Filter-UI + Mock-Clubs im Community-Feed (Opas Rat #5); Backend + Gewässer offen |
+| **Vereinsangeln** | 🟡 30% | Filter-UI + Mock-Clubs im Community-Feed (Opas Rat #5); Backend + Gewässer offen |
 | **EU Fangmeldung** | 🔴 0% | RecFishing 1-Klick-Integration (Opas Rat #6, rechtlich ab Sommer 2026) |
 | Fischereischein | ✅ 80% | Wallet UI, Image Picker, Metadaten, Gültigkeit (OCR optional) |
 | Monetarisierung | 🔴 0% | Stripe vorbereitet |
@@ -346,20 +348,57 @@
 | Affiliate Links | 2h | Weiterleitung zu Buchung |
 | Mystery Spots Premium | 1 Woche | "Geheimtipp freischalten" €0.99 |
 
+### Prio 1.5: Spot-Daten 2.0 🔴 JETZT (März 2026)
+> "Jeder Spot erzählt eine Geschichte" — Unser USP. Nicht 10.000 leere Pins, sondern 500+ Spots die besser sind als alles was die Konkurrenz hat.
+
+#### Phase 1: Daten-Fundament (1–2 Wochen)
+
+| Task | Aufwand | Beschreibung | Status |
+|------|---------|--------------|--------|
+| **Flüsse & Kanäle** | 2-3 Tage | OSM-Query erweitern: `waterway=river/canal`. Elbe, Aller, Weser, Oste, Seeve etc. Als Fluss-Abschnitte (je 2-5km). 60%+ der Angler angeln am Fluss! | 🚧 |
+| **HH/SH Expansion** | 1 Tag | Bounding Box auf Hamburg + Schleswig-Holstein erweitern. HH ist unser Heimatmarkt! | 🚧 |
+| **Angelerlaubnis-Daten** | 2-3 Tage | Wo darf ich angeln? Tageskarte-Preise, Kauforte, Regeln. Quellen: hejfish.com, Landesfischereiverband, Vereins-Websites | 🚧 |
+| **Echte Fischarten** | 2 Tage | Statt `estimateFishSpecies()` → echte Daten pro Spot (Gewässersteckbriefe, Vereine, Community-Bestätigung) | ⬜ |
+| **Koordinaten-Qualität** | 1 Tag | Ufer-Punkte statt Gewässermitte. Google Places Matching automatisieren. Community-Corrections. | ⬜ |
+
+#### Phase 2: Intelligence Layer (1–2 Wochen)
+
+| Task | Aufwand | Beschreibung | Status |
+|------|---------|--------------|--------|
+| **DWD Open Data** | 1 Tag | `opendata.dwd.de` statt OpenWeather: Wind, Niederschlag, Gewitterwarnungen. Kostenlos, kein API-Key, 2000+ Messstationen | 🚧 |
+| **PEGELONLINE Vorhersagen** | 4h | Wasserstandsvorhersagen-API (seit März 2026): Pegel-Trend ↗️↘️➡️ pro Fluss-Spot, 24h-Prognose | 🚧 |
+| **NLWKN Niedersachsen** | 4h | Granulare Pegel-API für NDS (Binnen + Tide) | ⬜ |
+| **7-Tage Fangindex-Prognose** | 2 Tage | DWD Wettervorhersage + Solunar-Kalender → "Bester Tag diese Woche" | ⬜ |
+
+#### Phase 3: Above and Beyond (2–4 Wochen)
+
+| Task | Aufwand | Beschreibung | Status |
+|------|---------|--------------|--------|
+| **Spot-Detailseiten** | 3 Tage | Regeln, Live-Bedingungen, Anfahrt+Parken, Community-Fotos — wie ein Reiseführer | ⬜ |
+| **Fang-Heatmap** | 2 Tage | Aggregierte, anonymisierte Fangdaten als Karten-Layer (Privacy-First, min. 5 Fänge/Zelle) | ⬜ |
+| **Spot-Qualitäts-Score** | 1 Tag | Datenqualität sichtbar: Fischarten bestätigt? Koordinaten verifiziert? Erlaubnis bekannt? | ⬜ |
+| **Community Spot-Corrections** | 1 Tag | User kann Pin verschieben, Fischarten bestätigen, Fotos uploaden → Spot-Scout Achievement | ⬜ |
+
+#### Spot-Ziele
+
+| Region | Aktuell | Ziel M2 | Ziel M4 |
+|--------|---------|---------|---------|
+| Niedersachsen (Seen/Teiche) | 241 | 400+ | 500+ |
+| Niedersachsen (Flüsse) | 0 | 100+ | 200+ |
+| Hamburg | 0 | 80+ | 120+ |
+| Schleswig-Holstein | 0 | 150+ | 300+ |
+| **Gesamt** | **241** | **730+** | **1.120+** |
+
 ### Prio 4: Daten & Community 🟢 NACH LAUNCH
 > Wachstum durch Inhalt – basierend auf [Opas Rat: Daten-System](OPAS_RAT.md#-das-daten-system--wie-ihr-komplett-kostenlos-aktuell-bleibt)
 
 | Task | Aufwand | Beschreibung | Opas Rat |
 |------|---------|--------------|----------|
-| **DWD Open Data** | 1 Tag | Deutscher Wetterdienst statt OpenWeather: Wind, Niederschlag, Gewitterwarnungen. `opendata.dwd.de`, kein API-Key, kein Limit | Schicht 1: "Viel präziser für Deutschland" |
-| **NLWKN Niedersachsen** | 4h | Pegelonline-REST-API für Niedersachsen (granularer als Bundes-PEGELONLINE) | Schicht 1: "Heimatmarkt" |
-| **PEGELONLINE Vorhersage** | 4h | Wasserstandsvorhersagen-API (seit März 2026): "Heute Nachmittag steigt der Pegel" | Schicht 1: "Keine andere Angel-App kann das" |
-| **OSM Weekly Sync** | 4h | Cronjob für wöchentlichen Overpass-API-Sync (`leisure=fishing`) | Schicht 2: "Wächst von selbst" |
+| **OSM Weekly Sync** | 4h | Cronjob für wöchentlichen Overpass-API-Sync | Schicht 2: "Wächst von selbst" |
 | User-Submissions | 1 Tag | "Teich melden" Feature |
 | Community-Verify | 2 Tage | Spot-Verifizierung + "Spot-Scout" Achievement | Schicht 3: "Gamification = Datenstrategie" |
 | ~~**"Zuletzt gefangen" Auto-Update**~~ | ~~2h~~ | ✅ Catch-Freshness Query in useMapData, Spot-Zuordnung per water_body_name | Schicht 3: "Nutzung der App ist das Daten-Update" |
-| Mehr Gewässer | fortlaufend | Erweiterung über Niedersachsen hinaus |
-| Pegel Live | 4h | Direkte API-Integration statt nur Berechnung |
+| Mehr Bundesländer | fortlaufend | Erweiterung auf ganz Deutschland |
 
 ### Prio 5: Premium Features 🔵 PHASE 2
 > Nach erfolgreichem Launch
@@ -539,3 +578,9 @@
 | 10.03.26 | **Navigation: 5→4 Tabs** | ScheinStack entfernt, Schein als Modal unter Profil-Menü. ScheinScreen akzeptiert optionale `onClose` Prop |
 | 10.03.26 | **Community Filter** | Fischarten (Chip-Grid), Umkreis (5-100km, Haversine), Verein (Mock-Clubs). Filter-Button oben rechts, Active Chips inline, CommunityFilterModal |
 | 10.03.26 | **Vereinsangeln gestartet** | Als Filter/Sektion im Community-Feed integriert (nicht eigener Tab). 5 Mock-Clubs, UI fertig, Backend offen |
+| 10.03.26 | **Dark Mode implementiert** | ThemeContext + AppearanceSettingsModal + Persistenz via AsyncStorage. Alle Screens + Navigation aktualisiert |
+| 10.03.26 | **Spot-Daten 2.0 gestartet** | Analyse: 241 Spots nur Seen/Teiche, keine Flüsse, geschätzte Fischarten, keine Permit-Daten. Neue Prio 1.5 mit 3 Phasen |
+| 10.03.26 | **Flüsse als Prio** | 60%+ der Angler angeln am Fluss — Elbe, Aller, Weser, Seeve etc. fehlen komplett. OSM-Query erweitern |
+| 10.03.26 | **DWD statt OpenWeather** | Kostenlos, kein API-Key, 2000+ Messstationen vs ~200. Präziser für DE |
+| 10.03.26 | **HH/SH Expansion** | Hamburg ist Heimatmarkt, SH hat 300+ Angelgewässer. Bounding Box erweitern |
+| 10.03.26 | **Angelerlaubnis = #1 Pain Point** | "Wo darf ich angeln?" beantwortet keine App gut. Tageskarten-Daten als Killer-Feature |

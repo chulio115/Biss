@@ -70,25 +70,35 @@ export interface EnrichedWaterBody extends RawWaterBody {
 
 const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
 
-// Niedersachsen Bounding Box
-const NIEDERSACHSEN_BBOX = {
+// Norddeutschland Bounding Box (NDS + HH + SH)
+const NORDDEUTSCHLAND_BBOX = {
   south: 51.29,
-  north: 54.01,
+  north: 54.91,  // Erweitert bis Flensburg/dänische Grenze
   west: 6.65,
   east: 11.56,
 };
 
+// Legacy alias
+const NIEDERSACHSEN_BBOX = NORDDEUTSCHLAND_BBOX;
+
+// Regional Bounding Boxes für gezielte Queries
+export const REGION_BOXES = {
+  niedersachsen: { south: 51.29, north: 53.89, west: 6.65, east: 11.56 },
+  hamburg: { south: 53.39, north: 53.74, west: 9.72, east: 10.33 },
+  schleswig_holstein: { south: 53.36, north: 54.91, west: 8.30, east: 11.31 },
+};
+
 /**
  * Queries OpenStreetMap for water bodies in a region
- * Returns lakes, ponds, reservoirs with fishing potential
+ * Returns lakes, ponds, reservoirs, rivers, canals with fishing potential
  */
 export const fetchOSMWaterBodies = async (
-  bbox: typeof NIEDERSACHSEN_BBOX = NIEDERSACHSEN_BBOX,
-  limit: number = 500
+  bbox: typeof NIEDERSACHSEN_BBOX = NORDDEUTSCHLAND_BBOX,
+  limit: number = 1000
 ): Promise<RawWaterBody[]> => {
-  // Overpass QL Query für Angelgewässer
+  // Overpass QL Query für ALLE Angelgewässer (inkl. Flüsse)
   const query = `
-    [out:json][timeout:60];
+    [out:json][timeout:90];
     (
       // Seen
       way["natural"="water"]["water"="lake"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
@@ -99,6 +109,13 @@ export const fetchOSMWaterBodies = async (
       
       // Stauseen
       way["natural"="water"]["water"="reservoir"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
+      
+      // Flüsse (NEU! - Hauptgewässer für 60%+ der Angler)
+      way["waterway"="river"]["name"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
+      relation["waterway"="river"]["name"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
+      
+      // Kanäle
+      way["waterway"="canal"]["name"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
       
       // Explizite Angelgewässer
       way["leisure"="fishing"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
@@ -146,7 +163,13 @@ export const fetchOSMWaterBodies = async (
       })
       .slice(0, limit);
 
+    // Log breakdown by type
+    const rivers = waterBodies.filter(wb => wb.type === 'river').length;
+    const canals = waterBodies.filter(wb => wb.type === 'canal').length;
+    const lakes = waterBodies.filter(wb => wb.type === 'lake').length;
+    const ponds = waterBodies.filter(wb => wb.type === 'pond').length;
     console.log(`✅ Found ${waterBodies.length} water bodies from OSM`);
+    console.log(`   🏞️ ${lakes} Seen, 🐟 ${ponds} Teiche, 🌊 ${rivers} Flüsse, 🚢 ${canals} Kanäle`);
     return waterBodies;
     
   } catch (error: any) {

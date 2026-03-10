@@ -34,4 +34,25 @@ export interface MapWaterBody {
   coordinateSource?: 'google' | 'manual' | 'osm';
   lastCaughtAt?: string;
   catchCount?: number;
+  // Angelerlaubnis-Daten (Spot-Daten 2.0)
+  permit_required?: boolean;
+  permit_url?: string;
+  permit_contact?: string;
+  permit_info?: string;
+  regulations?: SpotRegulations;
+  // Pegel-Daten für Flüsse (Spot-Daten 2.0)
+  pegelStation?: string;
+  pegelLevel?: number;
+  pegelTrend?: 'rising' | 'stable' | 'falling';
+  pegelForecast?: string;
+  // Fluss-Segment Info
+  riverSegment?: string;
+}
+
+export interface SpotRegulations {
+  minSizes?: Record<string, number>;
+  dailyLimit?: number;
+  nightFishing?: boolean;
+  allowedMethods?: string[];
+  specialRules?: string;
 }
