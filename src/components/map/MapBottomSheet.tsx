@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Navigation, MapPin, Phone, ExternalLink, Info, Star, Clock, Droplets, Sun, Moon, Wind, ChevronRight, Heart } from 'lucide-react-native';
+import { Navigation, MapPin, Phone, ExternalLink, Info, Star, Clock, Droplets, Sun, Moon, Wind, ChevronRight, Heart, Cloud } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { COLORS, getScoreColor } from '../../constants/colors';
 import { ScoreRing } from '../ui/ScoreRing';
@@ -535,22 +535,131 @@ const SpotDetailView: React.FC<{
       </View>
     )}
 
+    {/* Live-Bedingungen (Spot-Daten 2.0) */}
+    {spot.fangIndexFactors && (
+      <View style={[styles.freshnessSection, isDark && styles.freshnessSectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Aktuelle Bedingungen</Text>
+        <View style={styles.conditionsGrid}>
+          <View style={styles.conditionItem}>
+            <Cloud size={16} color={COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+              {spot.fangIndexFactors.weather >= 70 ? 'Ideal' : spot.fangIndexFactors.weather >= 45 ? 'OK' : 'Schwierig'}
+            </Text>
+            <Text style={styles.conditionLabel}>Wetter</Text>
+          </View>
+          <View style={styles.conditionItem}>
+            <Droplets size={16} color={COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+              {spot.fangIndexFactors.water_level >= 70 ? 'Optimal' : spot.fangIndexFactors.water_level >= 45 ? 'Normal' : 'Niedrig'}
+            </Text>
+            <Text style={styles.conditionLabel}>Pegel</Text>
+          </View>
+          <View style={styles.conditionItem}>
+            <Moon size={16} color={COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+              {spot.fangIndexFactors.moon_phase >= 70 ? 'Stark' : spot.fangIndexFactors.moon_phase >= 45 ? 'Mittel' : 'Schwach'}
+            </Text>
+            <Text style={styles.conditionLabel}>Mond</Text>
+          </View>
+          <View style={styles.conditionItem}>
+            <Sun size={16} color={COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+              {spot.fangIndexFactors.time_of_day >= 70 ? 'Prime!' : spot.fangIndexFactors.time_of_day >= 45 ? 'Gut' : 'Mäßig'}
+            </Text>
+            <Text style={styles.conditionLabel}>Tageszeit</Text>
+          </View>
+        </View>
+        {spot.fangIndexFactors.solunar && spot.fangIndexFactors.solunar >= 75 && (
+          <View style={styles.solunarAlert}>
+            <Text style={styles.solunarAlertText}>🎯 Solunar-Fenster aktiv — erhöhte Beißaktivität!</Text>
+          </View>
+        )}
+      </View>
+    )}
+
+    {/* Regulations (kuratierte Spots) */}
+    {spot.regulations && ((spot.regulations.allowedMethods?.length ?? 0) > 0 || spot.regulations.dailyLimit || spot.regulations.minSizes) && (
+      <View style={[styles.freshnessSection, isDark && styles.freshnessSectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textLight]}>📋 Regeln & Bestimmungen</Text>
+        {spot.regulations.allowedMethods && spot.regulations.allowedMethods.length > 0 && (
+          <View style={styles.freshnessRow}>
+            <Text style={[styles.freshnessLabel, isDark && styles.textLight]}>Methoden</Text>
+            <Text style={[styles.freshnessValue, isDark && styles.textLight]} numberOfLines={2}>
+              {spot.regulations.allowedMethods.join(', ')}
+            </Text>
+          </View>
+        )}
+        {spot.regulations.dailyLimit && (
+          <View style={styles.freshnessRow}>
+            <Text style={[styles.freshnessLabel, isDark && styles.textLight]}>Tagesfang</Text>
+            <Text style={[styles.freshnessValue, isDark && styles.textLight]}>
+              max. {spot.regulations.dailyLimit} Fische
+            </Text>
+          </View>
+        )}
+        {spot.regulations.nightFishing !== undefined && (
+          <View style={styles.freshnessRow}>
+            <Text style={[styles.freshnessLabel, isDark && styles.textLight]}>Nachtangeln</Text>
+            <Text style={[styles.freshnessValue, isDark && styles.textLight]}>
+              {spot.regulations.nightFishing ? '✅ Erlaubt' : '❌ Nicht erlaubt'}
+            </Text>
+          </View>
+        )}
+        {spot.regulations.minSizes && Object.keys(spot.regulations.minSizes).length > 0 && (
+          <View style={{ marginTop: 4 }}>
+            <Text style={[styles.freshnessLabel, isDark && styles.textLight, { marginBottom: 4 }]}>Mindestmaße</Text>
+            <View style={styles.minSizesGrid}>
+              {Object.entries(spot.regulations.minSizes).map(([fish, size]) => (
+                <View key={fish} style={styles.minSizeChip}>
+                  <Text style={styles.minSizeFish}>{fish}</Text>
+                  <Text style={styles.minSizeValue}>{size} cm</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+        {spot.regulations.specialRules && (
+          <Text style={[styles.regulationsText, isDark && styles.textLight]}>
+            💡 {spot.regulations.specialRules}
+          </Text>
+        )}
+      </View>
+    )}
+
     {/* Price */}
     {spot.permit_price != null && (
       <View style={styles.priceSection}>
         <View style={styles.priceRow}>
           <View>
             <Text style={styles.priceSectionLabel}>Tageskarte</Text>
-            <Text style={styles.priceValue}>€{spot.permit_price}</Text>
+            <Text style={styles.priceValue}>
+              {spot.permit_price === 0 ? 'Kostenlos!' : `€${spot.permit_price}`}
+            </Text>
           </View>
-          <TouchableOpacity
-            style={styles.buyBtn}
-            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.buyBtnText}>Kaufen</Text>
-          </TouchableOpacity>
+          {spot.permit_url ? (
+            <TouchableOpacity
+              style={styles.buyBtn}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                Linking.openURL(spot.permit_url!);
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.buyBtnText}>Kaufen</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.buyBtn}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.buyBtnText}>Info</Text>
+            </TouchableOpacity>
+          )}
         </View>
+        {spot.permit_info && (
+          <Text style={[styles.permitInfoText, isDark && styles.textLight]}>{spot.permit_info}</Text>
+        )}
       </View>
     )}
 
@@ -975,6 +1084,20 @@ const styles = StyleSheet.create({
   permitLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: COLORS.primary + '15', borderRadius: 10 },
   permitLinkText: { fontSize: 13, fontWeight: '600', color: COLORS.primary },
   regulationsText: { fontSize: 12, color: COLORS.gray500, marginTop: 6, lineHeight: 17 },
+
+  // Live-Bedingungen (Spot-Daten 2.0)
+  conditionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  conditionItem: { flex: 1, minWidth: '45%' as any, alignItems: 'center', gap: 4, paddingVertical: 10, backgroundColor: COLORS.white, borderRadius: 12 },
+  conditionValue: { fontSize: 13, fontWeight: '700', color: COLORS.gray800 },
+  conditionLabel: { fontSize: 11, color: COLORS.gray400 },
+  solunarAlert: { backgroundColor: '#FEF3C7', borderRadius: 10, padding: 10, marginTop: 6 },
+  solunarAlertText: { fontSize: 12, fontWeight: '600', color: '#92400E', textAlign: 'center' },
+
+  // Regulations (Spot-Daten 2.0)
+  minSizesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  minSizeChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.gray100, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  minSizeFish: { fontSize: 12, fontWeight: '600', color: COLORS.gray700 },
+  minSizeValue: { fontSize: 12, color: COLORS.gray500 },
 });
 
 const modalStyles = StyleSheet.create({
