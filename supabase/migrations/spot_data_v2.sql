@@ -4,7 +4,10 @@
 -- Erweitert water_bodies um Angelerlaubnis-Details, Pegel-Stationen, Regulations
 -- Run in Supabase SQL Editor
 
--- 1. Angelerlaubnis-Details
+-- 1. Angelerlaubnis-Details (permit_required/permit_url/permit_contact evtl. schon vorhanden)
+ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS permit_required BOOLEAN DEFAULT true;
+ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS permit_url TEXT;
+ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS permit_contact TEXT;
 ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS permit_info TEXT;
 ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS permit_type TEXT CHECK (permit_type IN ('free', 'day_permit', 'club_only', 'private', 'unknown'));
 ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS permit_buy_location TEXT;
