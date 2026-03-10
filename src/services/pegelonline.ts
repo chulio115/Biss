@@ -46,10 +46,14 @@ export interface PegelInfo {
 
 // ─── Norddeutschland Pegel-Stationen (wichtigste Angelgewässer) ───
 
+// Alle Stationsnamen verifiziert gegen PEGELONLINE REST-API v2 (Stand: 2026-03-10)
+// API: https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json
+// Stationen ohne API-Eintrag (Seeve, Luhe, Schwentine, NOK, ELK, ESK, MLK) sind NICHT verfügbar.
 export const NORDDEUTSCHLAND_STATIONS: Record<string, string> = {
-  // Elbe
+  // ── Elbe ──
   'Elbe': 'HAMBURG ST. PAULI',
   'Elbe bei Hamburg': 'HAMBURG ST. PAULI',
+  'Elbe Hamburg (Hafen)': 'HAMBURG ST. PAULI',
   'Elbe bei Geesthacht': 'GEESTHACHT',
   'Elbe bei Lauenburg': 'LAUENBURG',
   'Elbe bei Hohnstorf': 'HOHNSTORF',
@@ -57,41 +61,59 @@ export const NORDDEUTSCHLAND_STATIONS: Record<string, string> = {
   'Elbe bei Bleckede': 'BLECKEDE',
   'Elbe bei Boizenburg': 'BOIZENBURG',
   'Elbe bei Dömitz': 'DOEMITZ',
-  // Weser
-  'Weser': 'BREMEN',
-  'Weser bei Bremen': 'INTSCHEDE',
+  // ── Weser ──
+  'Weser': 'INTSCHEDE',
+  'Weser bei Bremen': 'GROSSE WESERBRÜCKE',
+  'Weser bei Hameln': 'HAMELN WEHRBERGEN',
   'Weser bei Nienburg': 'NIENBURG',
-  'Weser bei Minden': 'MINDEN',
-  'Weser bei Hameln': 'HAMELN',
-  // Aller
+  'Weser bei Minden': 'PORTA',
+  'Weser bei Hoya': 'HOYA',
+  'Weser bei Rinteln': 'RINTELN',
+  // ── Aller ──
   'Aller': 'CELLE',
   'Aller bei Celle': 'CELLE',
-  'Aller bei Verden': 'VERDEN',
   'Aller bei Rethem': 'RETHEM',
-  // Leine
-  'Leine': 'HANNOVER-CALENBERGER NEUSTADT',
-  'Leine bei Hannover': 'HANNOVER-CALENBERGER NEUSTADT',
-  'Leine bei Neustadt': 'NEUSTADT AM RÜBENBERGE',
-  // Oste
-  'Oste': 'BREMERVÖRDE',
-  'Oste bei Bremervörde': 'BREMERVÖRDE',
-  // Este
+  'Aller bei Ahlden': 'AHLDEN',
+  // ── Leine ──
+  'Leine': 'HERRENHAUSEN',
+  'Leine bei Hannover': 'HERRENHAUSEN',
+  'Leine in Hannover': 'HERRENHAUSEN',
+  'Leine bei Neustadt': 'NEUSTADT',
+  'Leine bei Schwarmstedt': 'SCHWARMSTEDT',
+  // ── Oste ──
+  'Oste': 'HECHTHAUSEN',
+  'Oste bei Bremervörde': 'BREMERVÖRDE UW',
+  'Oste bei Hechthausen': 'HECHTHAUSEN',
+  // ── Este ──
   'Este': 'BUXTEHUDE',
   'Este bei Buxtehude': 'BUXTEHUDE',
-  // Ilmenau
-  'Ilmenau': 'LÜNEBURG',
-  'Ilmenau bei Lüneburg': 'LÜNEBURG',
-  // Seeve
-  'Seeve': 'JESTEBURG',
-  // Stör (SH)
-  'Stör': 'ITZEHOE',
-  'Stör bei Itzehoe': 'ITZEHOE',
-  // Eider (SH)
-  'Eider': 'RENDSBURG',
-  // Nord-Ostsee-Kanal
-  'Nord-Ostsee-Kanal': 'RENDSBURG',
-  // Trave (SH)
-  'Trave': 'BAD OLDESLOE',
+  // ── Ilmenau ──
+  'Ilmenau': 'LÜNE',
+  'Ilmenau bei Lüneburg': 'LÜNE',
+  // ── Hunte ──
+  'Hunte': 'OLDENBURG-DRIELAKE',
+  'Hunte bei Oldenburg': 'OLDENBURG-DRIELAKE',
+  // ── Ems ──
+  'Ems': 'PAPENBURG',
+  'Ems bei Papenburg': 'PAPENBURG',
+  'Ems bei Lingen': 'LINGEN-DARME',
+  // ── Stör (SH) ──
+  'Stör': 'ITZEHOE HAFEN',
+  'Stör bei Itzehoe': 'ITZEHOE HAFEN',
+  'Stör bei Kellinghusen': 'BREITENBERG',
+  // ── Eider (SH) ──
+  'Eider': 'NORDFELD UNTERWASSER',
+  'Eider bei Rendsburg': 'LEXFÄHRE OBERWASSER',
+  'Eider bei Friedrichstadt': 'FRIEDRICHSTADT STRASSENBRÜCKE',
+  'Eider bei Tönning': 'TÖNNING',
+  // ── Nord-Ostsee-Kanal ──
+  'Nord-Ostsee-Kanal': 'NOK RENDSBURG',
+  'Nord-Ostsee-Kanal bei Rendsburg': 'NOK RENDSBURG',
+  'Nord-Ostsee-Kanal bei Brunsbüttel': 'NOK BRUNSBÜTTEL',
+  'Nord-Ostsee-Kanal bei Kiel': 'NOK KIEL BINNEN',
+  // ── Trave (SH) ──
+  'Trave': 'LÜBECK-BAUHOF',
+  'Trave bei Lübeck': 'LÜBECK-BAUHOF',
 };
 
 // ─── API Functions ───
@@ -145,7 +167,7 @@ export const findNearestStation = async (
 /**
  * Aktuelle Messung + 24h-Verlauf für eine Station
  */
-export const getStationData = async (stationId: string): Promise<PegelInfo | null> => {
+export const getStationData = async (stationId: string, quiet = false): Promise<PegelInfo | null> => {
   try {
     // Station-Info
     const stationRes = await axios.get(`${PEGEL_API}/stations/${stationId}.json`, {
@@ -204,7 +226,9 @@ export const getStationData = async (stationId: string): Promise<PegelInfo | nul
       unit: wTimeseries?.unit || 'cm',
     };
   } catch (error: any) {
-    console.error(`PEGELONLINE station ${stationId} error:`, error.message);
+    if (!quiet) {
+      console.error(`PEGELONLINE station ${stationId} error:`, error.message);
+    }
     return null;
   }
 };
@@ -243,16 +267,24 @@ export const getStationForecast = async (stationId: string): Promise<PegelMeasur
 export const getPegelForSpot = async (
   spotName: string,
   lat?: number,
-  lon?: number
+  lon?: number,
+  dbPegelStation?: string
 ): Promise<PegelInfo | null> => {
-  // Erst nach bekanntem Station-Match suchen
-  const stationId = findStationForSpot(spotName);
-  
-  if (stationId) {
-    return getStationData(stationId);
+  // 1. Direkt DB-Station nutzen (verifizierter API-Name aus Seed-Daten)
+  //    quiet=true: kein Error-Log falls DB noch alte Namen hat
+  if (dbPegelStation) {
+    const result = await getStationData(dbPegelStation, true);
+    if (result) return result;
   }
 
-  // Fallback: nächste Station per Koordinaten
+  // 2. Name-basiertes Matching gegen NORDDEUTSCHLAND_STATIONS
+  const stationId = findStationForSpot(spotName);
+  if (stationId) {
+    const result = await getStationData(stationId, true);
+    if (result) return result;
+  }
+
+  // 3. Fallback: nächste Station per Koordinaten (max 20km)
   if (lat && lon) {
     const nearest = await findNearestStation(lat, lon, 20);
     if (nearest) {
@@ -279,7 +311,7 @@ const findStationForSpot = (spotName: string): string | null => {
   }
 
   // Fluss-Name Match
-  const riverNames = ['elbe', 'weser', 'aller', 'leine', 'oste', 'este', 'ilmenau', 'seeve', 'stör', 'eider', 'trave'];
+  const riverNames = ['elbe', 'weser', 'aller', 'leine', 'oste', 'este', 'ilmenau', 'hunte', 'ems', 'stör', 'eider', 'trave', 'schwentine', 'nord-ostsee-kanal'];
   for (const river of riverNames) {
     if (nameLower.includes(river)) {
       const key = river.charAt(0).toUpperCase() + river.slice(1);

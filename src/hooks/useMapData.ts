@@ -277,7 +277,8 @@ export const useMapData = (): UseMapDataReturn => {
                 const pegel = await getPegelForSpot(
                   spot.name,
                   spot.latitude,
-                  spot.longitude
+                  spot.longitude,
+                  spot.pegelStation
                 );
                 if (pegel) {
                   spot.pegelStation = pegel.stationName;

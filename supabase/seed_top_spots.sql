@@ -149,7 +149,7 @@ VALUES (
   'Gastschein SAV Oste-Hamme. Top-Hechtgewässer!',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Meerforelle": 60}, "dailyLimit": 2, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz"], "specialRules": "Meerforelle: Saison Apr-Okt. Einer der besten Hechtflüsse in NDS."}'::jsonb,
-  'BREMERVÖRDE'
+  'BREMERVÖRDE UW'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -265,7 +265,7 @@ VALUES (
   'Frei mit Fischereischein SH! Kein Zusatzschein nötig. Bundeswasserstraße.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Zander": 45, "Dorsch": 38}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Bundeswasserstraße: Schiffsverkehr beachten! Wellengang bei Passage. Dorsch im Winter möglich."}'::jsonb,
-  'RENDSBURG', 'Rendsburg-Kiel'
+  'NOK RENDSBURG', 'Rendsburg-Kiel'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_url = EXCLUDED.permit_url, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -279,7 +279,7 @@ VALUES (
   'LSFV-SH Gastschein oder lokaler Angelverein.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Meerforelle": 40}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz"], "specialRules": "Tidebereich unterhalb Nordfeld. Meerforelle Saison beachten."}'::jsonb,
-  'FRIEDRICHSTADT'
+  'FRIEDRICHSTADT STRASSENBRÜCKE'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -365,7 +365,7 @@ VALUES (
   'Gastschein beim AV Lüneburg oder online bei angelkarten.online',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Äsche": 35}, "dailyLimit": 2, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Fliegenfischen", "Ansitz"], "specialRules": "Einer der besten Äschenflüsse in NDS. Schonend behandeln!"}'::jsonb,
-  'BIENENBÜTTEL'
+  'LÜNE'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 

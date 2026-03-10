@@ -76,7 +76,7 @@ VALUES (
   'Angelkarten beim SAV Bremervörde oder Angelgeschäft in der Innenstadt.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Zander": 45, "Meerforelle": 40}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Tideeinfluss! Meerforellen im Herbst/Winter. Fliegenstrecken beachten."}'::jsonb,
-  'BREMERVÖRDE'
+  'BREMERVÖRDE UW'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -90,7 +90,7 @@ VALUES (
   'Gastscheine beim ASV Hameln oder bei hejfish.com.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Zander": 45, "Rapfen": 40}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Top-Zanderfluss! Buhnen und Steinpackungen sind Hotspots. Wehre beachten."}'::jsonb,
-  'HAMELN'
+  'HAMELN WEHRBERGEN'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -118,7 +118,7 @@ VALUES (
   'Angelkarten beim ASV Lingen oder online.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Zander": 45}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Ruhiger Fluss, guter Bestand. Altarme sind Hotspots für Hecht."}'::jsonb,
-  'LINGEN'
+  'LINGEN-DARME'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -132,7 +132,7 @@ VALUES (
   'Tageskarten beim Sportfischerverein Oldenburg.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 50, "Zander": 45}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Guter Mischbestand. Mündungsbereich hat Tideeinfluss."}'::jsonb,
-  'OLDENBURG'
+  'OLDENBURG-DRIELAKE'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -161,7 +161,7 @@ VALUES (
   'Limitierte Tageskarten beim Seeve-Fischerei-Verein. Frühzeitig reservieren!',
   false, 'curated', true, 'official',
   '{"minSizes": {"Forelle": 25, "Meerforelle": 40}, "dailyLimit": 2, "nightFishing": false, "allowedMethods": ["Fliegenfischen", "Spinnfischen"], "specialRules": "Top-Forellenbach in der Nordheide! Schonender Umgang Pflicht. C&R für Meerforelle."}'::jsonb,
-  'JESTEBURG'
+  'BUXTEHUDE'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -307,7 +307,7 @@ VALUES (
   'Gastscheine beim LSFV-SH oder Angelgeschäften in Lübeck.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 45, "Zander": 40, "Meerforelle": 40}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Tidebereich ab Lübeck. Meerforellen im Herbst. Zanderangeln an Brücken."}'::jsonb,
-  'LÜBECK'
+  'LÜBECK-BAUHOF'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -321,7 +321,7 @@ VALUES (
   'Tageskarten über den Kreissportfischerverband Rendsburg.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 45, "Zander": 40, "Meerforelle": 40}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Einer der wichtigsten Meerforellenflüsse in SH. Laichschonstrecken beachten!"}'::jsonb,
-  'RENDSBURG'
+  'LEXFÄHRE OBERWASSER'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
@@ -335,7 +335,7 @@ VALUES (
   'Gastscheine beim SAV Kellinghusen oder LSFV-SH.',
   false, 'curated', true, 'official',
   '{"minSizes": {"Hecht": 45, "Zander": 40}, "dailyLimit": 3, "nightFishing": true, "allowedMethods": ["Spinnfischen", "Ansitz", "Grundangeln"], "specialRules": "Tidefluss. Guter Hechtbestand. Schleusen sind Hotspots für Zander."}'::jsonb,
-  'KELLINGHUSEN'
+  'BREITENBERG'
 ) ON CONFLICT (id) DO UPDATE SET
   permit_price = EXCLUDED.permit_price, permit_type = EXCLUDED.permit_type, permit_info = EXCLUDED.permit_info, regulations = EXCLUDED.regulations, fish_species = EXCLUDED.fish_species, fish_species_confirmed = EXCLUDED.fish_species_confirmed, pegel_station = EXCLUDED.pegel_station;
 
