@@ -33,7 +33,7 @@
               │              │              │
               ▼              ▼              ▼
         ┌─────────┐   ┌───────────┐   ┌───────────┐
-        │Supabase │   │OpenWeather│   │PEGELONLINE│
+        │Supabase │   │DWD BrightSky│ │PEGELONLINE│
         │ (DB+Auth)│   │  (API)    │   │  (API)    │
         └─────────┘   └───────────┘   └───────────┘
 ```
@@ -57,7 +57,7 @@
 | Dienst | Tier | Zweck |
 |--------|------|-------|
 | Supabase | Free | Auth, DB (water_bodies, catches, ratings, favorites) |
-| OpenWeather | Free | Wetter-Daten für Fangindex |
+| DWD Bright Sky + OpenWeather | Free | Wetter-Daten: DWD als Primary (48h Forecast), OpenWeather als Fallback |
 | PEGELONLINE | Free | Pegel-Daten für Fangindex |
 | Mapbox | Free | Karten, Custom Styles, Offline Tiles |
 
@@ -122,8 +122,9 @@ biss-app/
 │   │
 │   ├── services/                   # API Clients
 │   │   ├── supabase.ts             # Auth + DB Client
-│   │   ├── weather.ts              # OpenWeather API
-│   │   ├── pegel.ts                # PEGELONLINE API
+│   │   ├── weatherDWD.ts           # DWD Bright Sky (Primary)
+│   │   ├── weather.ts              # OpenWeather (Fallback)
+│   │   ├── pegelonline.ts          # PEGELONLINE API
 │   │   ├── offlineStorage.ts       # AsyncStorage Cache + Offline Queue
 │   │   ├── googlePlaces.ts         # Places API
 │   │   └── xai.ts                  # Legacy (nicht mehr für Fangindex)
@@ -181,16 +182,26 @@ biss-app/
 water_bodies (
   id UUID PRIMARY KEY,
   name TEXT,
-  type TEXT,                    -- 'teich', 'see', 'fluss', 'kanal', 'bach'
+  type TEXT,                    -- 'lake', 'river', 'canal', 'pond', 'coast'
   latitude DECIMAL,
   longitude DECIMAL,
   region TEXT,
   fish_species TEXT[],
+  requires_permit BOOLEAN,
   permit_price DECIMAL,
+  permit_type TEXT,
   permit_url TEXT,
-  contact_phone TEXT,
+  permit_info TEXT,
+  permit_contact TEXT,
+  data_source TEXT,
+  fish_species_confirmed BOOLEAN,
+  fish_species_source TEXT,
+  regulations JSONB,
+  pegel_station TEXT,
+  max_depth DECIMAL,
+  surface_area DECIMAL,
   is_assumed BOOLEAN,
-  created_at TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT now()
 )
 
 -- Catches (Fänge)
@@ -272,7 +283,7 @@ User öffnet App
 
 | Faktor | Gewicht | Quelle |
 |--------|---------|--------|
-| Wetter (Temp, Druck, Wolken) | 30% | OpenWeather API |
+| Wetter (Temp, Druck, Wolken) | 30% | DWD Bright Sky (Primary) → OpenWeather (Fallback) |
 | Tageszeit (Golden Hours) | 25% | Lokal berechnet |
 | Mondphase | 20% | Lokal berechnet |
 | Solunar (Major/Minor) | 15% | Lokal berechnet |
@@ -338,8 +349,8 @@ export const COLORS = {
 
 | Style | Mapbox URL | Beschreibung |
 |-------|-----------|--------------|
-| **BISS Angel-Day** | `mapbox://styles/chulio115/cmikk7vsv003301qvgta39zfb` | Custom heller Angel-Style |
-| **Night** | `mapbox://styles/mapbox/dark-v11` | Dunkler Modus (Fallback) |
+| **BISS Angel-Day** | ENV: `EXPO_PUBLIC_MAPBOX_STYLE_STANDARD` | Custom heller Angel-Style |
+| **Night** | ENV: `EXPO_PUBLIC_MAPBOX_STYLE_NIGHT` | Dunkler Modus |
 
 Styles sind per ENV überschreibbar: `EXPO_PUBLIC_MAPBOX_STYLE_STANDARD`, `EXPO_PUBLIC_MAPBOX_STYLE_NIGHT`
 
@@ -349,8 +360,8 @@ Styles sind per ENV überschreibbar: `EXPO_PUBLIC_MAPBOX_STYLE_STANDARD`, `EXPO_
 
 ```
 5 Tabs:
-ScheinStack → CatchBookStack → MapStack (Mitte) → BuyStack → ProfileStack
-     🪪              📖            🗺️              🛒           👤
+ScheinStack → MapStack → CatchBookStack → CommunityStack → ProfileStack
+     🪪             🗺️              �                �            👤
 ```
 
 ---
@@ -363,6 +374,7 @@ ScheinStack → CatchBookStack → MapStack (Mitte) → BuyStack → ProfileStac
 | Mapbox Public Token | `.env` | Public |
 | Mapbox Download Token | `app.json` (Plugin) | Build-time only |
 | OpenWeather API Key | `.env` | Public |
+| Supabase Service Role Key | (nur lokal, ENV) | Nur für Seeding-Skripte (nicht im Repo) |
 
 ---
 
@@ -387,4 +399,4 @@ ScheinStack → CatchBookStack → MapStack (Mitte) → BuyStack → ProfileStac
 
 ---
 
-*Letzte Aktualisierung: 05.03.2026*
+*Letzte Aktualisierung: 10.03.2026*
