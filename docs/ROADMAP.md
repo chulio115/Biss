@@ -17,8 +17,8 @@
 | Map Core | ✅ 85% | Mapbox, Clustering, Score-Marker, Zoom-basiert |
 | USP Features | ✅ 75% | Beißzeit-Modal, Schonzeit, Solunar, Favoriten |
 | Smart Intelligence | ✅ 40% | Kontext-Detection, Insight Generation |
-| Daten | 🟡 50% | 241 OSM-Gewässer (nur Seen/Teiche), keine Flüsse, geschätzte Fischarten, keine Permit-Daten |
-| **Spot-Daten 2.0** | 🚧 IN PROGRESS | Flüsse+Kanäle, HH/SH Expansion, Angelerlaubnis-Daten, echte Fischarten, DWD Wetter |
+| Daten | ✅ 80% | 241+ OSM-Gewässer + Flüsse/Kanäle, 20 kuratierte Top-Spots, echte Fischarten, Permit-Daten |
+| **Spot-Daten 2.0** | ✅ 90% | 15/16 Features implementiert. Flüsse, DWD, PEGELONLINE, Forecast, Regulations, Seed-Daten |
 | Categories | ✅ 100% | 4 Spot-Kategorien + Filter |
 | UI/UX Rework | ✅ 90% | Design System, ScoreRing, FangindexBreakdown, Logo, Map UI redesign (solid colors) |
 | **Dark Mode** | ✅ 100% | App-weiter Dark Mode mit ThemeContext, AppearanceSettingsModal, Persistenz |
@@ -583,4 +583,7 @@
 | 10.03.26 | **Flüsse als Prio** | 60%+ der Angler angeln am Fluss — Elbe, Aller, Weser, Seeve etc. fehlen komplett. OSM-Query erweitern |
 | 10.03.26 | **DWD statt OpenWeather** | Kostenlos, kein API-Key, 2000+ Messstationen vs ~200. Präziser für DE |
 | 10.03.26 | **HH/SH Expansion** | Hamburg ist Heimatmarkt, SH hat 300+ Angelgewässer. Bounding Box erweitern |
+| 10.03.26 | **48h Fangindex-Prognose** | Killer-Feature: DWD Forecast + Solunar + Mondphasen → stündlicher Score. Keine andere DE Angel-App hat das |
+| 10.03.26 | **20 kuratierte Top-Spots** | Seed-SQL mit echten Permit-Preisen, Regulations, Fischarten für NDS/HH/SH. Sofortiger Mehrwert |
+| 10.03.26 | **Live-Bedingungen im Detail** | 4-Grid (Wetter/Pegel/Mond/Tageszeit) + Solunar-Alert + Regulations (Mindestmaße, Methoden, Tagesfang) |
 | 10.03.26 | **Angelerlaubnis = #1 Pain Point** | "Wo darf ich angeln?" beantwortet keine App gut. Tageskarten-Daten als Killer-Feature |

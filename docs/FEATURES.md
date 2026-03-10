@@ -145,53 +145,62 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 | **Pegel im BottomSheet** | ✅ | Pegel-Station, Level (cm), Trend (↗️↘️➡️) für Fluss-Spots |
 | **Angelerlaubnis UI** | ✅ | Tageskarte-Preis, Info-Text, Kauflink, Regeln im BottomSheet |
 | **Supabase Migration** | ✅ | `spot_data_v2.sql`: permit_type, regulations JSONB, pegel_station, community_verified, etc. |
-| **Permit-Daten befüllen** | ⬜ | Noch keine echten Permit-Daten in DB (Datenquellen: hejfish, Verbände) |
+| **48h Fangindex-Prognose** | ✅ | DWD Forecast + Solunar + Mondphasen → stündlicher Score. ForecastCard UI mit Day-Cards, Hourly Timeline, Best-Moment Highlight |
+| **20 kuratierte Top-Spots** | ✅ | `seed_top_spots.sql`: NDS 12, HH 4, SH 4 Spots. Echte Fischarten, Preise, Regulations, Pegel-Stationen |
+| **Live-Bedingungen UI** | ✅ | 4-Grid im SpotDetail: Wetter/Pegel/Mond/Tageszeit Status + Solunar-Alert |
+| **Regulations-Sektion** | ✅ | Methoden, Tagesfang, Nachtangeln, Mindestmaße-Chips, Sonderregeln |
+| **Erweiterte Permit-Sektion** | ✅ | Kostenlos-Anzeige, Kauflink direkt zu URL, permit_info Text |
 | **Koordinaten-Qualität** | ⬜ | Ufer-Punkte statt Gewässermitte noch nicht implementiert |
 
 ### Architektur
 
 ```
-                    OSM Overpass API
-                   (Seen + Flüsse + Kanäle)
-                          │
-                          ▼
-              ┌─── dataAcquisition.ts ───┐
-              │  fetchOSMWaterBodies()    │
-              │  NORDDEUTSCHLAND_BBOX    │
-              │  detectRegionFast()       │
-              │  estimateFishSpecies()    │──→ KNOWN_RIVERS (17 Flüsse)
-              │  FISH_BY_WATER_TYPE       │
-              └──────────┬───────────────┘
-                         │
-                         ▼
-              ┌─── useMapData.ts ────────┐
-              │  Supabase fetch          │
-              │  Fangindex berechnen     │
-              │  detectCategory()        │──→ 'river' für Flüsse
-              │  Catch Freshness         │
+                    OSM Overpass API                DWD Bright Sky API
+                   (Seen + Flüsse + Kanäle)         (48h Forecast)
+                          │                              │
+                          ▼                              ▼
+              ┌─── dataAcquisition.ts ───┐  ┌── fangindexForecast.ts ─┐
+              │  fetchOSMWaterBodies()    │  │  getFangindexForecast() │
+              │  NORDDEUTSCHLAND_BBOX    │  │  Solunar + Mondphasen   │
+              │  detectRegionFast()       │  │  Score pro Stunde/Tag   │
+              │  estimateFishSpecies()    │  │  Best-Moment Finder     │
+              │  KNOWN_RIVERS (17)        │  └──────────┬─────────────┘
+              └──────────┬───────────────┘             │
+                         │                              │
+                         ▼                              ▼
+              ┌─── useMapData.ts ────────┐  ┌── useForecast.ts ──────┐
+              │  Supabase fetch          │  │  loadForecast(lat,lng) │
+              │  Fangindex berechnen     │  │  WeekForecast state    │
+              │  detectCategory()        │  └──────────┬─────────────┘
               │  Pegel Enrichment ◄──────┤──→ pegelonline.ts
-              └──────────┬───────────────┘
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-   MapBottomSheet   MapFilterSheet   MapScreen
-   (Pegel-Sektion)  (River-Filter)  (Clustering)
-   (Permit-Sektion)
+              └──────────┬───────────────┘             │
+                         │                              │
+          ┌──────────────┼──────────────┐              │
+          ▼              ▼              ▼              ▼
+   MapBottomSheet   MapFilterSheet   MapScreen    ForecastCard
+   (Bedingungen)   (River-Filter)  (Clustering)  (48h Prognose)
+   (Regulations)                                 (Day-Cards)
+   (Permit+Preis)                                (Hourly Timeline)
 ```
 
-### Neue Datenquellen (alle kostenlos!)
+### Datenquellen (alle kostenlos!)
 
 | Quelle | Typ | Service-Datei | Was wir bekommen |
 |--------|-----|---------------|-----------------|
 | **OSM Overpass** (erweitert) | API | `dataAcquisition.ts` | Flüsse, Kanäle, Bäche zusätzlich zu Seen/Teichen |
-| **DWD Bright Sky** | API | `weatherDWD.ts` | Wetter (2000+ Stationen), 48h Vorhersage, Warnungen |
+| **DWD Bright Sky** | API | `weatherDWD.ts` + `fangindexForecast.ts` | Wetter (2000+ Stationen), 48h Forecast, Warnungen |
 | **PEGELONLINE** (erweitert) | API | `pegelonline.ts` | 25+ Stationen, Trend, Vorhersagen, nächste Station |
 | **KNOWN_RIVERS** | Lokal | `constants/fishing.ts` | 17 Flüsse mit echten Fischarten für NDS/HH/SH |
+| **Kuratierte Seed-Daten** | SQL | `seed_top_spots.sql` | 20 Top-Spots mit Permit-Preisen, Regulations, Pegel |
 
 ### Dateien (neu/geändert)
 
 | Datei | Änderung |
 |-------|----------|
+| `src/services/fangindexForecast.ts` | **NEU**: 48h Fangindex-Prognose — DWD + Solunar + Mondphasen, WeekForecast/ForecastDay/ForecastHour |
+| `src/hooks/useForecast.ts` | **NEU**: React Hook für Forecast mit Loading/Error State |
+| `src/components/map/ForecastCard.tsx` | **NEU**: Premium UI — Day-Cards, Hourly Timeline, Best-Moment, Score-Bars |
+| `supabase/seed_top_spots.sql` | **NEU**: 20 kuratierte Spots (NDS/HH/SH) mit echten Permit-Daten, Regulations, Fischarten |
 | `src/services/dataAcquisition.ts` | OSM-Query um Flüsse/Kanäle erweitert, BBox Norddeutschland, `detectRegionFast()`, KNOWN_RIVERS in `estimateFishSpecies()` |
 | `src/services/weatherDWD.ts` | **NEU**: DWD Bright Sky API — aktuelles Wetter, 48h Vorhersage, Wetterwarnungen |
 | `src/services/pegelonline.ts` | **NEU**: Erweiterte PEGELONLINE-Integration — 25+ Stationen, Trend, Vorhersagen, `getPegelForSpot()` |
@@ -200,7 +209,8 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 | `src/constants/fishing.ts` | `SpotCategory` + `'river'`, `SPOT_CATEGORIES.river`, `WATER_TYPE_FILTERS`, `KNOWN_RIVERS` (17 Flüsse), `FISH_FILTERS` + Wels |
 | `src/utils/fishing.ts` | `detectCategory()` erkennt Flüsse, neues `getFishForRiver()` |
 | `src/hooks/useMapData.ts` | Pegel-Enrichment für Fluss-Spots (batched, non-blocking) |
-| `src/components/map/MapBottomSheet.tsx` | Pegel-Sektion + Angelerlaubnis-Sektion im Spot-Detail |
+| `src/components/map/MapBottomSheet.tsx` | Live-Bedingungen (4-Grid), Regulations-Sektion, Pegel-Sektion, erweiterte Permit-Sektion |
+| `src/screens/MapScreen.tsx` | `useForecast` Hook, Forecast-Props an BottomSheet |
 | `supabase/migrations/spot_data_v2.sql` | Schema-Erweiterung: permit_type, regulations JSONB, pegel_station, fish_species_confirmed, community_verified |
 
 ---
