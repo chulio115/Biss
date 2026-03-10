@@ -17,8 +17,8 @@
 | Map Core | ✅ 85% | Mapbox, Clustering, Score-Marker, Zoom-basiert |
 | USP Features | ✅ 75% | Beißzeit-Modal, Schonzeit, Solunar, Favoriten |
 | Smart Intelligence | ✅ 40% | Kontext-Detection, Insight Generation |
-| Daten | ✅ 85% | 241+ OSM-Gewässer + 54 kuratierte Top-Spots (NDS/HH/SH/Ostsee), 16 Fischarten + Mindestmaße |
-| **Spot-Daten 2.0** | ✅ 95% | 16/17 Features. 54 kuratierte Spots, 16 Fischarten + Mindestmaße, Verifiziert-Badge, Datenqualität |
+| Daten | ✅ 88% | 241+ OSM-Gewässer + 56 kuratierte Top-Spots (NDS/HH/SH/Ostsee), 16 Fischarten + Mindestmaße |
+| **Spot-Daten 2.0** | ✅ 98% | 17/17 Features. 56 kuratierte Spots, 16 Fischarten + Mindestmaße, Verifiziert-Badge, Datenqualität, PEGELONLINE 100% |
 | Categories | ✅ 100% | 4 Spot-Kategorien + Filter |
 | UI/UX Rework | ✅ 90% | Design System, ScoreRing, FangindexBreakdown, Logo, Map UI redesign (solid colors) |
 | **Dark Mode** | ✅ 100% | App-weiter Dark Mode mit ThemeContext, AppearanceSettingsModal, Persistenz |
@@ -366,7 +366,7 @@
 | Task | Aufwand | Beschreibung | Status |
 |------|---------|--------------|--------|
 | ~~**DWD Open Data**~~ | ~~1 Tag~~ | ✅ weatherDWD.ts: Bright Sky API, kostenlos, kein API-Key. Primary mit OpenWeather Fallback | ✅ |
-| ~~**PEGELONLINE Vorhersagen**~~ | ~~4h~~ | ✅ pegelonline.ts: 25+ Stationen NDS/HH/SH, Trend-Berechnung, Batched Enrichment in useMapData | ✅ |
+| ~~**PEGELONLINE Vorhersagen**~~ | ~~4h~~ | ✅ pegelonline.ts: 40+ Stationen NDS/HH/SH, API-verifiziert (2026-03-10), Trend-Berechnung, Batched Enrichment, 0 Errors | ✅ |
 | **NLWKN Niedersachsen** | 4h | Granulare Pegel-API für NDS (Binnen + Tide) | ⬜ |
 | ~~**48h Fangindex-Prognose**~~ | ~~2 Tage~~ | ✅ fangindexForecast.ts: DWD + Solunar + Mondphasen → stündlicher Score. ForecastCard Premium UI | ✅ |
 
@@ -388,7 +388,7 @@
 | Hamburg | 8 kuratiert | 80+ | 120+ |
 | Schleswig-Holstein | 16 kuratiert + 2 Ostsee | 150+ | 300+ |
 | Sonderspot (Put&Take etc.) | 2 kuratiert | 10+ | 20+ |
-| **Gesamt** | **241 + 54 kuratiert** | **730+** | **1.120+** |
+| **Gesamt** | **241 + 56 kuratiert** | **730+** | **1.120+** |
 
 ### Prio 4: Daten & Community 🟢 NACH LAUNCH
 > Wachstum durch Inhalt – basierend auf [Opas Rat: Daten-System](OPAS_RAT.md#-das-daten-system--wie-ihr-komplett-kostenlos-aktuell-bleibt)

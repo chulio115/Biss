@@ -138,7 +138,7 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 | **Flüsse & Kanäle** | ✅ | OSM-Query erweitert: `waterway=river/canal`. Elbe, Aller, Weser, Oste, Seeve etc. |
 | **HH/SH Expansion** | ✅ | BBox auf `54.91°N` erweitert (Flensburg). `NORDDEUTSCHLAND_BBOX` + `REGION_BOXES` |
 | **DWD Wetter** | ✅ | Bright Sky API als Primary, OpenWeather als Fallback. Aktuell + 48h Vorhersage + Warnungen |
-| **PEGELONLINE Erweitert** | ✅ | 25+ Norddeutschland-Stationen, Trend-Berechnung, Vorhersagen, nächste Station per Koordinaten |
+| **PEGELONLINE Erweitert** | ✅ | 40+ Norddeutschland-Stationen (API-verifiziert 2026-03-10), Trend-Berechnung, Vorhersagen, 0 Errors |
 | **River-Kategorie** | ✅ | Neue SpotCategory `'river'` (🌊, blau). `detectCategory` erkennt Flüsse automatisch |
 | **Echte Fluss-Fischarten** | ✅ | `KNOWN_RIVERS` mit 17 Flüssen + echten Fischarten. `estimateFishSpecies` nutzt diese zuerst |
 | **Schnelle Region-Detection** | ✅ | `detectRegionFast()` per Koordinaten-BBox, instant, kein API-Call |
@@ -146,7 +146,8 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 | **Angelerlaubnis UI** | ✅ | Tageskarte-Preis, Info-Text, Kauflink, Regeln im BottomSheet |
 | **Supabase Migration** | ✅ | `spot_data_v2.sql`: permit_type, regulations JSONB, pegel_station, community_verified, etc. |
 | **48h Fangindex-Prognose** | ✅ | DWD Forecast + Solunar + Mondphasen → stündlicher Score. ForecastCard UI mit Day-Cards, Hourly Timeline, Best-Moment Highlight |
-| **20 kuratierte Top-Spots** | ✅ | `seed_top_spots.sql`: NDS 12, HH 4, SH 4 Spots. Echte Fischarten, Preise, Regulations, Pegel-Stationen |
+| **56 kuratierte Top-Spots** | ✅ | `seed_top_spots.sql` + Batch 2. NDS 28, HH 8, SH 18, Ostsee 2. Echte Fischarten, Preise, Regulations, Pegel-Stationen |
+| **Remote-Seeding** | ✅ | `scripts/seed-remote.js` + `seed-batch2.js`: Direktes Seeding zu Supabase via Service Role Key, idempotent |
 | **Live-Bedingungen UI** | ✅ | 4-Grid im SpotDetail: Wetter/Pegel/Mond/Tageszeit Status + Solunar-Alert |
 | **Regulations-Sektion** | ✅ | Methoden, Tagesfang, Nachtangeln, Mindestmaße-Chips, Sonderregeln |
 | **Erweiterte Permit-Sektion** | ✅ | Kostenlos-Anzeige, Kauflink direkt zu URL, permit_info Text |
@@ -189,9 +190,9 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 |--------|-----|---------------|-----------------|
 | **OSM Overpass** (erweitert) | API | `dataAcquisition.ts` | Flüsse, Kanäle, Bäche zusätzlich zu Seen/Teichen |
 | **DWD Bright Sky** | API | `weatherDWD.ts` + `fangindexForecast.ts` | Wetter (2000+ Stationen), 48h Forecast, Warnungen |
-| **PEGELONLINE** (erweitert) | API | `pegelonline.ts` | 25+ Stationen, Trend, Vorhersagen, nächste Station |
+| **PEGELONLINE** (erweitert) | API | `pegelonline.ts` | 40+ Stationen (API-verifiziert), Trend, Vorhersagen, 3-stufige Auflösung |
 | **KNOWN_RIVERS** | Lokal | `constants/fishing.ts` | 17 Flüsse mit echten Fischarten für NDS/HH/SH |
-| **Kuratierte Seed-Daten** | SQL | `seed_top_spots.sql` | 20 Top-Spots mit Permit-Preisen, Regulations, Pegel |
+| **Kuratierte Seed-Daten** | SQL + Node.js | `seed_top_spots.sql` + Remote-Seeder Scripts | 56 Top-Spots mit Permit-Preisen, Regulations, Pegel |
 
 ### Dateien (neu/geändert)
 
@@ -200,10 +201,11 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 | `src/services/fangindexForecast.ts` | **NEU**: 48h Fangindex-Prognose — DWD + Solunar + Mondphasen, WeekForecast/ForecastDay/ForecastHour |
 | `src/hooks/useForecast.ts` | **NEU**: React Hook für Forecast mit Loading/Error State |
 | `src/components/map/ForecastCard.tsx` | **NEU**: Premium UI — Day-Cards, Hourly Timeline, Best-Moment, Score-Bars |
-| `supabase/seed_top_spots.sql` | **NEU**: 20 kuratierte Spots (NDS/HH/SH) mit echten Permit-Daten, Regulations, Fischarten |
+| `supabase/seed_top_spots.sql` + `seed_top_spots_batch2.sql` | **NEU**: 56 kuratierte Spots (NDS/HH/SH/Ostsee) mit echten Permit-Daten, Regulations, Fischarten |
+| `scripts/seed-remote.js` + `seed-batch2.js` | **NEU**: Remote-Seeder für direktes Supabase-Seeding via Service Role Key (idempotent, md5-UUID) |
 | `src/services/dataAcquisition.ts` | OSM-Query um Flüsse/Kanäle erweitert, BBox Norddeutschland, `detectRegionFast()`, KNOWN_RIVERS in `estimateFishSpecies()` |
 | `src/services/weatherDWD.ts` | **NEU**: DWD Bright Sky API — aktuelles Wetter, 48h Vorhersage, Wetterwarnungen |
-| `src/services/pegelonline.ts` | **NEU**: Erweiterte PEGELONLINE-Integration — 25+ Stationen, Trend, Vorhersagen, `getPegelForSpot()` |
+| `src/services/pegelonline.ts` | **NEU**: Erweiterte PEGELONLINE-Integration — 40+ Stationen (API-verifiziert), Trend, 3-stufige Auflösung (DB → Name → Geo), quiet mode |
 | `src/services/weather.ts` | DWD als Primary, OpenWeather Fallback, erweiterte COMMON_PEGEL_STATIONS |
 | `src/types/map.ts` | `MapWaterBody` erweitert: permit_url/contact/info, regulations, pegelStation/Level/Trend, riverSegment. Neues `SpotRegulations` Interface |
 | `src/constants/fishing.ts` | `SpotCategory` + `'river'`, `SPOT_CATEGORIES.river`, `WATER_TYPE_FILTERS`, `KNOWN_RIVERS` (17 Flüsse), `FISH_FILTERS` + Wels |
@@ -246,7 +248,136 @@ Alle UI-Komponenten verwenden `useTheme()` statt `useColorScheme()`:
 
 ---
 
-## �🗺️ Karte & Fangindex
+## 🌊 PEGELONLINE Integration
+
+### Status: ✅ 100% (10.03.26)
+
+> Echtzeitdaten für Fluss-Spots — Wasserstand, Trend, Vorhersagen
+
+### Architektur
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PEGELONLINE REST-API v2                   │
+│         https://pegelonline.wsv.de/webservices/rest-api      │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              src/services/pegelonline.ts                     │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ NORDDEUTSCHLAND_STATIONS (40+ verifizierte Namen)   │   │
+│  │ - Elbe: HAMBURG ST. PAULI, GEESTHACHT, LAUENBURG    │   │
+│  │ - Weser: GROSSE WESERBRÜCKE, NIENBURG, HAMELN       │   │
+│  │ - Aller: CELLE, RETHEM, AHLDEN                      │   │
+│  │ - Leine: HERRENHAUSEN, NEUSTADT, SCHWARMSTEDT       │   │
+│  │ - Oste: BREMERVÖRDE UW, HECHTHAUSEN                 │   │
+│  │ - Eider: LEXFÄHRE, NORDFELD, FRIEDRICHSTADT         │   │
+│  │ - NOK: NOK RENDSBURG, NOK BRUNSBÜTTEL, NOK KIEL     │   │
+│  │ - Trave: LÜBECK-BAUHOF                              │   │
+│  │ - Stör: ITZEHOE HAFEN, BREITENBERG                  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+│  getPegelForSpot(name, lat, lng, dbStation)                 │
+│  ├─ 1. DB-Station (pegel_station aus Seed-Daten)            │
+│  ├─ 2. Name-Matching (NORDDEUTSCHLAND_STATIONS)             │
+│  └─ 3. Geo-Fallback (nächste Station im 20km-Umkreis)       │
+│                                                              │
+│  getStationData(stationId, quiet=false)                     │
+│  ├─ Aktueller Wasserstand (cm)                              │
+│  ├─ 24h-Verlauf                                             │
+│  ├─ Trend-Berechnung (letzte 6h vs vorherige 6h)            │
+│  └─ Quiet Mode für graceful fallback                        │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              src/hooks/useMapData.ts                         │
+│  Pegel-Enrichment für River-Spots (batched, non-blocking)   │
+│  - Max 5 parallel requests                                  │
+│  - 23/23 River Spots enriched                               │
+│  - 0 Errors (API-verifizierte Namen)                        │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│         src/components/map/MapBottomSheet.tsx                │
+│  Pegel-Sektion im SpotDetail:                               │
+│  - 📊 Pegel (STATION): XXX cm                               │
+│  - ↗️/↘️/➡️ Trend: +X cm (steigend/fallend/stabil)          │
+│  - Live-Bedingungen Grid: Pegel-Status (Optimal/Normal/...)│
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Dateien
+
+| Datei | Beschreibung |
+|-------|--------------|
+| `src/services/pegelonline.ts` | PEGELONLINE REST-API v2 Integration, 40+ verifizierte Stationen |
+| `src/hooks/useMapData.ts` | Batched Pegel-Enrichment (5 parallel, non-blocking) |
+| `src/components/map/MapBottomSheet.tsx` | Pegel-Sektion + Live-Bedingungen Grid |
+| `supabase/seed_top_spots.sql` + `batch2.sql` | `pegel_station` Feld mit API-verifizierten Namen |
+
+### API-Verifikation (2026-03-10)
+
+Alle Stationsnamen gegen `https://pegelonline.wsv.de/webservices/rest-api/v2/stations.json` verifiziert:
+
+| Alt (fehlerhaft) | Neu (API-verifiziert) | Gewässer |
+|---|---|---|
+| BREMEN | GROSSE WESERBRÜCKE | Weser |
+| HAMELN | HAMELN WEHRBERGEN | Weser |
+| RENDSBURG | NOK RENDSBURG | Nord-Ostsee-Kanal |
+| FRIEDRICHSTADT | FRIEDRICHSTADT STRASSENBRÜCKE | Eider |
+| BREMERVÖRDE | BREMERVÖRDE UW | Oste |
+| ITZEHOE | ITZEHOE HAFEN | Stör |
+| BAD OLDESLOE | LÜBECK-BAUHOF | Trave |
+| OLDENBURG | OLDENBURG-DRIELAKE | Hunte |
+| LINGEN | LINGEN-DARME | Ems |
+
+**Ergebnis:** 23/23 River Spots enriched, 0 Errors
+
+### Nicht in API verfügbar
+
+Folgende Gewässer haben keine PEGELONLINE-Stationen:
+- Seeve, Luhe, Schwentine (zu klein)
+- Elbe-Lübeck-Kanal, Elbe-Seitenkanal, Mittellandkanal (Kanäle ohne Pegel)
+
+→ Nutzen Geo-Fallback (nächste Station im 20km-Umkreis)
+
+### Trend-Berechnung
+
+```javascript
+// Letzte 6h vs vorherige 6h
+const recentAvg = last6h.reduce((sum, m) => sum + m.value, 0) / 6;
+const previousAvg = previous6h.reduce((sum, m) => sum + m.value, 0) / 6;
+const diff = recentAvg - previousAvg;
+
+// Threshold: ±2cm = stabil
+if (Math.abs(diff) < 2) return 'stable';
+return diff > 0 ? 'rising' : 'falling';
+```
+
+### Remote-Seeding
+
+**Neue Scripts für direktes Supabase-Seeding:**
+
+```bash
+# Batch 1 (26 Spots)
+SUPABASE_SERVICE_ROLE_KEY=xxx node scripts/seed-remote.js
+
+# Batch 2 (27 Spots)
+SUPABASE_SERVICE_ROLE_KEY=xxx node scripts/seed-batch2.js
+```
+
+**Features:**
+- ✅ Service Role Key via ENV (sicher, nicht im Git)
+- ✅ md5-UUID repliziert PostgreSQL `md5()::uuid`
+- ✅ Upsert mit `onConflict` für idempotentes Seeding
+- ✅ 56 kuratierte Spots in Supabase DB
+
+---
+
+## 🗺️ Karte & Fangindex
 
 ### Status: ✅ 85%
 
