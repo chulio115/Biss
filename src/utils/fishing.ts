@@ -3,7 +3,7 @@
  * Sun times, golden hour, fish season logic, coordinate corrections, distance
  */
 
-import { FISH_SEASONS, WATER_TYPE_NAMES, SpotCategory } from '../constants/fishing';
+import { FISH_SEASONS, WATER_TYPE_NAMES, KNOWN_RIVERS, SpotCategory } from '../constants/fishing';
 
 // ─── Sun Time Calculation ───
 
@@ -152,6 +152,11 @@ export const detectCategory = (wb: any): SpotCategory => {
   const name = wb.name?.toLowerCase() || '';
   const type = wb.type?.toLowerCase() || '';
 
+  // Flüsse & Kanäle → eigene Kategorie (Spot-Daten 2.0)
+  if (type === 'river' || type === 'canal' || type === 'stream') {
+    return 'river';
+  }
+
   const officialKeywords = [
     'angelteich', 'forellenteich', 'forellenhof', 'fischzucht',
     'angelsee', 'angelpark', 'angelverein',
@@ -166,6 +171,20 @@ export const detectCategory = (wb: any): SpotCategory => {
   }
 
   return 'fangindex';
+};
+
+/**
+ * Ermittelt Fischarten für bekannte Flüsse anhand des Namens
+ * Fallback auf dataAcquisition.FISH_BY_WATER_TYPE wenn nicht in KNOWN_RIVERS
+ */
+export const getFishForRiver = (spotName: string): string[] | null => {
+  const nameLower = spotName.toLowerCase();
+  for (const [river, info] of Object.entries(KNOWN_RIVERS)) {
+    if (nameLower.includes(river)) {
+      return info.fish;
+    }
+  }
+  return null;
 };
 
 // ─── Coordinate Corrections ───

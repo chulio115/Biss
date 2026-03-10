@@ -4,7 +4,7 @@
  */
 
 // Spot Categories - USP Feature
-export type SpotCategory = 'fangindex' | 'official' | 'hidden' | 'mystery';
+export type SpotCategory = 'fangindex' | 'official' | 'hidden' | 'mystery' | 'river';
 
 export const SPOT_CATEGORIES = {
   fangindex: {
@@ -34,6 +34,13 @@ export const SPOT_CATEGORIES = {
     icon: '🔮',
     color: '#06B6D4',
     description: 'Geheimtipps - wenig frequentiert',
+  },
+  river: {
+    id: 'river',
+    name: 'Fluss',
+    icon: '🌊',
+    color: '#3B82F6',
+    description: 'Flüsse & Kanäle',
   },
 } as const;
 
@@ -98,6 +105,17 @@ export const FISH_FILTERS = [
   { id: 'zander', name: 'Zander', confidence: 'medium' as const },
   { id: 'barsch', name: 'Barsch', confidence: 'high' as const },
   { id: 'aal', name: 'Aal', confidence: 'low' as const },
+  { id: 'wels', name: 'Wels', confidence: 'low' as const },
+];
+
+// Water type filter options for map (Spot-Daten 2.0)
+export const WATER_TYPE_FILTERS = [
+  { id: 'lake', name: 'See', icon: '🏞️' },
+  { id: 'pond', name: 'Teich', icon: '🐟' },
+  { id: 'river', name: 'Fluss', icon: '🌊' },
+  { id: 'canal', name: 'Kanal', icon: '🚢' },
+  { id: 'reservoir', name: 'Stausee', icon: '🏔️' },
+  { id: 'stream', name: 'Bach', icon: '💧' },
 ];
 
 // Water type translations
@@ -114,4 +132,28 @@ export const WATER_TYPE_NAMES: Record<string, string> = {
   forellenteich: 'Forellenteich',
   karpfenteich: 'Karpfenteich',
   fluss: 'Fluss',
+  kanal: 'Kanal',
+  bach: 'Bach',
+  stausee: 'Stausee',
+};
+
+// Bekannte Flüsse in Norddeutschland (für Erkennung + Fischarten)
+export const KNOWN_RIVERS: Record<string, { fish: string[]; region: string }> = {
+  'elbe': { fish: ['Zander', 'Aal', 'Hecht', 'Barsch', 'Brassen', 'Rapfen', 'Wels'], region: 'Norddeutschland' },
+  'weser': { fish: ['Zander', 'Hecht', 'Barsch', 'Aal', 'Döbel', 'Brassen'], region: 'Niedersachsen' },
+  'aller': { fish: ['Hecht', 'Zander', 'Barsch', 'Aal', 'Karpfen', 'Döbel'], region: 'Niedersachsen' },
+  'leine': { fish: ['Hecht', 'Barsch', 'Döbel', 'Aal', 'Forelle', 'Barbe'], region: 'Niedersachsen' },
+  'oste': { fish: ['Hecht', 'Barsch', 'Aal', 'Zander', 'Brassen'], region: 'Niedersachsen' },
+  'este': { fish: ['Forelle', 'Barsch', 'Hecht', 'Aal'], region: 'Niedersachsen' },
+  'seeve': { fish: ['Forelle', 'Barsch', 'Döbel', 'Aal'], region: 'Niedersachsen' },
+  'ilmenau': { fish: ['Hecht', 'Barsch', 'Aal', 'Döbel', 'Forelle'], region: 'Niedersachsen' },
+  'luhe': { fish: ['Forelle', 'Barsch', 'Hecht', 'Aal'], region: 'Niedersachsen' },
+  'stör': { fish: ['Hecht', 'Barsch', 'Brassen', 'Aal', 'Zander'], region: 'Schleswig-Holstein' },
+  'eider': { fish: ['Hecht', 'Barsch', 'Brassen', 'Aal', 'Zander'], region: 'Schleswig-Holstein' },
+  'trave': { fish: ['Hecht', 'Barsch', 'Brassen', 'Aal', 'Zander'], region: 'Schleswig-Holstein' },
+  'alster': { fish: ['Hecht', 'Barsch', 'Zander', 'Aal', 'Karpfen'], region: 'Hamburg' },
+  'bille': { fish: ['Hecht', 'Barsch', 'Aal', 'Forelle'], region: 'Hamburg' },
+  'nord-ostsee-kanal': { fish: ['Hecht', 'Barsch', 'Zander', 'Aal', 'Brassen'], region: 'Schleswig-Holstein' },
+  'elbe-lübeck-kanal': { fish: ['Hecht', 'Barsch', 'Zander', 'Aal', 'Karpfen'], region: 'Schleswig-Holstein' },
+  'mittellandkanal': { fish: ['Hecht', 'Zander', 'Barsch', 'Karpfen', 'Aal'], region: 'Niedersachsen' },
 };
