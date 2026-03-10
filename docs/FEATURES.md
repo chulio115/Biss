@@ -129,48 +129,79 @@ Grünes Banner im ProfileScreen nach Stats, vor Streak:
 
 > Unser USP. Nicht 10.000 leere Pins, sondern 500+ Spots die besser sind als alles was die Konkurrenz hat.
 
-### Status: � IN PROGRESS (10.03.26)
+### Status: 🚧 IN PROGRESS (10.03.26)
 
-### Aktuelle Schwachstellen (ehrlich)
+### Was wurde implementiert
 
-| Problem | Detail |
-|---------|--------|
-| **Nur Seen/Teiche** | OSM-Query holt nur `water=lake/pond/reservoir`. Keine Flüsse (Elbe, Aller, Weser...) |
-| **Nur Niedersachsen** | BBox `51.29–54.01, 6.65–11.56`. Hamburg + SH fehlen |
-| **Fischarten geraten** | `estimateFishSpecies()` schätzt nach Gewässertyp — keine echten Daten |
-| **Permit-Daten = null** | `permit_required: true, permit_price: null` für alle Spots |
-| **Koordinaten teils daneben** | 15 manuelle Korrekturen, Rest = OSM-Gewässermitte |
+| Feature | Status | Detail |
+|---------|--------|--------|
+| **Flüsse & Kanäle** | ✅ | OSM-Query erweitert: `waterway=river/canal`. Elbe, Aller, Weser, Oste, Seeve etc. |
+| **HH/SH Expansion** | ✅ | BBox auf `54.91°N` erweitert (Flensburg). `NORDDEUTSCHLAND_BBOX` + `REGION_BOXES` |
+| **DWD Wetter** | ✅ | Bright Sky API als Primary, OpenWeather als Fallback. Aktuell + 48h Vorhersage + Warnungen |
+| **PEGELONLINE Erweitert** | ✅ | 25+ Norddeutschland-Stationen, Trend-Berechnung, Vorhersagen, nächste Station per Koordinaten |
+| **River-Kategorie** | ✅ | Neue SpotCategory `'river'` (🌊, blau). `detectCategory` erkennt Flüsse automatisch |
+| **Echte Fluss-Fischarten** | ✅ | `KNOWN_RIVERS` mit 17 Flüssen + echten Fischarten. `estimateFishSpecies` nutzt diese zuerst |
+| **Schnelle Region-Detection** | ✅ | `detectRegionFast()` per Koordinaten-BBox, instant, kein API-Call |
+| **Pegel im BottomSheet** | ✅ | Pegel-Station, Level (cm), Trend (↗️↘️➡️) für Fluss-Spots |
+| **Angelerlaubnis UI** | ✅ | Tageskarte-Preis, Info-Text, Kauflink, Regeln im BottomSheet |
+| **Supabase Migration** | ✅ | `spot_data_v2.sql`: permit_type, regulations JSONB, pegel_station, community_verified, etc. |
+| **Permit-Daten befüllen** | ⬜ | Noch keine echten Permit-Daten in DB (Datenquellen: hejfish, Verbände) |
+| **Koordinaten-Qualität** | ⬜ | Ufer-Punkte statt Gewässermitte noch nicht implementiert |
 
-### Neue Datenquellen
+### Architektur
 
-| Quelle | Typ | Kosten | Was wir bekommen |
-|--------|-----|--------|-----------------|
-| **OSM Overpass** (erweitert) | API | €0 | Flüsse, Kanäle, Bäche zusätzlich zu Seen/Teichen |
-| **DWD Open Data** | API | €0 | Präzises DE-Wetter, 2000+ Stationen, kein API-Key |
-| **PEGELONLINE Vorhersagen** | API | €0 | Wasserstandsvorhersagen (NEU seit März 2026) |
-| **NLWKN Niedersachsen** | API | €0 | Granulare NDS-Pegel (Binnen + Tide) |
-| **hejfish.com** | Web | €0 | Tageskarten-Preise, Kauforte |
-| **Landesfischereiverbände** | Web | €0 | Gewässersteckbriefe, echte Fischarten |
-| **Community** | UGC | €0 | Spot-Corrections, Fotos, Fischarten-Bestätigung |
+```
+                    OSM Overpass API
+                   (Seen + Flüsse + Kanäle)
+                          │
+                          ▼
+              ┌─── dataAcquisition.ts ───┐
+              │  fetchOSMWaterBodies()    │
+              │  NORDDEUTSCHLAND_BBOX    │
+              │  detectRegionFast()       │
+              │  estimateFishSpecies()    │──→ KNOWN_RIVERS (17 Flüsse)
+              │  FISH_BY_WATER_TYPE       │
+              └──────────┬───────────────┘
+                         │
+                         ▼
+              ┌─── useMapData.ts ────────┐
+              │  Supabase fetch          │
+              │  Fangindex berechnen     │
+              │  detectCategory()        │──→ 'river' für Flüsse
+              │  Catch Freshness         │
+              │  Pegel Enrichment ◄──────┤──→ pegelonline.ts
+              └──────────┬───────────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+   MapBottomSheet   MapFilterSheet   MapScreen
+   (Pegel-Sektion)  (River-Filter)  (Clustering)
+   (Permit-Sektion)
+```
 
-### Spot-Ziele
+### Neue Datenquellen (alle kostenlos!)
 
-| Region | Aktuell | Ziel M2 | Ziel M4 |
-|--------|---------|---------|---------|
-| Niedersachsen (Seen/Teiche) | 241 | 400+ | 500+ |
-| Niedersachsen (Flüsse) | 0 | 100+ | 200+ |
-| Hamburg | 0 | 80+ | 120+ |
-| Schleswig-Holstein | 0 | 150+ | 300+ |
-| **Gesamt** | **241** | **730+** | **1.120+** |
+| Quelle | Typ | Service-Datei | Was wir bekommen |
+|--------|-----|---------------|-----------------|
+| **OSM Overpass** (erweitert) | API | `dataAcquisition.ts` | Flüsse, Kanäle, Bäche zusätzlich zu Seen/Teichen |
+| **DWD Bright Sky** | API | `weatherDWD.ts` | Wetter (2000+ Stationen), 48h Vorhersage, Warnungen |
+| **PEGELONLINE** (erweitert) | API | `pegelonline.ts` | 25+ Stationen, Trend, Vorhersagen, nächste Station |
+| **KNOWN_RIVERS** | Lokal | `constants/fishing.ts` | 17 Flüsse mit echten Fischarten für NDS/HH/SH |
 
 ### Dateien (neu/geändert)
 
 | Datei | Änderung |
 |-------|----------|
-| `src/services/dataAcquisition.ts` | OSM-Query um Flüsse erweitert, BBox für HH/SH |
-| `src/services/weatherDWD.ts` | NEU: DWD Open Data Integration |
-| `src/services/pegelonline.ts` | NEU: Vorhersagen-API |
-| `src/types/map.ts` | Erweitert: permit_url, permit_contact, regulations, pegelTrend |
+| `src/services/dataAcquisition.ts` | OSM-Query um Flüsse/Kanäle erweitert, BBox Norddeutschland, `detectRegionFast()`, KNOWN_RIVERS in `estimateFishSpecies()` |
+| `src/services/weatherDWD.ts` | **NEU**: DWD Bright Sky API — aktuelles Wetter, 48h Vorhersage, Wetterwarnungen |
+| `src/services/pegelonline.ts` | **NEU**: Erweiterte PEGELONLINE-Integration — 25+ Stationen, Trend, Vorhersagen, `getPegelForSpot()` |
+| `src/services/weather.ts` | DWD als Primary, OpenWeather Fallback, erweiterte COMMON_PEGEL_STATIONS |
+| `src/types/map.ts` | `MapWaterBody` erweitert: permit_url/contact/info, regulations, pegelStation/Level/Trend, riverSegment. Neues `SpotRegulations` Interface |
+| `src/constants/fishing.ts` | `SpotCategory` + `'river'`, `SPOT_CATEGORIES.river`, `WATER_TYPE_FILTERS`, `KNOWN_RIVERS` (17 Flüsse), `FISH_FILTERS` + Wels |
+| `src/utils/fishing.ts` | `detectCategory()` erkennt Flüsse, neues `getFishForRiver()` |
+| `src/hooks/useMapData.ts` | Pegel-Enrichment für Fluss-Spots (batched, non-blocking) |
+| `src/components/map/MapBottomSheet.tsx` | Pegel-Sektion + Angelerlaubnis-Sektion im Spot-Detail |
+| `supabase/migrations/spot_data_v2.sql` | Schema-Erweiterung: permit_type, regulations JSONB, pegel_station, fish_species_confirmed, community_verified |
 
 ---
 
