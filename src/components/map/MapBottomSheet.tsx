@@ -29,6 +29,8 @@ import { SPOT_CATEGORIES, FISH_SEASONS, FISH_FILTERS } from '../../constants/fis
 import { getWaterTypeName, getFishSeasonStatus, formatDistance } from '../../utils/fishing';
 import { MapWaterBody } from '../../types/map';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ForecastCard } from './ForecastCard';
+import { WeekForecast } from '../../services/fangindexForecast';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -66,6 +68,9 @@ interface MapBottomSheetProps {
   allSpots?: MapWaterBody[];
   getRatingSummary?: (spotId: string) => SpotRatingSummary;
   onRateSpot?: (spotId: string) => void;
+  forecast?: WeekForecast | null;
+  forecastLoading?: boolean;
+  onLoadForecast?: () => void;
 }
 
 export const MapBottomSheet: React.FC<MapBottomSheetProps> = ({
@@ -85,6 +90,9 @@ export const MapBottomSheet: React.FC<MapBottomSheetProps> = ({
   allSpots,
   getRatingSummary,
   onRateSpot,
+  forecast,
+  forecastLoading,
+  onLoadForecast,
 }) => {
   const { isDark } = useTheme();
   const snapPoints = [20, 450, '90%'];
@@ -215,6 +223,9 @@ export const MapBottomSheet: React.FC<MapBottomSheetProps> = ({
             onToggleFish={onToggleFish}
             favoriteIds={favoriteIds ?? []}
             allSpots={allSpots ?? []}
+            forecast={forecast}
+            forecastLoading={forecastLoading}
+            onLoadForecast={onLoadForecast}
           />
         )}
       </BottomSheetScrollView>
@@ -666,7 +677,10 @@ const ExploreView: React.FC<{
   onToggleFish: (fishId: string) => void;
   favoriteIds: string[];
   allSpots: MapWaterBody[];
-}> = ({ top3, userLocation, selectedFish, isDark, onMarkerPress, onToggleFish, favoriteIds, allSpots }) => {
+  forecast?: WeekForecast | null;
+  forecastLoading?: boolean;
+  onLoadForecast?: () => void;
+}> = ({ top3, userLocation, selectedFish, isDark, onMarkerPress, onToggleFish, favoriteIds, allSpots, forecast, forecastLoading, onLoadForecast }) => {
   const favoriteSpots = allSpots.filter((s) => favoriteIds.includes(s.id));
 
   return (
@@ -701,6 +715,13 @@ const ExploreView: React.FC<{
         </ScrollView>
       </View>
     )}
+
+    {/* 48h Fangindex-Prognose (Spot-Daten 2.0) */}
+    <ForecastCard
+      forecast={forecast ?? null}
+      loading={forecastLoading ?? false}
+      onLoadForecast={onLoadForecast}
+    />
 
     {top3.length > 0 && (
       <View style={styles.top3Section}>

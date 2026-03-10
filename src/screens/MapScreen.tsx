@@ -29,6 +29,7 @@ import { useSmartFishing } from '../hooks/useSmartFishing';
 import { useFavorites } from '../hooks/useFavorites';
 import { useRatings } from '../hooks/useRatings';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { useForecast } from '../hooks/useForecast';
 import { OfflineBanner } from '../components/ui/OfflineBanner';
 import { COLORS, getScoreColor } from '../constants/colors';
 import { SPOT_CATEGORIES } from '../constants/fishing';
@@ -91,6 +92,9 @@ export const MapScreen: React.FC = () => {
 
   // Network status (Opas Rat #4: Offline-Modus)
   const { isOffline, onReconnect } = useNetworkStatus();
+
+  // 48h Fangindex-Prognose (Spot-Daten 2.0)
+  const { forecast, loading: forecastLoading, loadForecast } = useForecast();
 
   // Auto-reload when coming back online
   React.useEffect(() => {
@@ -628,6 +632,9 @@ export const MapScreen: React.FC = () => {
         allSpots={waterBodies}
         getRatingSummary={getSummaryForSpot}
         onRateSpot={(spotId) => setRatingSpotId(spotId)}
+        forecast={forecast}
+        forecastLoading={forecastLoading}
+        onLoadForecast={() => loadForecast(userLocation[1], userLocation[0])}
       />
     </GestureHandlerRootView>
   );
