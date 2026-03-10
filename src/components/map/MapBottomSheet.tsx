@@ -605,33 +605,33 @@ const SpotDetailView: React.FC<{
       <View style={[styles.freshnessSection, isDark && styles.freshnessSectionDark]}>
         <Text style={[styles.sectionLabel, isDark && styles.textLight]}>Aktuelle Bedingungen</Text>
         <View style={styles.conditionsGrid}>
-          <View style={styles.conditionItem}>
-            <Cloud size={16} color={COLORS.gray500} />
-            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+          <View style={[styles.conditionItem, isDark && styles.conditionItemDark]}>
+            <Cloud size={16} color={isDark ? COLORS.gray300 : COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && { color: COLORS.gray100 }]}>
               {spot.fangIndexFactors.weather >= 70 ? 'Ideal' : spot.fangIndexFactors.weather >= 45 ? 'OK' : 'Schwierig'}
             </Text>
-            <Text style={styles.conditionLabel}>Wetter</Text>
+            <Text style={[styles.conditionLabel, isDark && { color: COLORS.gray400 }]}>Wetter</Text>
           </View>
-          <View style={styles.conditionItem}>
-            <Droplets size={16} color={COLORS.gray500} />
-            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+          <View style={[styles.conditionItem, isDark && styles.conditionItemDark]}>
+            <Droplets size={16} color={isDark ? COLORS.gray300 : COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && { color: COLORS.gray100 }]}>
               {spot.fangIndexFactors.water_level >= 70 ? 'Optimal' : spot.fangIndexFactors.water_level >= 45 ? 'Normal' : 'Niedrig'}
             </Text>
-            <Text style={styles.conditionLabel}>Pegel</Text>
+            <Text style={[styles.conditionLabel, isDark && { color: COLORS.gray400 }]}>Pegel</Text>
           </View>
-          <View style={styles.conditionItem}>
-            <Moon size={16} color={COLORS.gray500} />
-            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+          <View style={[styles.conditionItem, isDark && styles.conditionItemDark]}>
+            <Moon size={16} color={isDark ? COLORS.gray300 : COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && { color: COLORS.gray100 }]}>
               {spot.fangIndexFactors.moon_phase >= 70 ? 'Stark' : spot.fangIndexFactors.moon_phase >= 45 ? 'Mittel' : 'Schwach'}
             </Text>
-            <Text style={styles.conditionLabel}>Mond</Text>
+            <Text style={[styles.conditionLabel, isDark && { color: COLORS.gray400 }]}>Mond</Text>
           </View>
-          <View style={styles.conditionItem}>
-            <Sun size={16} color={COLORS.gray500} />
-            <Text style={[styles.conditionValue, isDark && styles.textLight]}>
+          <View style={[styles.conditionItem, isDark && styles.conditionItemDark]}>
+            <Sun size={16} color={isDark ? COLORS.gray300 : COLORS.gray500} />
+            <Text style={[styles.conditionValue, isDark && { color: COLORS.gray100 }]}>
               {spot.fangIndexFactors.time_of_day >= 70 ? 'Prime!' : spot.fangIndexFactors.time_of_day >= 45 ? 'Gut' : 'Mäßig'}
             </Text>
-            <Text style={styles.conditionLabel}>Tageszeit</Text>
+            <Text style={[styles.conditionLabel, isDark && { color: COLORS.gray400 }]}>Tageszeit</Text>
           </View>
         </View>
         {spot.fangIndexFactors.solunar && spot.fangIndexFactors.solunar >= 75 && (
@@ -1162,6 +1162,7 @@ const styles = StyleSheet.create({
   // Live-Bedingungen (Spot-Daten 2.0)
   conditionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   conditionItem: { flex: 1, minWidth: '45%' as any, alignItems: 'center', gap: 4, paddingVertical: 10, backgroundColor: COLORS.white, borderRadius: 12 },
+  conditionItemDark: { backgroundColor: '#1E293B' },
   conditionValue: { fontSize: 13, fontWeight: '700', color: COLORS.gray800 },
   conditionLabel: { fontSize: 11, color: COLORS.gray400 },
   solunarAlert: { backgroundColor: '#FEF3C7', borderRadius: 10, padding: 10, marginTop: 6 },
