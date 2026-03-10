@@ -14,6 +14,7 @@
  */
 
 import axios from 'axios';
+import { KNOWN_RIVERS } from '../constants/fishing';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -374,23 +375,41 @@ export const FISH_BY_WATER_TYPE: Record<RawWaterBody['type'], string[]> = {
 };
 
 /**
- * Estimates likely fish species based on water type and region
+ * Estimates likely fish species based on water type, name, and region
+ * Spot-Daten 2.0: Nutzt KNOWN_RIVERS für echte Fischarten bei Flüssen
  */
 export const estimateFishSpecies = (
   waterBody: RawWaterBody,
   region: string
 ): string[] => {
+  // Flüsse/Kanäle: Erst in KNOWN_RIVERS nachschauen (echte Daten!)
+  if (waterBody.type === 'river' || waterBody.type === 'canal' || waterBody.type === 'stream') {
+    const nameLower = waterBody.name.toLowerCase();
+    for (const [river, info] of Object.entries(KNOWN_RIVERS)) {
+      if (nameLower.includes(river)) {
+        return info.fish.slice(0, 6);
+      }
+    }
+  }
+
   const baseFish = FISH_BY_WATER_TYPE[waterBody.type] || [];
   
-  // Regional adjustments (Niedersachsen specifics)
-  if (region.toLowerCase().includes('harz')) {
+  // Regional adjustments
+  const regionLower = region.toLowerCase();
+  if (regionLower.includes('harz')) {
     return ['Forelle', 'Äsche', 'Barsch', ...baseFish.slice(0, 3)];
   }
-  if (region.toLowerCase().includes('heide')) {
+  if (regionLower.includes('heide')) {
     return ['Hecht', 'Aal', 'Karpfen', ...baseFish.slice(0, 3)];
   }
+  if (regionLower.includes('hamburg')) {
+    return ['Zander', 'Barsch', 'Hecht', 'Aal', ...baseFish.slice(0, 2)];
+  }
+  if (regionLower.includes('schleswig') || regionLower.includes('holstein')) {
+    return ['Hecht', 'Barsch', 'Zander', 'Aal', 'Brassen'];
+  }
   
-  return baseFish.slice(0, 5); // Limit to 5 most likely
+  return baseFish.slice(0, 5);
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -398,13 +417,42 @@ export const estimateFishSpecies = (
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Schnelle Region-Erkennung anhand der Koordinaten (kein API-Call nötig)
+ * Verwendet Bounding Boxes der Bundesländer
+ */
+export const detectRegionFast = (lat: number, lon: number): string => {
+  // Hamburg (kompaktes Stadtgebiet)
+  if (lat >= 53.39 && lat <= 53.74 && lon >= 9.72 && lon <= 10.33) {
+    return 'Hamburg';
+  }
+  // Schleswig-Holstein (nördlich von Hamburg)
+  if (lat > 53.74 && lat <= 54.91 && lon >= 8.30 && lon <= 11.31) {
+    return 'Schleswig-Holstein';
+  }
+  // Auch SH: westlich von HH, nördlich von NDS
+  if (lat >= 53.36 && lat <= 54.91 && lon >= 8.30 && lon < 9.72) {
+    return 'Schleswig-Holstein';
+  }
+  // Rest = Niedersachsen (default für unsere BBox)
+  return 'Niedersachsen';
+};
+
+/**
  * Determines the region/Landkreis from coordinates
- * Uses OpenStreetMap Nominatim (free)
+ * Fast: Uses coordinate-based detection (instant)
+ * Detailed: Falls back to OpenStreetMap Nominatim (free, slow)
  */
 export const detectRegion = async (
   lat: number,
-  lon: number
+  lon: number,
+  detailed: boolean = false
 ): Promise<string> => {
+  // Schnelle Erkennung (reicht für Bundesland-Level)
+  if (!detailed) {
+    return detectRegionFast(lat, lon);
+  }
+
+  // Detaillierte Erkennung via Nominatim (für Landkreis etc.)
   try {
     const response = await axios.get(
       'https://nominatim.openstreetmap.org/reverse',
@@ -418,14 +466,14 @@ export const detectRegion = async (
         headers: {
           'User-Agent': 'BISS-App/1.0 (fishing spot finder)',
         },
+        timeout: 5000,
       }
     );
 
     const address = response.data.address;
-    // Prioritize: city > county > state
-    return address.city || address.town || address.county || address.state || 'Niedersachsen';
+    return address.city || address.town || address.county || address.state || detectRegionFast(lat, lon);
   } catch (error) {
-    return 'Niedersachsen';
+    return detectRegionFast(lat, lon);
   }
 };
 
