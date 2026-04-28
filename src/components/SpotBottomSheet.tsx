@@ -10,6 +10,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { MapWaterBody } from '../types/map';
+import { useTheme } from '../contexts/ThemeContext';
+import { COLORS } from '../constants/colors';
 
 interface SpotBottomSheetProps {
   spot: MapWaterBody;
@@ -39,6 +41,7 @@ const getTypeLabel = (type: string): string => {
 };
 
 export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose }) => {
+  const { isDark } = useTheme();
   const openInMaps = () => {
     const scheme = Platform.select({
       ios: 'maps:',
@@ -64,28 +67,28 @@ export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDark && styles.containerDark]}>
       {/* Handle bar */}
-      <View style={styles.handleBar} />
+      <View style={[styles.handleBar, isDark && styles.handleBarDark]} />
 
       {/* Close button */}
-      <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-        <Text style={styles.closeBtnText}>✕</Text>
+      <TouchableOpacity style={[styles.closeBtn, isDark && styles.closeBtnDark]} onPress={onClose}>
+        <Text style={[styles.closeBtnText, isDark && styles.closeBtnTextDark]}>✕</Text>
       </TouchableOpacity>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header with score */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.typeLabel}>{getTypeLabel(spot.type)}</Text>
-            <Text style={styles.spotName}>{spot.name}</Text>
-            <Text style={styles.region}>📍 {spot.region}</Text>
+            <Text style={[styles.typeLabel, isDark && styles.typeLabelDark]}>{getTypeLabel(spot.type)}</Text>
+            <Text style={[styles.spotName, isDark && styles.spotNameDark]}>{spot.name}</Text>
+            <Text style={[styles.region, isDark && styles.regionDark]}>📍 {spot.region}</Text>
           </View>
-          <View style={styles.scoreBox}>
+          <View style={[styles.scoreBox, isDark && styles.scoreBoxDark]}>
             <Text style={[styles.scoreNumber, { color: getScoreColor(spot.fangIndex) }]}>
               {spot.fangIndex}
             </Text>
-            <Text style={styles.scoreLabel}>{getScoreLabel(spot.fangIndex)}</Text>
+            <Text style={[styles.scoreLabel, isDark && styles.scoreLabelDark]}>{getScoreLabel(spot.fangIndex)}</Text>
           </View>
         </View>
 
@@ -101,11 +104,11 @@ export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose 
         {/* Fish species */}
         {spot.fish_species && spot.fish_species.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Fischarten</Text>
+            <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>Fischarten</Text>
             <View style={styles.fishTags}>
               {spot.fish_species.map((fish, i) => (
-                <View key={i} style={styles.fishTag}>
-                  <Text style={styles.fishTagText}>🐟 {fish}</Text>
+                <View key={i} style={[styles.fishTag, isDark && styles.fishTagDark]}>
+                  <Text style={[styles.fishTagText, isDark && styles.fishTagTextDark]}>🐟 {fish}</Text>
                 </View>
               ))}
             </View>
@@ -115,7 +118,7 @@ export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose 
         {/* Price */}
         {spot.permit_price && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tageskarte</Text>
+            <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>Tageskarte</Text>
             <View style={styles.priceBox}>
               <Text style={styles.priceValue}>€{spot.permit_price}</Text>
               <Text style={styles.priceLabel}>pro Tag</Text>
@@ -131,10 +134,10 @@ export const SpotBottomSheet: React.FC<SpotBottomSheetProps> = ({ spot, onClose 
           <TouchableOpacity style={styles.googleBtn} onPress={openGoogleMaps}>
             <Text style={styles.googleBtnText}>G</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn}>
+          <TouchableOpacity style={[styles.secondaryBtn, isDark && styles.secondaryBtnDark]}>
             <Text style={styles.secondaryBtnText}>❤️</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn}>
+          <TouchableOpacity style={[styles.secondaryBtn, isDark && styles.secondaryBtnDark]}>
             <Text style={styles.secondaryBtnText}>📤</Text>
           </TouchableOpacity>
         </View>
@@ -149,7 +152,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#0a1628',
+    backgroundColor: COLORS.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 12,
@@ -161,13 +164,19 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
   },
+  containerDark: {
+    backgroundColor: COLORS.dark.surface,
+  },
   handleBar: {
     width: 40,
     height: 4,
-    backgroundColor: '#334155',
+    backgroundColor: COLORS.gray300,
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 16,
+  },
+  handleBarDark: {
+    backgroundColor: COLORS.gray600,
   },
   closeBtn: {
     position: 'absolute',
@@ -176,14 +185,20 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#1e293b',
+    backgroundColor: COLORS.gray100,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
   },
+  closeBtnDark: {
+    backgroundColor: COLORS.dark.card,
+  },
   closeBtnText: {
-    color: '#94a3b8',
+    color: COLORS.gray600,
     fontSize: 16,
+  },
+  closeBtnTextDark: {
+    color: COLORS.gray400,
   },
   content: {
     paddingHorizontal: 20,
@@ -199,35 +214,50 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   typeLabel: {
-    color: '#64748b',
+    color: COLORS.gray600,
     fontSize: 13,
     marginBottom: 4,
   },
+  typeLabelDark: {
+    color: COLORS.gray400,
+  },
   spotName: {
-    color: '#fff',
+    color: COLORS.gray900,
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 4,
   },
+  spotNameDark: {
+    color: COLORS.white,
+  },
   region: {
-    color: '#94a3b8',
+    color: COLORS.gray600,
     fontSize: 14,
   },
+  regionDark: {
+    color: COLORS.gray400,
+  },
   scoreBox: {
-    backgroundColor: '#1e293b',
+    backgroundColor: COLORS.gray100,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     minWidth: 80,
+  },
+  scoreBoxDark: {
+    backgroundColor: COLORS.dark.card,
   },
   scoreNumber: {
     fontSize: 32,
     fontWeight: 'bold',
   },
   scoreLabel: {
-    color: '#94a3b8',
+    color: COLORS.gray600,
     fontSize: 12,
     marginTop: 2,
+  },
+  scoreLabelDark: {
+    color: COLORS.gray400,
   },
   assumedBanner: {
     backgroundColor: '#7c3aed20',
@@ -245,12 +275,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    color: '#64748b',
+    color: COLORS.gray600,
     fontSize: 13,
     fontWeight: '500',
     marginBottom: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  sectionTitleDark: {
+    color: COLORS.gray400,
   },
   fishTags: {
     flexDirection: 'row',
@@ -258,14 +291,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   fishTag: {
-    backgroundColor: '#1e293b',
+    backgroundColor: COLORS.gray100,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
   },
+  fishTagDark: {
+    backgroundColor: COLORS.dark.card,
+  },
   fishTagText: {
-    color: '#fff',
+    color: COLORS.gray900,
     fontSize: 14,
+  },
+  fishTagTextDark: {
+    color: COLORS.white,
   },
   priceBox: {
     backgroundColor: '#065f4620',
@@ -318,9 +357,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: '#1e293b',
+    backgroundColor: COLORS.gray100,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  secondaryBtnDark: {
+    backgroundColor: COLORS.dark.card,
   },
   secondaryBtnText: {
     fontSize: 22,

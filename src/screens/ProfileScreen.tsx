@@ -42,10 +42,16 @@ import { useFishingLicense } from '../hooks/useFishingLicense';
 import { useCatchCount } from '../hooks/useCatchCount';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { useTheme } from '../contexts/ThemeContext';
+import { useUserProfile } from '../hooks/useUserProfile';
 import { AchievementModal } from '../components/profile/AchievementModal';
 import { LeaderboardModal } from '../components/profile/LeaderboardModal';
 import { NotificationSettingsModal } from '../components/profile/NotificationSettingsModal';
 import { AppearanceSettingsModal } from '../components/profile/AppearanceSettingsModal';
+import { ProfileEditModal } from '../components/profile/ProfileEditModal';
+import { CatchStatsScreen } from './CatchStatsScreen';
+import { OfflineMapsScreen } from './OfflineMapsScreen';
+import { HelpScreen } from './HelpScreen';
+import { PrivacyScreen } from './PrivacyScreen';
 import { ScheinScreen } from './ScheinScreen';
 import { COLORS } from '../constants/colors';
 import { TIER_COLORS, CATEGORY_LABELS, AchievementDef } from '../constants/achievements';
@@ -55,9 +61,9 @@ import { TIER_COLORS, CATEGORY_LABELS, AchievementDef } from '../constants/achie
 const MENU_ITEMS = [
   { id: 'appearance', label: 'Darstellung', icon: Palette },
   { id: 'schein', label: 'Fischereischein', icon: FileText },
-  { id: 'tageskarten', label: 'Tageskarten kaufen', icon: Ticket },
+  { id: 'stats', label: 'Fang-Statistik', icon: Trophy },
+  { id: 'offline', label: 'Offline-Karten', icon: MapPin },
   { id: 'notifications', label: 'Benachrichtigungen', icon: Bell },
-  { id: 'favorites', label: 'Favoriten', icon: Star },
   { id: 'help', label: 'Hilfe & Support', icon: HelpCircle },
   { id: 'privacy', label: 'Datenschutz', icon: Shield },
 ];
@@ -66,6 +72,7 @@ export const ProfileScreen: React.FC = () => {
   const { theme, isDark, setTheme } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
+  const { profile, loading: profileLoading } = useUserProfile();
   const { achievements, streak, unlockedCount, totalCount, incrementProgress } = useAchievements();
   const { favoritesCount } = useFavorites();
   const { ratings } = useRatings();
@@ -78,6 +85,11 @@ export const ProfileScreen: React.FC = () => {
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showAppearanceSettings, setShowAppearanceSettings] = useState(false);
   const [showSchein, setShowSchein] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [showCatchStats, setShowCatchStats] = useState(false);
+  const [showOfflineMaps, setShowOfflineMaps] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   // Sync external data into achievement progress
   useEffect(() => {
@@ -120,10 +132,10 @@ export const ProfileScreen: React.FC = () => {
         <View style={[styles.freeTierBanner, isDark && styles.freeTierBannerDark]}>
           <Text style={styles.freeTierEmoji}>🎁</Text>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.freeTierTitle, isDark && styles.textLight]}>
+            <Text style={[styles.freeTierTitle, isDark && styles.freeTierTitleDark]}>
               Immer kostenlos bei BISS
             </Text>
-            <Text style={[styles.freeTierDesc, isDark && styles.subtitleDark]}>
+            <Text style={[styles.freeTierDesc, isDark && styles.freeTierDescDark]}>
               Fangindex, Beißzeiten, Karten, Fangbuch, Schonzeiten — keine Paywall, kein Abo
             </Text>
           </View>
@@ -142,14 +154,28 @@ export const ProfileScreen: React.FC = () => {
           
           <View style={styles.profileInfo}>
             <Text style={[styles.profileName, isDark && styles.textLight]}>
-              Angler
+              {profile.name || 'Angler'}
             </Text>
             <Text style={[styles.profileEmail, isDark && styles.subtitleDark]}>
               {user?.email || 'user@example.com'}
             </Text>
+            {profile.bio && (
+              <Text style={[styles.profileBio, isDark && styles.subtitleDark]} numberOfLines={2}>
+                {profile.bio}
+              </Text>
+            )}
+            {profile.favoriteFish && (
+              <Text style={[styles.profileFavorite, isDark && styles.subtitleDark]}>
+                🎣 Lieblingsfisch: {profile.favoriteFish}
+              </Text>
+            )}
           </View>
 
-          <TouchableOpacity style={styles.editBtn} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={styles.editBtn} 
+            activeOpacity={0.7}
+            onPress={() => setShowProfileEdit(true)}
+          >
             <Text style={styles.editBtnText}>Bearbeiten</Text>
           </TouchableOpacity>
         </View>
@@ -241,8 +267,8 @@ export const ProfileScreen: React.FC = () => {
           <View style={styles.leaderboardLeft}>
             <Trophy size={22} color={COLORS.yellow} strokeWidth={2} />
             <View>
-              <Text style={[styles.leaderboardTitle, isDark && styles.textLight]}>Leaderboard</Text>
-              <Text style={styles.leaderboardSubtitle}>
+              <Text style={[styles.leaderboardTitle, isDark && styles.leaderboardTitleDark]}>Leaderboard</Text>
+              <Text style={[styles.leaderboardSubtitle, isDark && styles.leaderboardSubtitleDark]}>
                 {currentUserEntry ? `Platz ${currentUserEntry.rank} · ${scoreBreakdown.total} Punkte` : 'Score berechnen...'}
               </Text>
             </View>
@@ -264,10 +290,22 @@ export const ProfileScreen: React.FC = () => {
                 if (item.id === 'appearance') setShowAppearanceSettings(true);
                 if (item.id === 'notifications') setShowNotificationSettings(true);
                 if (item.id === 'schein') setShowSchein(true);
+                if (item.id === 'stats') {
+                  setShowCatchStats(true);
+                }
+                if (item.id === 'offline') {
+                  setShowOfflineMaps(true);
+                }
+                if (item.id === 'help') {
+                  setShowHelp(true);
+                }
+                if (item.id === 'privacy') {
+                  setShowPrivacy(true);
+                }
               }}
             >
               <item.icon size={22} color={COLORS.primary} strokeWidth={1.5} />
-              <Text style={[styles.menuLabel, isDark && styles.textLight]}>
+              <Text style={[styles.menuLabel, isDark && styles.menuLabelDark]}>
                 {item.label}
               </Text>
               <ChevronRight size={20} color={COLORS.gray400} strokeWidth={1.8} />
@@ -319,6 +357,32 @@ export const ProfileScreen: React.FC = () => {
         currentTheme={theme}
         onThemeChange={setTheme}
       />
+
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        visible={showProfileEdit}
+        onClose={() => setShowProfileEdit(false)}
+      />
+
+      {/* Catch Stats Modal */}
+      <Modal visible={showCatchStats} animationType="slide" presentationStyle="pageSheet">
+        <CatchStatsScreen onClose={() => setShowCatchStats(false)} />
+      </Modal>
+
+      {/* Offline Maps Modal */}
+      <Modal visible={showOfflineMaps} animationType="slide" presentationStyle="pageSheet">
+        <OfflineMapsScreen onClose={() => setShowOfflineMaps(false)} />
+      </Modal>
+
+      {/* Help Modal */}
+      <Modal visible={showHelp} animationType="slide" presentationStyle="pageSheet">
+        <HelpScreen onClose={() => setShowHelp(false)} />
+      </Modal>
+
+      {/* Privacy Modal */}
+      <Modal visible={showPrivacy} animationType="slide" presentationStyle="pageSheet">
+        <PrivacyScreen onClose={() => setShowPrivacy(false)} />
+      </Modal>
 
       {/* Schein Modal */}
       <Modal visible={showSchein} animationType="slide" presentationStyle="pageSheet">
@@ -432,6 +496,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.gray400,
   },
+  profileBio: {
+    fontSize: 13,
+    color: COLORS.gray600,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  profileFavorite: {
+    fontSize: 12,
+    color: COLORS.primary,
+    marginTop: 4,
+    fontWeight: '500',
+  },
   editBtn: {
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -493,7 +569,9 @@ const styles = StyleSheet.create({
   freeTierBannerDark: { backgroundColor: '#10B981' + '15', borderColor: '#10B981' + '30' },
   freeTierEmoji: { fontSize: 32 },
   freeTierTitle: { fontSize: 16, fontWeight: '700', color: COLORS.gray900 },
+  freeTierTitleDark: { color: COLORS.white },
   freeTierDesc: { fontSize: 12, color: COLORS.gray600, lineHeight: 17 },
+  freeTierDescDark: { color: COLORS.gray400 },
 
   // ─── Streak ───
   streakBanner: {
@@ -574,18 +652,24 @@ const styles = StyleSheet.create({
   },
   lockedEmoji: { fontSize: 20 },
   lockedTitle: { fontSize: 14, fontWeight: '600', color: COLORS.gray900 },
+  lockedTitleDark: { color: COLORS.white },
   lockedDesc: { fontSize: 11, color: COLORS.gray500, marginBottom: 6 },
+  lockedDescDark: { color: COLORS.gray400 },
   progressBar: {
     height: 4,
     backgroundColor: COLORS.gray200,
     borderRadius: 2,
     overflow: 'hidden',
   },
+  progressBarDark: {
+    backgroundColor: COLORS.dark.bg,
+  },
   progressFill: {
     height: '100%',
     borderRadius: 2,
   },
   progressText: { fontSize: 12, fontWeight: '700', color: COLORS.gray400, minWidth: 32, textAlign: 'right' },
+  progressTextDark: { color: COLORS.gray400 },
   showAllBtn: { 
     alignItems: 'center', 
     paddingVertical: 14, 
@@ -617,6 +701,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray500,
     textAlign: 'center',
   },
+  emptyStateTextDark: { color: COLORS.gray400 },
 
   leaderboardBtn: {
     flexDirection: 'row',
@@ -645,11 +730,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.gray900,
   },
+  leaderboardTitleDark: { color: COLORS.white },
   leaderboardSubtitle: {
     fontSize: 12,
     color: COLORS.gray400,
     marginTop: 2,
   },
+  leaderboardSubtitleDark: { color: COLORS.gray400 },
 
   menuCard: {
     backgroundColor: COLORS.white,
@@ -681,6 +768,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.gray900,
   },
+  menuLabelDark: { color: COLORS.white },
   signOutBtn: {
     flexDirection: 'row',
     alignItems: 'center',

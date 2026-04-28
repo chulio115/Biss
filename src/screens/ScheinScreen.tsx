@@ -7,9 +7,8 @@ import {
   View,
   Text,
   StyleSheet,
-  useColorScheme,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
   Image,
   Alert,
   ActivityIndicator,
@@ -33,6 +32,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { COLORS } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import { useFishingLicense, StoredLicense } from '../hooks/useFishingLicense';
 
 interface ScheinScreenProps {
@@ -40,8 +40,7 @@ interface ScheinScreenProps {
 }
 
 export const ScheinScreen: React.FC<ScheinScreenProps> = ({ onClose }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { license, loading, saveLicense, updateLicense, removeLicense, isValid, hasLicense } = useFishingLicense();
   const [isEditing, setIsEditing] = useState(false);
@@ -147,7 +146,7 @@ export const ScheinScreen: React.FC<ScheinScreenProps> = ({ onClose }) => {
     <View style={[styles.container, isDark && styles.containerDark]}>
       <View style={[styles.header, isDark && styles.headerDark, { paddingTop: insets.top + 16 }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={[styles.title, isDark && styles.textLight]}>Mein Schein</Text>
+          <Text style={[styles.title, isDark && styles.titleDark]}>Mein Schein</Text>
           {onClose && (
             <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
               <X size={24} color={isDark ? COLORS.white : COLORS.gray600} />
@@ -170,7 +169,7 @@ export const ScheinScreen: React.FC<ScheinScreenProps> = ({ onClose }) => {
             <View style={[styles.walletCard, isDark && styles.walletCardDark]}>
               {/* License Image */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: license.imageUri }} style={styles.licenseImage} resizeMode="cover" />
+                <Image source={{ uri: license.imageUri }} style={[styles.licenseImage, isDark && styles.licenseImageDark]} resizeMode="cover" />
                 <View style={[styles.validityBadge, { backgroundColor: validityColor + '20' }]}>
                   <ValidityIcon size={14} color={validityColor} />
                   <Text style={[styles.validityText, { color: validityColor }]}>{validityLabel}</Text>
@@ -182,31 +181,31 @@ export const ScheinScreen: React.FC<ScheinScreenProps> = ({ onClose }) => {
                 {license.name && (
                   <View style={styles.metaRow}>
                     <Text style={[styles.metaLabel, isDark && styles.metaLabelDark]}>Inhaber</Text>
-                    <Text style={[styles.metaValue, isDark && styles.textLight]}>{license.name}</Text>
+                    <Text style={[styles.metaValue, isDark && styles.metaValueDark]}>{license.name}</Text>
                   </View>
                 )}
                 {license.licenseNumber && (
                   <View style={styles.metaRow}>
                     <Text style={[styles.metaLabel, isDark && styles.metaLabelDark]}>Scheinnummer</Text>
-                    <Text style={[styles.metaValue, isDark && styles.textLight]}>{license.licenseNumber}</Text>
+                    <Text style={[styles.metaValue, isDark && styles.metaValueDark]}>{license.licenseNumber}</Text>
                   </View>
                 )}
                 {license.issuingAuthority && (
                   <View style={styles.metaRow}>
                     <Text style={[styles.metaLabel, isDark && styles.metaLabelDark]}>Ausgestellt von</Text>
-                    <Text style={[styles.metaValue, isDark && styles.textLight]}>{license.issuingAuthority}</Text>
+                    <Text style={[styles.metaValue, isDark && styles.metaValueDark]}>{license.issuingAuthority}</Text>
                   </View>
                 )}
                 {license.validUntil && (
                   <View style={styles.metaRow}>
                     <Text style={[styles.metaLabel, isDark && styles.metaLabelDark]}>Gültig bis</Text>
-                    <Text style={[styles.metaValue, isDark && styles.textLight]}>{license.validUntil}</Text>
+                    <Text style={[styles.metaValue, isDark && styles.metaValueDark]}>{license.validUntil}</Text>
                   </View>
                 )}
                 {!license.name && !license.licenseNumber && (
                   <TouchableOpacity style={styles.addMetaCta} onPress={startEditing}>
                     <Edit3 size={16} color={COLORS.primary} />
-                    <Text style={styles.addMetaText}>Details hinzufügen (Name, Nummer, ...)</Text>
+                    <Text style={[styles.addMetaText, isDark && styles.addMetaTextDark]}>Details hinzufügen (Name, Nummer, ...)</Text>
                     <ChevronRight size={16} color={COLORS.gray400} />
                   </TouchableOpacity>
                 )}
@@ -356,6 +355,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: COLORS.white },
   headerDark: { backgroundColor: COLORS.dark.surface },
   title: { fontSize: 28, fontWeight: '700', color: COLORS.gray900, marginBottom: 4 },
+  titleDark: { color: COLORS.white },
   subtitle: { fontSize: 15, color: COLORS.gray400 },
   subtitleDark: { color: COLORS.gray400 },
   textLight: { color: COLORS.white },
@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
   walletCardDark: { backgroundColor: COLORS.dark.card },
   imageContainer: { position: 'relative' },
   licenseImage: { width: '100%', height: 220, backgroundColor: COLORS.gray200 },
+  licenseImageDark: { backgroundColor: COLORS.dark.bg },
   validityBadge: {
     position: 'absolute',
     top: 12,
@@ -394,6 +395,7 @@ const styles = StyleSheet.create({
   metaLabel: { fontSize: 11, fontWeight: '600', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
   metaLabelDark: { color: COLORS.gray500 },
   metaValue: { fontSize: 16, fontWeight: '600', color: COLORS.gray900 },
+  metaValueDark: { color: COLORS.white },
   addMetaCta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -406,6 +408,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary + '20',
   },
   addMetaText: { flex: 1, fontSize: 14, fontWeight: '600', color: COLORS.primary },
+  addMetaTextDark: { color: '#4DA3FF' },
 
   // ─── Actions ───
   actionsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },

@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
-  useColorScheme,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -30,6 +29,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useNotificationPreferences, NotificationPreferences } from '../../hooks/useNotificationPreferences';
 
 interface Props {
@@ -116,7 +116,7 @@ export const NotificationSettingsModal: React.FC<Props> = ({
   onClose,
   favoriteSpots,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const {
     prefs,
@@ -353,6 +353,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
+  titleDark: {
+    color: COLORS.white,
+  },
   textLight: {
     color: '#F9FAFB',
   },
@@ -404,6 +407,9 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: '#111827',
+  },
+  masterTitleDark: {
+    color: COLORS.white,
   },
   masterDesc: {
     fontSize: 13,
